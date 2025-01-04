@@ -10,18 +10,10 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import com.github.nacabaro.vbhelper.R
 import com.github.cfogrady.vbnfc.CryptographicTransformer
 import com.github.cfogrady.vbnfc.TagCommunicator
 import com.github.cfogrady.vbnfc.data.DeviceType
+import com.github.nacabaro.vbhelper.navigation.AppNavigation
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 
 class MainActivity : ComponentActivity() {
@@ -45,7 +37,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             VBHelperTheme {
-
+                AppNavigation()
             }
         }
     }
