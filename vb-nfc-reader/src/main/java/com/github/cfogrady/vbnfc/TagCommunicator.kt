@@ -69,8 +69,9 @@ class TagCommunicator(
         checksumCalculator.checkChecksums(decryptedCharacterData)
         val nfcCharacter = translator.parseNfcCharacter(decryptedCharacterData)
         Log.i(TAG, "Known Character Stats: $nfcCharacter")
-        Log.i(TAG, "Signaling operation complete")
-        nfcData.transceive(translator.getOperationCommandBytes(header, OPERATION_TRANSFERRED_TO_APP))
+        // Not ready to lose any of my mons in this...
+        //Log.i(TAG, "Signaling operation complete")
+        //nfcData.transceive(translator.getOperationCommandBytes(header, OPERATION_TRANSFERRED_TO_APP))
         return nfcCharacter
     }
 

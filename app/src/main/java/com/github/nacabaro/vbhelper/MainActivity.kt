@@ -10,15 +10,24 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.github.nacabaro.vbhelper.navigation.AppNavigation
 import com.github.cfogrady.vbnfc.CryptographicTransformer
 import com.github.cfogrady.vbnfc.TagCommunicator
 import com.github.cfogrady.vbnfc.data.DeviceType
-import com.github.nacabaro.vbhelper.navigation.AppNavigation
+import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class MainActivity : ComponentActivity() {
     private lateinit var nfcAdapter: NfcAdapter
     private lateinit var deviceToCryptographicTransformers: Map<UShort, CryptographicTransformer>
+
+    private var nfcCharacter = MutableStateFlow<NfcCharacter?>(null)
 
     // EXTRACTED DIRECTLY FROM EXAMPLE APP
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,9 +46,28 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             VBHelperTheme {
-                AppNavigation()
+                MainApplication()
             }
         }
+    }
+
+    @Composable
+    private fun MainApplication() {
+        var isDoneReadingCharacter by remember { mutableStateOf(false) }
+        AppNavigation(
+            isDoneReadingCharacter = isDoneReadingCharacter,
+            onClickRead = {
+                handleTag {
+                    val character = it.receiveCharacter()
+                    nfcCharacter.value = character
+                    isDoneReadingCharacter = true
+                    "Done reading character"
+                }
+            },
+            onClickScan = {
+                isDoneReadingCharacter = false
+            }
+        )
     }
 
     // EXTRACTED DIRECTLY FROM EXAMPLE APP
