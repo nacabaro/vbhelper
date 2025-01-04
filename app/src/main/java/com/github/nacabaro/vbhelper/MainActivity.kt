@@ -63,6 +63,9 @@ class MainActivity : ComponentActivity() {
                     isDoneReadingCharacter = true
                     "Done reading character"
                 }
+            },
+            onClickScan = {
+                isDoneReadingCharacter = false
             }
         )
     }

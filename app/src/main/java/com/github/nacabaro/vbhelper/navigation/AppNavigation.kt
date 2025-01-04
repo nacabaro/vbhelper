@@ -16,6 +16,7 @@ import com.github.nacabaro.vbhelper.screens.StorageScreen
 @Composable
 fun AppNavigation(
     onClickRead: () -> Unit,
+    onClickScan: () -> Unit,
     isDoneReadingCharacter: Boolean
 ) {
     val navController = rememberNavController()
@@ -41,6 +42,7 @@ fun AppNavigation(
                 StorageScreen()
             }
             composable(BottomNavItem.Scan.route) {
+                onClickScan()
                 ScanScreen(
                     navController = navController,
                     onClickRead = onClickRead,
