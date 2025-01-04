@@ -11,7 +11,7 @@ import com.github.nacabaro.vbhelper.temporary_domain.TemporaryTransformationHist
 @Dao
 interface TemporaryMonsterDao {
     @Insert
-    fun insertCharacterData(temporaryCharacterData: TemporaryCharacterData): Int
+    fun insertCharacterData(temporaryCharacterData: TemporaryCharacterData): Long
 
     @Insert
     fun insertBECharacterData(temporaryBECharacterData: TemporaryBECharacterData)

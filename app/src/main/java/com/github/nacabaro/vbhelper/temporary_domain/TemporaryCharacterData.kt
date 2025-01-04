@@ -6,7 +6,7 @@ import com.github.cfogrady.vbnfc.data.NfcCharacter
 
 @Entity
 data class TemporaryCharacterData (
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val dimId: Int,
     var charIndex: Int,
     var stage: Int,

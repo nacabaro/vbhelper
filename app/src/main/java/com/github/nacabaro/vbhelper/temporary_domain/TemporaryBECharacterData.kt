@@ -18,7 +18,7 @@ import com.github.cfogrady.vbnfc.data.NfcCharacter
     ]
 )
 data class TemporaryBECharacterData (
-    @PrimaryKey(autoGenerate = true) val id: Int,
+    @PrimaryKey(autoGenerate = true) val id: Long,
     val trainingHp: Int,
     val trainingAp: Int,
     val trainingBp: Int,

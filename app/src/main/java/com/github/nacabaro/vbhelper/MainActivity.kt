@@ -182,7 +182,7 @@ class MainActivity : ComponentActivity() {
 
         val application = applicationContext as VBHelper
         val storageRepository = application.container.db
-        val characterId = storageRepository
+        val characterId: Long = storageRepository
             .temporaryMonsterDao()
             .insertCharacterData(temporaryCharacterData)
 

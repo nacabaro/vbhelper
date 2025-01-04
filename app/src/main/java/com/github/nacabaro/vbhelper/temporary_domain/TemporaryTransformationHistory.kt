@@ -16,8 +16,8 @@ import androidx.room.PrimaryKey
 )
 // Bit lazy, will correct later...
 data class TemporaryTransformationHistory (
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val monId: Int,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val monId: Long,
     val toCharIndex: Int,
     val yearsSince1988: Int,
     val month: Int,
