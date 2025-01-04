@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.temporary_domain
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.be.FirmwareVersion
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 
@@ -11,32 +12,33 @@ import com.github.cfogrady.vbnfc.data.NfcCharacter
         ForeignKey(
             entity = TemporaryCharacterData::class,
             parentColumns = ["id"],
-            childColumns = ["userId"],
+            childColumns = ["id"],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class TemporaryBECharacterData (
     @PrimaryKey(autoGenerate = true) val id: Int,
-    val trainingHp: UShort,
-    val trainingAp: UShort,
-    val trainingBp: UShort,
-    val remainingTrainingTimeInMinutes: UShort,
-    val itemEffectMentalStateValue: Byte,
-    val itemEffectMentalStateMinutesRemaining: Byte,
-    val itemEffectActivityLevelValue: Byte,
-    val itemEffectActivityLevelMinutesRemaining: Byte,
-    val itemEffectVitalPointsChangeValue: Byte,
-    val itemEffectVitalPointsChangeMinutesRemaining: Byte,
+    val trainingHp: Int,
+    val trainingAp: Int,
+    val trainingBp: Int,
+    val remainingTrainingTimeInMinutes: Int,
+    val itemEffectMentalStateValue: Int,
+    val itemEffectMentalStateMinutesRemaining: Int,
+    val itemEffectActivityLevelValue: Int,
+    val itemEffectActivityLevelMinutesRemaining: Int,
+    val itemEffectVitalPointsChangeValue: Int,
+    val itemEffectVitalPointsChangeMinutesRemaining: Int,
     val abilityRarity: NfcCharacter.AbilityRarity,
-    val abilityType: UShort,
-    val abilityBranch: UShort,
-    val abilityReset: Byte,
-    val rank: Byte,
-    val itemType: Byte,
-    val itemMultiplier: Byte,
-    val itemRemainingTime: Byte,
+    val abilityType: Int,
+    val abilityBranch: Int,
+    val abilityReset: Int,
+    val rank: Int,
+    val itemType: Int,
+    val itemMultiplier: Int,
+    val itemRemainingTime: Int,
     val otp0: String,
     val otp1: String,
-    var characterCreationFirmwareVersion: FirmwareVersion,
+    val minorVersion: Int,
+    val majorVersion: Int,
 )

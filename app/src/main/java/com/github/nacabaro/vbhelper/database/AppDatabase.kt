@@ -2,15 +2,7 @@ package com.github.nacabaro.vbhelper.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.github.nacabaro.vbhelper.domain.Dim
-import com.github.nacabaro.vbhelper.domain.DimProgress
-import com.github.nacabaro.vbhelper.domain.Evolutions
-import com.github.nacabaro.vbhelper.domain.Mon
-import com.github.nacabaro.vbhelper.domain.User
-import com.github.nacabaro.vbhelper.domain.UserHealthData
-import com.github.nacabaro.vbhelper.domain.UserMonsters
-import com.github.nacabaro.vbhelper.domain.UserMonstersSpecialMissions
-import com.github.nacabaro.vbhelper.domain.UserStepsData
+import com.github.nacabaro.vbhelper.temporary_daos.TemporaryMonsterDao
 import com.github.nacabaro.vbhelper.temporary_domain.TemporaryBECharacterData
 import com.github.nacabaro.vbhelper.temporary_domain.TemporaryCharacterData
 import com.github.nacabaro.vbhelper.temporary_domain.TemporaryTransformationHistory
@@ -24,5 +16,6 @@ import com.github.nacabaro.vbhelper.temporary_domain.TemporaryTransformationHist
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun temporaryMonsterDao(): TemporaryMonsterDao
 
 }
