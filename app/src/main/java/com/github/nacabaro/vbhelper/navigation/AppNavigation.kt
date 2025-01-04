@@ -14,7 +14,11 @@ import com.github.nacabaro.vbhelper.screens.ScanScreen
 import com.github.nacabaro.vbhelper.screens.StorageScreen
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    onClickRead: () -> Unit,
+    onClickScan: () -> Unit,
+    isDoneReadingCharacter: Boolean
+) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -38,7 +42,12 @@ fun AppNavigation() {
                 StorageScreen()
             }
             composable(BottomNavItem.Scan.route) {
-                ScanScreen()
+                onClickScan()
+                ScanScreen(
+                    navController = navController,
+                    onClickRead = onClickRead,
+                    isDoneReadingCharacter = isDoneReadingCharacter
+                )
             }
             composable(BottomNavItem.Dex.route) {
                 DexScreen()

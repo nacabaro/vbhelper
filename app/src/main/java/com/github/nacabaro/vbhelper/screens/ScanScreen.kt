@@ -10,17 +10,52 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.github.nacabaro.vbhelper.components.TopBanner
+import com.github.nacabaro.vbhelper.navigation.BottomNavItem
+import com.github.nacabaro.vbhelper.screens.scanScreen.ReadingCharacterScreen
 
 @Composable
-fun ScanScreen() {
-    Scaffold (
-    topBar = { TopBanner(text = "Scan a Vital Bracelet") }
+fun ScanScreen(
+    navController: NavController,
+    onClickRead: () -> Unit,
+    isDoneReadingCharacter: Boolean
+) {
+    var readingScreen by remember { mutableStateOf(false) }
+
+    if (isDoneReadingCharacter) {
+        readingScreen = false
+        navController.navigate(BottomNavItem.Home.route)
+    }
+
+    if (readingScreen) {
+        ReadingCharacterScreen { readingScreen = false }
+    } else {
+        ChooseConnectOption(
+            onClickRead = {
+                readingScreen = true
+                onClickRead()
+            },
+        )
+    }
+}
+
+@Composable
+private fun ChooseConnectOption(
+    onClickRead: () -> Unit,
+) {
+    Scaffold(
+        topBar = { TopBanner(text = "Scan a Vital Bracelet") }
     ) { contentPadding ->
         Column(
             verticalArrangement = Arrangement.Center,
@@ -31,7 +66,7 @@ fun ScanScreen() {
         ) {
             ScanButton(
                 text = "Vital Bracelet to App",
-                onClick = {}
+                onClick = onClickRead
             )
             Spacer(modifier = Modifier.height(16.dp))
             ScanButton(
@@ -41,6 +76,7 @@ fun ScanScreen() {
         }
     }
 }
+
 
 @Composable
 fun ScanButton(
@@ -64,5 +100,9 @@ fun ScanButton(
 @Preview(showBackground = true)
 @Composable
 fun ScanScreenPreview() {
-    ScanScreen()
+    ScanScreen(
+        navController = rememberNavController(),
+        onClickRead = {  },
+        isDoneReadingCharacter = false
+    )
 }
