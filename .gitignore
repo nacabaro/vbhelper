@@ -1,0 +1,8 @@
+
+.gradle/
+
+.idea/
+
+local.properties
+
+app/src/main/res/values/keys.xml
