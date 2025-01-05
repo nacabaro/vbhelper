@@ -13,4 +13,6 @@ sealed class BottomNavItem (
     object Dex : BottomNavItem("Dex", R.drawable.baseline_menu_book_24, "Dex")
     object Storage : BottomNavItem("Storage", R.drawable.baseline_catching_pokemon_24, "Storage")
     object Settings : BottomNavItem("Settings", R.drawable.baseline_settings_24, "Settings")
+    object Viewer : BottomNavItem("Viewer", R.drawable.baseline_image_24, "Viewer")
+    object CardView : BottomNavItem("Card/{dimId}", R.drawable.baseline_image_24, "Card")
 }

@@ -14,15 +14,20 @@ import androidx.room.ForeignKey
         )
     ]
 )
-data class Mon (
-    @PrimaryKey val id: Int,
+data class Character (
+    @PrimaryKey(autoGenerate = true) val id: Long,
     val dimId: Int,
     val monIndex: Int,
-    val name: String,
+    val name: ByteArray,
     val stage: Int, // These should be replaced with enums
     val attribute: Int, // This one too
     val baseHp: Int,
     val baseBp: Int,
     val baseAp: Int,
-    val evoTime: Int, // In minutes
+    val sprite1: ByteArray,
+    val sprite2: ByteArray,
+    val nameWidth: Int,
+    val nameHeight: Int,
+    val spritesWidth: Int,
+    val spritesHeight: Int
 )

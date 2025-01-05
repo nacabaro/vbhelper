@@ -20,7 +20,7 @@ fun TopBanner(
     text: String,
     modifier: Modifier = Modifier,
     onGearClick: (() -> Unit)? = null,
-    onBackClick: (() -> Unit)? = null
+    onBackClick: (() -> Unit)? = null,
 ) {
     Box( // Use Box to overlay elements
         modifier = modifier

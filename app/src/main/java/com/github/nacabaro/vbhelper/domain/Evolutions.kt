@@ -7,13 +7,13 @@ import androidx.room.PrimaryKey
 @Entity(
     foreignKeys = [
         ForeignKey(
-            entity = Mon::class,
+            entity = Character::class,
             parentColumns = ["id"],
             childColumns = ["monId"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Mon::class,
+            entity = Character::class,
             parentColumns = ["id"],
             childColumns = ["nextMon"],
             onDelete = ForeignKey.CASCADE
