@@ -42,7 +42,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.room.runtime)
-    implementation(project(":vb-nfc-reader"))
+    implementation(libs.vb.nfc.reader)
     ksp(libs.androidx.room.compiler)
     annotationProcessor(libs.androidx.room.compiler)
     implementation(libs.androidx.core.ktx)
