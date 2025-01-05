@@ -3,9 +3,11 @@
 ## Developer Setup
 
 1. Clone vb-nfc-reader (https://github.com/cfogrady/lib-vb-nfc)
-2. Run vb-nfc-reader/publishToMavenLocal gradle task.
-3. Create res/values/keys.xml within the app module.
-4. Populate with:
+2. Run vb-nfc-reader/publishToMavenLocal gradle task in the lib-vb-nfc project.
+3. Clone vb-dim-reader (https://github.com/cfogrady/vb-dim-reader)
+4. Run publishToMavenLocal gradle task in the vb-dim-reader project.
+5. Create res/values/keys.xml within the app module.
+6. Populate with:
 ```
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -32,5 +34,5 @@
     </integer-array>
 </resources>
 ```
-5. Replace the values in the keys.xml file with those extracted from the original app.
-6. Run
+7. Replace the values in the keys.xml file with those extracted from the original app.
+8. Run

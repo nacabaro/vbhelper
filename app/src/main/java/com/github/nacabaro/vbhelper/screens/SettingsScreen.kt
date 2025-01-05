@@ -17,11 +17,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.github.cfogrady.vb.dim.card.BemCard
+import com.github.cfogrady.vb.dim.card.DimCard
+import com.github.cfogrady.vb.dim.card.DimReader
+import com.github.cfogrady.vb.dim.sprite.SpriteData
+import com.github.cfogrady.vb.dim.sprite.SpriteData.Sprite
 import com.github.nacabaro.vbhelper.components.TopBanner
+import java.io.File
+import java.io.FileInputStream
 
 @Composable
 fun SettingsScreen(
-    navController: NavController
+    navController: NavController,
+    dimReader: DimReader = DimReader()
 ) {
     Scaffold (
         topBar = {
@@ -48,8 +56,22 @@ fun SettingsScreen(
             SettingsEntry(title = "Import transform functions", description = "Import standard vital bracelet keys") { }
             SettingsEntry(title = "Import decryption key", description = "Import standard vital bracelet keys") { }
             SettingsSection("DiM/BEm management")
-            SettingsEntry(title = "Import DiM card", description = "Import DiM card file") { }
-            SettingsEntry(title = "Import BEm card", description = "Import BEm card file") { }
+            SettingsEntry(title = "Import DiM card", description = "Import DiM card file") {
+                // placeholder
+//                val file = File("dummy_file.bin") //filePicker()
+//                val fileInputStream = FileInputStream(file)
+//                fileInputStream.use {
+//                    val card = dimReader.readCard(fileInputStream, false)
+//                    if (card is DimCard) {
+//                        val logo = card.spriteData.sprites[0]
+//                    }
+//                    val beMemory = card as BemCard
+//                    val logo = beMemory.spriteData.sprites[0]
+//                }
+            }
+            SettingsEntry(title = "Import BEm card", description = "Import BEm card file") {
+                // placeholder
+            }
             SettingsSection("About and credits")
             SettingsEntry(title = "Credits", description = "Credits") { }
             SettingsEntry(title = "About", description = "About") { }
