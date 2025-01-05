@@ -11,6 +11,7 @@ import com.github.nacabaro.vbhelper.screens.BattlesScreen
 import com.github.nacabaro.vbhelper.screens.DexScreen
 import com.github.nacabaro.vbhelper.screens.HomeScreen
 import com.github.nacabaro.vbhelper.screens.ScanScreen
+import com.github.nacabaro.vbhelper.screens.SettingsScreen
 import com.github.nacabaro.vbhelper.screens.StorageScreen
 
 @Composable
@@ -36,7 +37,9 @@ fun AppNavigation(
                 BattlesScreen()
             }
             composable(BottomNavItem.Home.route) {
-                HomeScreen()
+                HomeScreen(
+                    navController = navController
+                )
             }
             composable(BottomNavItem.Storage.route) {
                 StorageScreen()
@@ -51,6 +54,11 @@ fun AppNavigation(
             }
             composable(BottomNavItem.Dex.route) {
                 DexScreen()
+            }
+            composable(BottomNavItem.Settings.route) {
+                SettingsScreen(
+                    navController = navController
+                )
             }
         }
     }
