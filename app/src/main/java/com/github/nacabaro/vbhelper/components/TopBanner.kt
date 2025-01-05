@@ -1,10 +1,12 @@
 package com.github.nacabaro.vbhelper.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,6 +26,7 @@ fun TopBanner(
 ) {
     Box( // Use Box to overlay elements
         modifier = modifier
+            .background(MaterialTheme.colorScheme.background)
             .fillMaxWidth()
             .padding(16.dp)
     ) {

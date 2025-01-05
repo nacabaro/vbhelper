@@ -1,7 +1,6 @@
 package com.github.nacabaro.vbhelper.screens
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -16,18 +15,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.Dim
@@ -44,12 +42,12 @@ fun DexScreen(
     val application = LocalContext.current.applicationContext as VBHelper
     val dexRepository = DexRepository(application.container.db)
 
-    val dimList = remember { mutableStateListOf<Dim>() }
+    val dimList = remember { mutableStateOf<List<Dim>>(emptyList()) }
 
     LaunchedEffect(dexRepository) {
         coroutineScope.launch {
-            dimList.clear()
-            dimList.addAll(dexRepository.getAllDims())
+            val newDimList = dexRepository.getAllDims()
+            dimList.value = newDimList // Replace the entire list atomically
         }
     }
 
@@ -67,15 +65,13 @@ fun DexScreen(
             modifier = Modifier
                 .padding(top = contentPadding.calculateTopPadding())
         ) {
-            items(dimList) {
+            items(dimList.value) {
                 val bitmap = remember (it.logo) {
                     Bitmap.createBitmap(it.logoWidth, it.logoHeight, Bitmap.Config.RGB_565).apply {
                         copyPixelsFromBuffer(ByteBuffer.wrap(it.logo))
                     }
                 }
                 val imageBitmap = remember(bitmap) { bitmap.asImageBitmap() }
-
-                Log.d("DexScreen", "dimList: ${it.id}")
 
                 DexDiMEntry(
                     name = it.name,
@@ -118,6 +114,7 @@ fun DexDiMEntry(
             Image (
                 bitmap = logo,
                 contentDescription = name,
+                filterQuality = FilterQuality.None,
                 modifier = Modifier
                     .padding(8.dp)
                     .size(64.dp)
