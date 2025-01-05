@@ -10,25 +10,31 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.lifecycleScope
+import com.github.cfogrady.vb.dim.card.DimReader
 import com.github.nacabaro.vbhelper.navigation.AppNavigation
 import com.github.cfogrady.vbnfc.CryptographicTransformer
-import com.github.cfogrady.vbnfc.R
 import com.github.cfogrady.vbnfc.TagCommunicator
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.DeviceType
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.di.VBHelper
+import com.github.nacabaro.vbhelper.domain.Dim
+import com.github.nacabaro.vbhelper.domain.Sprites
+import com.github.nacabaro.vbhelper.domain.Character
 import com.github.nacabaro.vbhelper.temporary_domain.TemporaryBECharacterData
 import com.github.nacabaro.vbhelper.temporary_domain.TemporaryCharacterData
 import com.github.nacabaro.vbhelper.temporary_domain.TemporaryTransformationHistory
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var nfcAdapter: NfcAdapter
@@ -36,9 +42,13 @@ class MainActivity : ComponentActivity() {
 
     private var nfcCharacter = MutableStateFlow<NfcCharacter?>(null)
 
+    private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
+
     // EXTRACTED DIRECTLY FROM EXAMPLE APP
     override fun onCreate(savedInstanceState: Bundle?) {
         deviceToCryptographicTransformers = getMapOfCryptographicTransformers()
+
+        registerFileActivityResult()
 
         val maybeNfcAdapter = NfcAdapter.getDefaultAdapter(this)
         if (maybeNfcAdapter == null) {
@@ -57,11 +67,109 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun registerFileActivityResult() {
+        activityResultLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) {
+            lifecycleScope.launch {
+                if (it.resultCode != RESULT_OK) {
+                    Toast.makeText(applicationContext, "Import operation cancelled.", Toast.LENGTH_SHORT).show()
+                }
+                val contentResolver = applicationContext.contentResolver
+                val inputStream = contentResolver.openInputStream(it.data!!.data!!)
+                inputStream.use { fileReader ->
+                    val dimReader = DimReader()
+                    val card = dimReader.readCard(fileReader, false)
+                    val dimModel = Dim(
+                        id = card.header.dimId,
+                        logo = card.spriteData.sprites[0].pixelData,
+                        name = card.spriteData.text, // TODO Make user write card name
+                        stageCount = card.adventureLevels.levels.size,
+                        logoHeight = card.spriteData.sprites[0].height,
+                        logoWidth = card.spriteData.sprites[0].width
+                    )
+                    val application = applicationContext as VBHelper
+                    val storageRepository = application.container.db
+                    storageRepository.dimDao().insertNewDim(dimModel)
+
+                    val characters = card.characterStats.characterEntries
+
+                    /*
+                    Confusing math for me ahead
+                    sprite[0] logo
+                    sprite[10] name
+                    sprite[10 + 1] character_1
+                    sprite[10 + 2] character_2
+                    sprite[16] name 1
+                    sprite[17] character_1
+                    sprite[18] character_2
+                    sprite[23] name 2
+                    sprite[24] character_1
+                    sprite[25] character_2
+                    sprite[23 + 12 + 1] name 3
+                    sprite[23 + 12 + 2] character_1
+                    sprite[23 + 12 + 3] character_2
+                     */
+
+                    var spriteCounter = 10
+                    var domainCharacters = mutableListOf<Character>()
+
+                    for (index in 0 until characters.size) {
+                        domainCharacters.add(
+                            Character(
+                                id = 0,
+                                dimId = card.header.dimId,
+                                monIndex = index,
+                                name = card.spriteData.sprites[spriteCounter].pixelData,
+                                stage = characters[index].stage,
+                                attribute = characters[index].attribute,
+                                baseHp = characters[index].hp,
+                                baseBp = characters[index].dp,
+                                baseAp = characters[index].ap,
+                                sprite1 = card.spriteData.sprites[spriteCounter + 1].pixelData,
+                                sprite2 = card.spriteData.sprites[spriteCounter + 2].pixelData,
+                                nameWidth = card.spriteData.sprites[spriteCounter].width,
+                                nameHeight = card.spriteData.sprites[spriteCounter].height,
+                                spritesWidth = card.spriteData.sprites[spriteCounter + 1].width,
+                                spritesHeight = card.spriteData.sprites[spriteCounter + 1].height
+                            )
+                        )
+
+                        if (index == 0) {
+                            spriteCounter += 6
+                        } else if (index == 1) {
+                            spriteCounter += 7
+                        } else {
+                            spriteCounter += 14
+                        }
+                    }
+
+                    storageRepository
+                        .characterDao()
+                        .insertCharacter(*domainCharacters.toTypedArray())
+
+                    val sprites = card.spriteData.sprites.map { sprite ->
+                        Sprites(
+                            id = 0,
+                            sprite = sprite.pixelData,
+                            width = sprite.width,
+                            height = sprite.height
+                        )
+                    }
+                    storageRepository
+                        .characterDao()
+                        .insertSprite(*sprites.toTypedArray())
+                }
+                inputStream?.close()
+                Toast.makeText(applicationContext, "Import successful!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     @Composable
     private fun MainApplication() {
         var isDoneReadingCharacter by remember { mutableStateOf(false) }
-        val application = LocalContext.current.applicationContext as VBHelper
-        val storageRepository = application.container.db
+
         AppNavigation(
             isDoneReadingCharacter = isDoneReadingCharacter,
             onClickRead = {
@@ -75,6 +183,13 @@ class MainActivity : ComponentActivity() {
             },
             onClickScan = {
                 isDoneReadingCharacter = false
+            },
+            onClickImportCard = {
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "*/*"
+                }
+                activityResultLauncher.launch(intent)
             }
         )
     }
@@ -160,6 +275,7 @@ class MainActivity : ComponentActivity() {
      */
     private fun addCharacterScannedIntoDatabase() {
         val beCharacter = nfcCharacter as MutableStateFlow<BENfcCharacter?>
+
         val temporaryCharacterData = TemporaryCharacterData(
             dimId = nfcCharacter.value!!.dimId.toInt(),
             charIndex = nfcCharacter.value!!.charIndex.toInt(),

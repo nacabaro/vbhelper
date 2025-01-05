@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.github.nacabaro.vbhelper.R
+import com.github.nacabaro.vbhelper.components.StorageEntry
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.source.StorageRepository
@@ -108,41 +109,6 @@ fun StorageScreen() {
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun StorageEntry(
-    name: String,
-    icon: Int,
-    onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        onClick = onClick,
-        modifier = modifier
-            .padding(8.dp)
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            Image(
-                painter = painterResource(id = icon),
-                contentDescription = name,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .size(64.dp)
-            )
-            Text(
-                text = name,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(8.dp)
-            )
         }
     }
 }
