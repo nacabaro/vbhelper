@@ -9,4 +9,8 @@ class StorageRepository (
     suspend fun getAllCharacters(): List<TemporaryCharacterData> {
         return db.temporaryMonsterDao().getAllCharacters()
     }
+
+    suspend fun getSingleCharacter(id: Long): TemporaryCharacterData {
+        return db.temporaryMonsterDao().getCharacter(id)
+    }
 }

@@ -24,4 +24,7 @@ interface TemporaryMonsterDao {
 
     @Query("SELECT * FROM TemporaryCharacterData")
     suspend fun getAllCharacters(): List<TemporaryCharacterData>
+
+    @Query("SELECT * FROM TemporaryCharacterData WHERE id = :id")
+    suspend fun getCharacter(id: Long): TemporaryCharacterData
 }
