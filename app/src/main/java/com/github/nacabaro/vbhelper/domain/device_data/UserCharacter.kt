@@ -1,14 +1,25 @@
-package com.github.nacabaro.vbhelper.temporary_domain
+package com.github.nacabaro.vbhelper.domain.device_data
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.github.cfogrady.vbnfc.data.NfcCharacter
+import com.github.nacabaro.vbhelper.domain.DeviceType
+import com.github.nacabaro.vbhelper.domain.Character
 
-@Entity
-data class TemporaryCharacterData (
+@Entity(
+    foreignKeys = [
+        ForeignKey(
+            entity = Character::class,
+            parentColumns = ["id"],
+            childColumns = ["charId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
+data class UserCharacter (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val dimId: Int,
-    var charIndex: Int,
+    var charId: Long,
     var stage: Int,
     var attribute: NfcCharacter.Attribute,
     var ageInDays: Int,
@@ -24,4 +35,5 @@ data class TemporaryCharacterData (
     var totalBattlesLost: Int,
     var activityLevel: Int,
     var heartRateCurrent: Int,
+    var characterType: DeviceType
 )
