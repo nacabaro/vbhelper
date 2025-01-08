@@ -40,7 +40,6 @@ import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.source.StorageRepository
-import com.github.nacabaro.vbhelper.temporary_domain.TemporaryCharacterData
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import kotlinx.coroutines.launch
 

@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.github.cfogrady.vbnfc.data.NfcCharacter
-import com.github.nacabaro.vbhelper.temporary_domain.TemporaryCharacterData
 
 @Entity(
     foreignKeys = [

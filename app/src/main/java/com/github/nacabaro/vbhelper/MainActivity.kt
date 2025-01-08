@@ -32,8 +32,6 @@ import com.github.nacabaro.vbhelper.domain.Character
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
-import com.github.nacabaro.vbhelper.temporary_domain.TemporaryBECharacterData
-import com.github.nacabaro.vbhelper.temporary_domain.TemporaryTransformationHistory
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
