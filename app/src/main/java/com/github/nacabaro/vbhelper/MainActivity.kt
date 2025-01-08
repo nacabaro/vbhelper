@@ -29,8 +29,10 @@ import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.Dim
 import com.github.nacabaro.vbhelper.domain.Sprites
 import com.github.nacabaro.vbhelper.domain.Character
+import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
+import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.temporary_domain.TemporaryBECharacterData
-import com.github.nacabaro.vbhelper.temporary_domain.TemporaryCharacterData
 import com.github.nacabaro.vbhelper.temporary_domain.TemporaryTransformationHistory
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -72,6 +74,9 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) {
             lifecycleScope.launch {
+                val application = applicationContext as VBHelper
+                val storageRepository = application.container.db
+
                 if (it.resultCode != RESULT_OK) {
                     Toast.makeText(applicationContext, "Import operation cancelled.", Toast.LENGTH_SHORT).show()
                 }
@@ -81,44 +86,27 @@ class MainActivity : ComponentActivity() {
                     val dimReader = DimReader()
                     val card = dimReader.readCard(fileReader, false)
                     val dimModel = Dim(
-                        id = card.header.dimId,
+                        dimId = card.header.dimId,
                         logo = card.spriteData.sprites[0].pixelData,
                         name = card.spriteData.text, // TODO Make user write card name
                         stageCount = card.adventureLevels.levels.size,
                         logoHeight = card.spriteData.sprites[0].height,
                         logoWidth = card.spriteData.sprites[0].width
                     )
-                    val application = applicationContext as VBHelper
-                    val storageRepository = application.container.db
-                    storageRepository.dimDao().insertNewDim(dimModel)
+
+                    val dimId = storageRepository
+                        .dimDao()
+                        .insertNewDim(dimModel)
 
                     val characters = card.characterStats.characterEntries
 
-                    /*
-                    Confusing math for me ahead
-                    sprite[0] logo
-                    sprite[10] name
-                    sprite[10 + 1] character_1
-                    sprite[10 + 2] character_2
-                    sprite[16] name 1
-                    sprite[17] character_1
-                    sprite[18] character_2
-                    sprite[23] name 2
-                    sprite[24] character_1
-                    sprite[25] character_2
-                    sprite[23 + 12 + 1] name 3
-                    sprite[23 + 12 + 2] character_1
-                    sprite[23 + 12 + 3] character_2
-                     */
-
                     var spriteCounter = 10
-                    var domainCharacters = mutableListOf<Character>()
+                    val domainCharacters = mutableListOf<Character>()
 
                     for (index in 0 until characters.size) {
                         domainCharacters.add(
                             Character(
-                                id = 0,
-                                dimId = card.header.dimId,
+                                dimId = dimId,
                                 monIndex = index,
                                 name = card.spriteData.sprites[spriteCounter].pixelData,
                                 stage = characters[index].stage,
@@ -135,6 +123,7 @@ class MainActivity : ComponentActivity() {
                             )
                         )
 
+                        // TODO: Improve this
                         if (index == 0) {
                             spriteCounter += 6
                         } else if (index == 1) {
@@ -176,9 +165,12 @@ class MainActivity : ComponentActivity() {
                 handleTag {
                     val character = it.receiveCharacter()
                     nfcCharacter.value = character
-                    addCharacterScannedIntoDatabase()
+
+                    val importStatus = addCharacterScannedIntoDatabase()
+
                     isDoneReadingCharacter = true
-                    "Done reading character"
+
+                    importStatus
                 }
             },
             onClickScan = {
@@ -273,19 +265,31 @@ class MainActivity : ComponentActivity() {
     now, it's a matter of implementing the functionality to parse dim/bem cards and use my
     domain model.
      */
-    private fun addCharacterScannedIntoDatabase() {
-        val beCharacter = nfcCharacter as MutableStateFlow<BENfcCharacter?>
+    private fun addCharacterScannedIntoDatabase(): String {
+        val application = applicationContext as VBHelper
+        val storageRepository = application.container.db
 
-        val temporaryCharacterData = TemporaryCharacterData(
-            dimId = nfcCharacter.value!!.dimId.toInt(),
-            charIndex = nfcCharacter.value!!.charIndex.toInt(),
+        val dimData = storageRepository
+            .dimDao()
+            .getDimById(nfcCharacter.value!!.dimId.toInt())
+
+        if (dimData == null) {
+            return "Card not found"
+        }
+
+        val cardCharData = storageRepository
+            .characterDao()
+            .getCharacterByMonIndex(nfcCharacter.value!!.charIndex.toInt(), dimData.id)
+
+        val characterData = UserCharacter(
+            charId = cardCharData.id,
             stage = nfcCharacter.value!!.stage.toInt(),
             attribute = nfcCharacter.value!!.attribute,
             ageInDays = nfcCharacter.value!!.ageInDays.toInt(),
             nextAdventureMissionStage = nfcCharacter.value!!.nextAdventureMissionStage.toInt(),
             mood = nfcCharacter.value!!.mood.toInt(),
             vitalPoints = nfcCharacter.value!!.vitalPoints.toInt(),
-            transformationCountdown = nfcCharacter.value!!.transformationCountdown.toInt(),
+            transformationCountdown = nfcCharacter.value!!.transformationCountdownInMinutes.toInt(),
             injuryStatus = nfcCharacter.value!!.injuryStatus,
             trophies = nfcCharacter.value!!.trophies.toInt(),
             currentPhaseBattlesWon = nfcCharacter.value!!.currentPhaseBattlesWon.toInt(),
@@ -293,58 +297,67 @@ class MainActivity : ComponentActivity() {
             totalBattlesWon = nfcCharacter.value!!.totalBattlesWon.toInt(),
             totalBattlesLost = nfcCharacter.value!!.totalBattlesLost.toInt(),
             activityLevel = nfcCharacter.value!!.activityLevel.toInt(),
-            heartRateCurrent = nfcCharacter.value!!.heartRateCurrent.toInt()
+            heartRateCurrent = nfcCharacter.value!!.heartRateCurrent.toInt(),
+            characterType = when (nfcCharacter.value) {
+                is BENfcCharacter -> com.github.nacabaro.vbhelper.domain.DeviceType.BEDevice
+                else -> com.github.nacabaro.vbhelper.domain.DeviceType.VBDevice
+            }
         )
 
-        val application = applicationContext as VBHelper
-        val storageRepository = application.container.db
         val characterId: Long = storageRepository
-            .temporaryMonsterDao()
-            .insertCharacterData(temporaryCharacterData)
+            .userCharacterDao()
+            .insertCharacterData(characterData)
 
-        val temporaryBECharacterData = TemporaryBECharacterData(
-            id = characterId,
-            trainingHp = beCharacter.value!!.trainingHp.toInt(),
-            trainingAp = beCharacter.value!!.trainingAp.toInt(),
-            trainingBp = beCharacter.value!!.trainingBp.toInt(),
-            remainingTrainingTimeInMinutes = beCharacter.value!!.remainingTrainingTimeInMinutes.toInt(),
-            itemEffectActivityLevelValue = beCharacter.value!!.itemEffectActivityLevelValue.toInt(),
-            itemEffectMentalStateValue = beCharacter.value!!.itemEffectMentalStateValue.toInt(),
-            itemEffectMentalStateMinutesRemaining = beCharacter.value!!.itemEffectMentalStateMinutesRemaining.toInt(),
-            itemEffectActivityLevelMinutesRemaining = beCharacter.value!!.itemEffectActivityLevelMinutesRemaining.toInt(),
-            itemEffectVitalPointsChangeValue = beCharacter.value!!.itemEffectVitalPointsChangeValue.toInt(),
-            itemEffectVitalPointsChangeMinutesRemaining = beCharacter.value!!.itemEffectVitalPointsChangeMinutesRemaining.toInt(),
-            abilityRarity = beCharacter.value!!.abilityRarity,
-            abilityType = beCharacter.value!!.abilityType.toInt(),
-            abilityBranch = beCharacter.value!!.abilityBranch.toInt(),
-            abilityReset = beCharacter.value!!.abilityReset.toInt(),
-            rank = beCharacter.value!!.abilityReset.toInt(),
-            itemType = beCharacter.value!!.itemType.toInt(),
-            itemMultiplier = beCharacter.value!!.itemMultiplier.toInt(),
-            itemRemainingTime = beCharacter.value!!.itemRemainingTime.toInt(),
-            otp0 = "", //beCharacter.value!!.otp0.toString(),
-            otp1 = "", //beCharacter.value!!.otp1.toString(),
-            minorVersion = beCharacter.value!!.characterCreationFirmwareVersion.minorVersion.toInt(),
-            majorVersion = beCharacter.value!!.characterCreationFirmwareVersion.majorVersion.toInt(),
-        )
-
-        storageRepository
-            .temporaryMonsterDao()
-            .insertBECharacterData(temporaryBECharacterData)
-
-        val transformationHistoryWatch = beCharacter.value!!.transformationHistory
-        val domainTransformationHistory = transformationHistoryWatch.map { item ->
-            TemporaryTransformationHistory(
-                monId = characterId,
-                toCharIndex = item.toCharIndex.toInt(),
-                yearsSince1988 = item.yearsSince1988.toInt(),
-                month = item.month.toInt(),
-                day = item.day.toInt()
+        if (nfcCharacter.value is BENfcCharacter) {
+            val beCharacter = nfcCharacter as MutableStateFlow<BENfcCharacter?>
+            val extraCharacterData = BECharacterData(
+                id = characterId,
+                trainingHp = beCharacter.value!!.trainingHp.toInt(),
+                trainingAp = beCharacter.value!!.trainingAp.toInt(),
+                trainingBp = beCharacter.value!!.trainingBp.toInt(),
+                remainingTrainingTimeInMinutes = beCharacter.value!!.remainingTrainingTimeInMinutes.toInt(),
+                itemEffectActivityLevelValue = beCharacter.value!!.itemEffectActivityLevelValue.toInt(),
+                itemEffectMentalStateValue = beCharacter.value!!.itemEffectMentalStateValue.toInt(),
+                itemEffectMentalStateMinutesRemaining = beCharacter.value!!.itemEffectMentalStateMinutesRemaining.toInt(),
+                itemEffectActivityLevelMinutesRemaining = beCharacter.value!!.itemEffectActivityLevelMinutesRemaining.toInt(),
+                itemEffectVitalPointsChangeValue = beCharacter.value!!.itemEffectVitalPointsChangeValue.toInt(),
+                itemEffectVitalPointsChangeMinutesRemaining = beCharacter.value!!.itemEffectVitalPointsChangeMinutesRemaining.toInt(),
+                abilityRarity = beCharacter.value!!.abilityRarity,
+                abilityType = beCharacter.value!!.abilityType.toInt(),
+                abilityBranch = beCharacter.value!!.abilityBranch.toInt(),
+                abilityReset = beCharacter.value!!.abilityReset.toInt(),
+                rank = beCharacter.value!!.abilityReset.toInt(),
+                itemType = beCharacter.value!!.itemType.toInt(),
+                itemMultiplier = beCharacter.value!!.itemMultiplier.toInt(),
+                itemRemainingTime = beCharacter.value!!.itemRemainingTime.toInt(),
+                otp0 = "", //beCharacter.value!!.otp0.toString(),
+                otp1 = "", //beCharacter.value!!.otp1.toString(),
+                minorVersion = beCharacter.value!!.characterCreationFirmwareVersion.minorVersion.toInt(),
+                majorVersion = beCharacter.value!!.characterCreationFirmwareVersion.majorVersion.toInt(),
             )
+
+            storageRepository
+                .userCharacterDao()
+                .insertBECharacterData(extraCharacterData)
+
+            val transformationHistoryWatch = beCharacter.value!!.transformationHistory
+            val domainTransformationHistory = transformationHistoryWatch.map { item ->
+                TransformationHistory(
+                    monId = characterId,
+                    toCharIndex = item.toCharIndex.toInt(),
+                    year = item.year.toInt(),
+                    month = item.month.toInt(),
+                    day = item.day.toInt()
+                )
+            }
+
+            storageRepository
+                .userCharacterDao()
+                .insertTransformationHistory(*domainTransformationHistory.toTypedArray())
+        } else {
+            return "Not implemented yet"
         }
 
-        storageRepository
-            .temporaryMonsterDao()
-            .insertTransformationHistory(*domainTransformationHistory.toTypedArray())
+        return "Done reading character!"
     }
 }
