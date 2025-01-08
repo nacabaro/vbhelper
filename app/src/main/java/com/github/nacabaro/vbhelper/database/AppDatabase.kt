@@ -11,9 +11,6 @@ import com.github.nacabaro.vbhelper.domain.Sprites
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
-import com.github.nacabaro.vbhelper.temporary_domain.TemporaryBECharacterData
-import com.github.nacabaro.vbhelper.temporary_domain.TemporaryCharacterData
-import com.github.nacabaro.vbhelper.temporary_domain.TemporaryTransformationHistory
 
 @Database(
     version = 1,
