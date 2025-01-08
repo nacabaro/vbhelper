@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.screens
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -10,16 +9,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
+import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.domain.Character
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.source.DexRepository
 import kotlinx.coroutines.launch
-import java.nio.ByteBuffer
 
 @Composable
 fun DiMScreen(
@@ -54,15 +52,13 @@ fun DiMScreen(
             contentPadding = contentPadding
         ) {
             items(characterList.value) { character ->
-                val bitmapCharacter = remember (character.sprite1) {
-                    Bitmap.createBitmap(character.spritesWidth, character.spritesHeight, Bitmap.Config.RGB_565).apply {
-                        copyPixelsFromBuffer(ByteBuffer.wrap(character.sprite1))
-                    }
-                }
-                val imageBitmapCharacter = remember(bitmapCharacter) { bitmapCharacter.asImageBitmap() }
                 CharacterEntry(
-                    icon = imageBitmapCharacter,
-                    onClick = {  }
+                    onClick = {  },
+                    icon = BitmapData(
+                        bitmap = character.sprite1,
+                        width = character.spritesWidth,
+                        height = character.spritesHeight
+                    ),
                 )
             }
         }

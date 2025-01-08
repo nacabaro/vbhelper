@@ -7,7 +7,8 @@ import androidx.room.PrimaryKey
 @Entity
 data class Dim(
     @PrimaryKey(autoGenerate = true)
-    val id: Int,
+    val id: Long = 0,
+    val dimId: Int,
     val logo: ByteArray,
     val logoWidth: Int,
     val logoHeight: Int,

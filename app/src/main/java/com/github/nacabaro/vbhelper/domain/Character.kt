@@ -15,8 +15,8 @@ import androidx.room.ForeignKey
     ]
 )
 data class Character (
-    @PrimaryKey(autoGenerate = true) val id: Long,
-    val dimId: Int,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val dimId: Long,
     val monIndex: Int,
     val name: ByteArray,
     val stage: Int, // These should be replaced with enums
