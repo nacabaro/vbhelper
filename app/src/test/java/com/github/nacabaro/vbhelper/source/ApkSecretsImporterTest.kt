@@ -1,6 +1,6 @@
 package com.github.nacabaro.vbhelper.source
 
-import com.github.cfogrady.vbnfc.data.DeviceType
+import com.github.nacabaro.vbhelper.source.proto.Secrets
 import org.junit.Assert
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -14,15 +14,18 @@ import java.util.zip.ZipOutputStream
 class ApkSecretsImporterTest {
 
     @Test
-    fun testThatRealImportSecretsHasAllDeviceTypes() {
+    fun testThatRealImportSecretsPasses() {
         val apkFileSecretsImporter = ApkSecretsImporter()
         val url = getAndAssertApkFile()
         val file = File(url.path)
         file.inputStream().use {
-            val deviceIdToSecrets = apkFileSecretsImporter.importSecrets(it)
-            Assert.assertNotNull("BE Device Type", deviceIdToSecrets[DeviceType.VitalBraceletBEDeviceType])
-            Assert.assertNotNull("VBDM Device Type", deviceIdToSecrets[DeviceType.VitalSeriesDeviceType])
-            Assert.assertNotNull("VBC Device Type", deviceIdToSecrets[DeviceType.VitalCharactersDeviceType])
+            val secrets = apkFileSecretsImporter.importSecrets(it)
+            Assert.assertEquals("Cipher size isn't correct", 16, secrets.vbCipherCount)
+            Assert.assertEquals("BE Cipher size isn't correct", 16, secrets.beCipherCount)
+            Assert.assertFalse("AES Key is empty", secrets.aesKey.isEmpty())
+            assertHmacKeysArePopulated("VBDM", secrets.vbdmHmacKeys)
+            assertHmacKeysArePopulated("VBC", secrets.vbcHmacKeys)
+            assertHmacKeysArePopulated("BE", secrets.beHmacKeys)
         }
     }
 
@@ -34,7 +37,7 @@ class ApkSecretsImporterTest {
             val inputStreamContents = it.readAllBytes()
             Assert.assertTrue("Unexpected file contents received by DexSecretsImporter", inputStreamContents.contentEquals(expectedDexContents))
             foundFile = true
-            emptyMap()
+            Secrets.newBuilder().build()
         }
         val apkBytes = constructTestApk(expectedDexContents)
         ByteArrayInputStream(apkBytes).use {

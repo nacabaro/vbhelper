@@ -1,6 +1,9 @@
 package com.github.nacabaro.vbhelper.source
 
+import com.github.cfogrady.vbnfc.CryptographicTransformer
 import com.github.cfogrady.vbnfc.data.DeviceType
+import com.github.nacabaro.vbhelper.source.proto.Secrets
+import com.github.nacabaro.vbhelper.source.proto.Secrets.HmacKeys
 import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -28,61 +31,56 @@ class DexFileSecretsImporter: SecretsImporter {
         const val VBC_TEST_TAG_PASSWORD = "a71dfb22"
     }
 
-    override fun importSecrets(inputStream: InputStream): Map<UShort, Secrets> {
+    override fun importSecrets(inputStream: InputStream): Secrets {
         val deviceToSecrets = readSecrets(inputStream)
         verifySecretCorrectness(deviceToSecrets)
         return deviceToSecrets
     }
 
-    private fun readSecrets(inputStream: InputStream): Map<UShort, Secrets> {
+    private fun readSecrets(inputStream: InputStream): Secrets {
         val dexFile = inputStream.readBytes()
         val byteOrder = ByteOrder.BIG_ENDIAN
         val vbdmSubstitutionCipher = dexFile.sliceArray(VBDM_SUBSTITUTION_CIPHER_IDX until VBDM_SUBSTITUTION_CIPHER_IDX+(16*4)).toIntArray(byteOrder)
         val beSubstitutionCipher = dexFile.sliceArray(BE_SUBSTITUTION_CIPHER_IDX until BE_SUBSTITUTION_CIPHER_IDX+(16*4)).toIntArray(byteOrder)
         val aesKey = dexFile.sliceArray(AES_KEY_IDX until AES_KEY_IDX+24).toString(StandardCharsets.UTF_8)
-        val secretsByDevices = mapOf(
-            Pair(DeviceType.VitalSeriesDeviceType, buildSecrets(dexFile, VBDM_HMAC_KEY_1_IDX, VBDM_HMAC_KEY_2_IDX, aesKey, vbdmSubstitutionCipher)),
-            Pair(DeviceType.VitalBraceletBEDeviceType, buildSecrets(dexFile, BE_HMAC_KEY_1_IDX, BE_HMAC_KEY_2_IDX, aesKey, beSubstitutionCipher)),
-            Pair(DeviceType.VitalCharactersDeviceType, buildSecrets(dexFile, VBC_HMAC_KEY_1_IDX, VBC_HMAC_KEY_2_IDX, aesKey, vbdmSubstitutionCipher)),
-        )
-        return secretsByDevices
+        return Secrets.newBuilder()
+            .setAesKey(aesKey)
+            .addAllVbCipher(vbdmSubstitutionCipher.toList())
+            .addAllBeCipher(beSubstitutionCipher.toList())
+            .setVbdmHmacKeys(getHmac(dexFile, VBDM_HMAC_KEY_1_IDX, VBDM_HMAC_KEY_2_IDX))
+            .setVbcHmacKeys(getHmac(dexFile, VBC_HMAC_KEY_1_IDX, VBC_HMAC_KEY_2_IDX))
+            .setBeHmacKeys(getHmac(dexFile, BE_HMAC_KEY_1_IDX, BE_HMAC_KEY_2_IDX))
+            .build()
     }
 
-    private fun buildSecrets(dexFile: ByteArray, hmacKeyIdx1: Int, hmacKeyIdx2: Int, aesKey: String, substitutionCipher: IntArray): Secrets {
+    private fun getHmac(dexFile: ByteArray, hmacKeyIdx1: Int, hmacKeyIdx2: Int): HmacKeys {
         val hmacKey1 = dexFile.sliceArray(hmacKeyIdx1 until hmacKeyIdx1+24).toString(StandardCharsets.UTF_8)
         val hmacKey2 = dexFile.sliceArray(hmacKeyIdx2 until hmacKeyIdx2+24).toString(StandardCharsets.UTF_8)
-        return Secrets(hmacKey1, hmacKey2, aesKey, substitutionCipher)
+        return HmacKeys.newBuilder()
+            .setHmacKey1(hmacKey1)
+            .setHmacKey2(hmacKey2)
+            .build()
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    private fun verifySecretCorrectness(deviceToSecrets: Map<UShort, Secrets>) {
-        for (keyValue in deviceToSecrets) {
+    private fun verifySecretCorrectness(secrets: Secrets) {
+        val deviceToCryptographicTransformers = secrets.getCryptographicTransformerMap()
+        for (keyValue in deviceToCryptographicTransformers) {
             when(keyValue.key) {
-                DeviceType.VitalBraceletBEDeviceType -> {
-                    val result = keyValue.value.toCryptographicTransformer().createNfcPassword(
-                        TEST_TAG
-                    )
-                    if( result.toHexString() != BE_TEST_TAG_PASSWORD) {
-                        throw InvalidKeyException("Secrets were loaded, but were unsuccessful at generating the test password: ${result.toHexString()}")
-                    }
-                }
-                DeviceType.VitalCharactersDeviceType -> {
-                    val result = keyValue.value.toCryptographicTransformer().createNfcPassword(
-                        TEST_TAG
-                    )
-                    if( result.toHexString() != VBC_TEST_TAG_PASSWORD) {
-                        throw InvalidKeyException("Secrets were loaded, but were unsuccessful at generating the test password: ${result.toHexString()}")
-                    }
-                }
-                DeviceType.VitalSeriesDeviceType -> {
-                    val result = keyValue.value.toCryptographicTransformer().createNfcPassword(
-                        TEST_TAG
-                    )
-                    if( result.toHexString() != VBDM_TEST_TAG_PASSWORD) {
-                        throw InvalidKeyException("Secrets were loaded, but were unsuccessful at generating the test password: ${result.toHexString()}")
-                    }
-                }
+                DeviceType.VitalBraceletBEDeviceType -> assertBuildsCorrectPassword(keyValue.value, BE_TEST_TAG_PASSWORD)
+                DeviceType.VitalCharactersDeviceType -> assertBuildsCorrectPassword(keyValue.value, VBC_TEST_TAG_PASSWORD)
+                DeviceType.VitalSeriesDeviceType -> assertBuildsCorrectPassword(keyValue.value, VBDM_TEST_TAG_PASSWORD)
             }
+        }
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    private fun assertBuildsCorrectPassword(cryptographicTransformer: CryptographicTransformer, expectedPassword: String) {
+        val result = cryptographicTransformer.createNfcPassword(
+            TEST_TAG
+        )
+        if( result.toHexString() != expectedPassword) {
+            throw InvalidKeyException("Secrets were loaded, but were unsuccessful at generating the test password")
         }
     }
 }

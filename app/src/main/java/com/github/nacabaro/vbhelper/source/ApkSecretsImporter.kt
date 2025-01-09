@@ -1,5 +1,6 @@
 package com.github.nacabaro.vbhelper.source
 
+import com.github.nacabaro.vbhelper.source.proto.Secrets
 import java.io.InputStream
 import java.util.zip.ZipInputStream
 
@@ -10,7 +11,7 @@ class ApkSecretsImporter(private val dexFileSecretsImporter: SecretsImporter = D
     }
 
     // importSecrets imports the secrets from the apk input stream, and validates them.
-    override fun importSecrets(inputStream: InputStream): Map<UShort, Secrets> {
+    override fun importSecrets(inputStream: InputStream): Secrets {
         ZipInputStream(inputStream).use { zip ->
             var zipEntry = zip.nextEntry
             while(zipEntry != null) {
