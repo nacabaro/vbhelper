@@ -6,3 +6,7 @@
 local.properties
 
 app/src/main/res/values/keys.xml
+
+app/src/test/resources/com/github/nacabaro/vbhelper/source/com.bandai.vitalbraceletarena.apk
+
+app/src/test/resources/com/github/nacabaro/vbhelper/source/classes.dex
