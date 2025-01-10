@@ -12,17 +12,19 @@ import com.github.nacabaro.vbhelper.screens.BattlesScreen
 import com.github.nacabaro.vbhelper.screens.DexScreen
 import com.github.nacabaro.vbhelper.screens.DiMScreen
 import com.github.nacabaro.vbhelper.screens.HomeScreen
-import com.github.nacabaro.vbhelper.screens.ScanScreen
+import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreen
+import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.SettingsScreen
+import com.github.nacabaro.vbhelper.screens.SettingsScreenController
 import com.github.nacabaro.vbhelper.screens.SpriteViewer
 import com.github.nacabaro.vbhelper.screens.StorageScreen
 
+data class AppNavigationHandlers(val settingsScreenController: SettingsScreenController, val scanScreenController: ScanScreenControllerImpl)
+
 @Composable
 fun AppNavigation(
-    onClickRead: () -> Unit,
-    onClickScan: () -> Unit,
+    applicationNavigationHandlers: AppNavigationHandlers,
     onClickImportCard: () -> Unit,
-    isDoneReadingCharacter: Boolean
 ) {
     val navController = rememberNavController()
 
@@ -49,11 +51,9 @@ fun AppNavigation(
                 StorageScreen()
             }
             composable(BottomNavItem.Scan.route) {
-                onClickScan()
                 ScanScreen(
                     navController = navController,
-                    onClickRead = onClickRead,
-                    isDoneReadingCharacter = isDoneReadingCharacter
+                    scanScreenController = applicationNavigationHandlers.scanScreenController,
                 )
             }
             composable(BottomNavItem.Dex.route) {
@@ -64,6 +64,7 @@ fun AppNavigation(
             composable(BottomNavItem.Settings.route) {
                 SettingsScreen(
                     navController = navController,
+                    settingsScreenController = applicationNavigationHandlers.settingsScreenController,
                     onClickImportCard = onClickImportCard
                 )
             }

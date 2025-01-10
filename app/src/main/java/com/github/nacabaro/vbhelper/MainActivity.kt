@@ -1,11 +1,8 @@
 package com.github.nacabaro.vbhelper
 
 import android.content.Intent
-import android.nfc.NfcAdapter
-import android.nfc.Tag
-import android.nfc.tech.NfcA
 import android.os.Bundle
-import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,17 +10,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import com.github.cfogrady.vb.dim.card.DimReader
 import com.github.nacabaro.vbhelper.navigation.AppNavigation
-import com.github.cfogrady.vbnfc.CryptographicTransformer
-import com.github.cfogrady.vbnfc.TagCommunicator
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
-import com.github.cfogrady.vbnfc.data.DeviceType
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.Dim
@@ -32,38 +22,70 @@ import com.github.nacabaro.vbhelper.domain.Character
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
+import com.github.nacabaro.vbhelper.navigation.AppNavigationHandlers
+import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.SettingsScreenController
+import com.github.nacabaro.vbhelper.source.ApkSecretsImporter
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    private lateinit var nfcAdapter: NfcAdapter
-    private lateinit var deviceToCryptographicTransformers: Map<UShort, CryptographicTransformer>
 
     private var nfcCharacter = MutableStateFlow<NfcCharacter?>(null)
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
 
-    // EXTRACTED DIRECTLY FROM EXAMPLE APP
-    override fun onCreate(savedInstanceState: Bundle?) {
-        deviceToCryptographicTransformers = getMapOfCryptographicTransformers()
+    private val onActivityLifecycleListeners = HashMap<String, ActivityLifecycleListener>()
 
+    private fun registerActivityLifecycleListener(key: String, activityLifecycleListener: ActivityLifecycleListener) {
+        if( onActivityLifecycleListeners[key] != null) {
+            throw IllegalStateException("Key is already in use")
+        }
+        onActivityLifecycleListeners[key] = activityLifecycleListener
+    }
+
+    private fun unregisterActivityLifecycleListener(key: String) {
+        onActivityLifecycleListeners.remove(key)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
         registerFileActivityResult()
 
-        val maybeNfcAdapter = NfcAdapter.getDefaultAdapter(this)
-        if (maybeNfcAdapter == null) {
-            Toast.makeText(this, "No NFC on device!", Toast.LENGTH_SHORT).show()
-            finish()
-            return
-        }
-        nfcAdapter = maybeNfcAdapter
+        val application = applicationContext as VBHelper
+        val settingsScreenController = SettingsScreenController.Factory(this, ApkSecretsImporter(), application.container.dataStoreSecretsRepository)
+            .buildSettingScreenHandlers()
+        val scanScreenController = ScanScreenControllerImpl(
+            application.container.dataStoreSecretsRepository.secretsFlow,
+            this::handleReceivedNfcCharacter,
+            this,
+            this::registerActivityLifecycleListener,
+            this::unregisterActivityLifecycleListener)
+
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             VBHelperTheme {
-                MainApplication()
+                MainApplication(settingsScreenController, scanScreenController)
             }
+        }
+        Log.i("MainActivity", "Activity onCreated")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.i("MainActivity", "onPause")
+        for(activityListener in onActivityLifecycleListeners) {
+            activityListener.value.onPause()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.i("MainActivity", "Resume")
+        for(activityListener in onActivityLifecycleListeners) {
+            activityListener.value.onResume()
         }
     }
 
@@ -154,26 +176,10 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun MainApplication() {
-        var isDoneReadingCharacter by remember { mutableStateOf(false) }
+    private fun MainApplication(settingsScreenController: SettingsScreenController, scanScreenController: ScanScreenControllerImpl) {
 
         AppNavigation(
-            isDoneReadingCharacter = isDoneReadingCharacter,
-            onClickRead = {
-                handleTag {
-                    val character = it.receiveCharacter()
-                    nfcCharacter.value = character
-
-                    val importStatus = addCharacterScannedIntoDatabase()
-
-                    isDoneReadingCharacter = true
-
-                    importStatus
-                }
-            },
-            onClickScan = {
-                isDoneReadingCharacter = false
-            },
+            applicationNavigationHandlers = AppNavigationHandlers(settingsScreenController, scanScreenController),
             onClickImportCard = {
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
@@ -184,73 +190,12 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    // EXTRACTED DIRECTLY FROM EXAMPLE APP
-    private fun getMapOfCryptographicTransformers(): Map<UShort, CryptographicTransformer> {
-        return mapOf(
-            Pair(DeviceType.VitalBraceletBEDeviceType,
-                CryptographicTransformer(readableHmacKey1 = resources.getString(R.string.password1),
-                    readableHmacKey2 = resources.getString(R.string.password2),
-                    aesKey = resources.getString(R.string.decryptionKey),
-                    substitutionCipher = resources.getIntArray(R.array.substitutionArray))),
-//            Pair(DeviceType.VitalSeriesDeviceType,
-//                CryptographicTransformer(hmacKey1 = resources.getString(R.string.password1),
-//                    hmacKey2 = resources.getString(R.string.password2),
-//                    decryptionKey = resources.getString(R.string.decryptionKey),
-//                    substitutionCipher = resources.getIntArray(R.array.substitutionArray))),
-//            Pair(DeviceType.VitalCharactersDeviceType,
-//                CryptographicTransformer(hmacKey1 = resources.getString(R.string.password1),
-//                    hmacKey2 = resources.getString(R.string.password2),
-//                    decryptionKey = resources.getString(R.string.decryptionKey),
-//                    substitutionCipher = resources.getIntArray(R.array.substitutionArray)))
-        )
-    }
+    private fun handleReceivedNfcCharacter(character: NfcCharacter): String {
+        nfcCharacter.value = character
 
-    // EXTRACTED DIRECTLY FROM EXAMPLE APP
-    private fun showWirelessSettings() {
-        Toast.makeText(this, "NFC must be enabled", Toast.LENGTH_SHORT).show()
-        startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
-    }
+        val importStatus = addCharacterScannedIntoDatabase()
 
-    // EXTRACTED DIRECTLY FROM EXAMPLE APP
-    private fun buildOnReadTag(handlerFunc: (TagCommunicator)->String): (Tag)->Unit {
-        return { tag->
-            val nfcData = NfcA.get(tag)
-            if (nfcData == null) {
-                runOnUiThread {
-                    Toast.makeText(this, "Tag detected is not VB", Toast.LENGTH_SHORT).show()
-                }
-            }
-            nfcData.connect()
-            nfcData.use {
-                val tagCommunicator = TagCommunicator.getInstance(nfcData, deviceToCryptographicTransformers)
-                val successText = handlerFunc(tagCommunicator)
-                runOnUiThread {
-                    Toast.makeText(this, successText, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    // EXTRACTED DIRECTLY FROM EXAMPLE APP
-    private fun handleTag(handlerFunc: (TagCommunicator)->String) {
-        if (!nfcAdapter.isEnabled) {
-            showWirelessSettings()
-        } else {
-            val options = Bundle()
-            // Work around for some broken Nfc firmware implementations that poll the card too fast
-            options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 250)
-            nfcAdapter.enableReaderMode(this, buildOnReadTag(handlerFunc), NfcAdapter.FLAG_READER_NFC_A or NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,
-                options
-            )
-        }
-    }
-
-    // EXTRACTED DIRECTLY FROM EXAMPLE APP
-    override fun onPause() {
-        super.onPause()
-        if (nfcAdapter.isEnabled) {
-            nfcAdapter.disableReaderMode(this)
-        }
+        return importStatus
     }
 
     //

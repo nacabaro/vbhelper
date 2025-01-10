@@ -1,5 +1,9 @@
 package com.github.nacabaro.vbhelper.screens
 
+import android.net.Uri
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +26,7 @@ import com.github.nacabaro.vbhelper.components.TopBanner
 @Composable
 fun SettingsScreen(
     navController: NavController,
+    settingsScreenController: SettingsScreenController,
     onClickImportCard: () -> Unit
 ) {
     Scaffold (
@@ -42,12 +47,10 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            SettingsSection("General")
-            SettingsEntry(title = "Import VB key", description = "Import standard vital bracelet keys") { }
-            SettingsEntry(title = "Import VB Characters key", description = "Import standard vital bracelet keys") { }
-            SettingsEntry(title = "Import VB BE key", description = "Import standard vital bracelet keys") { }
-            SettingsEntry(title = "Import transform functions", description = "Import standard vital bracelet keys") { }
-            SettingsEntry(title = "Import decryption key", description = "Import standard vital bracelet keys") { }
+            SettingsSection("NFC Communication")
+            SettingsEntry(title = "Import APK", description = "Import Secrets From Vital Arean 2.1.0 APK") {
+                settingsScreenController.apkFilePickLauncher.launch(arrayOf("*/*"))
+            }
             SettingsSection("DiM/BEm management")
             SettingsEntry(title = "Import DiM card", description = "Import DiM/BEm card file", onClick = onClickImportCard)
             SettingsEntry(title = "Rename DiM/BEm", description = "Set card name") { }
@@ -55,6 +58,12 @@ fun SettingsScreen(
             SettingsEntry(title = "Credits", description = "Credits") { }
             SettingsEntry(title = "About", description = "About") { }
         }
+    }
+}
+
+fun buildFilePickLauncher(activity: ComponentActivity, onItemPicked: (Uri?) -> Unit): ActivityResultLauncher<Array<String>> {
+    return activity.registerForActivityResult(ActivityResultContracts.OpenDocument()) {
+        onItemPicked.invoke(it)
     }
 }
 
