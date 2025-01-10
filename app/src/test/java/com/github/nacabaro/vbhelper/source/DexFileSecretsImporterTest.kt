@@ -1,6 +1,6 @@
 package com.github.nacabaro.vbhelper.source
 
-import com.github.cfogrady.vbnfc.data.DeviceType
+import com.github.nacabaro.vbhelper.source.proto.Secrets.HmacKeys
 import org.junit.Assert
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -10,18 +10,26 @@ import java.nio.ByteOrder
 import java.security.InvalidKeyException
 
 
+fun assertHmacKeysArePopulated(msg: String, hmacKeys: HmacKeys) {
+    Assert.assertFalse("$msg hmacKey1 is empty", hmacKeys.hmacKey1.isEmpty())
+    Assert.assertFalse("$msg hmacKey2 is empty", hmacKeys.hmacKey2.isEmpty())
+}
+
 class DexFileSecretsImporterTest {
 
     @Test
-    fun testThatImportSecretsHasAllDeviceTypes() {
+    fun testThatImportSecretsIsPopulated() {
         val dexFileSecretsImporter = DexFileSecretsImporter()
         val url = getAndAssertClassesDexFile()
         val file = File(url.path)
         file.inputStream().use {
-            val deviceIdToSecrets = dexFileSecretsImporter.importSecrets(it)
-            Assert.assertNotNull("BE Device Type", deviceIdToSecrets[DeviceType.VitalBraceletBEDeviceType])
-            Assert.assertNotNull("VBDM Device Type", deviceIdToSecrets[DeviceType.VitalSeriesDeviceType])
-            Assert.assertNotNull("VBC Device Type", deviceIdToSecrets[DeviceType.VitalCharactersDeviceType])
+            val secrets = dexFileSecretsImporter.importSecrets(it)
+            Assert.assertEquals("Cipher size isn't correct", 16, secrets.vbCipherCount)
+            Assert.assertEquals("BE Cipher size isn't correct", 16, secrets.beCipherCount)
+            Assert.assertFalse("AES Key is empty", secrets.aesKey.isEmpty())
+            assertHmacKeysArePopulated("VBDM", secrets.vbdmHmacKeys)
+            assertHmacKeysArePopulated("VBC", secrets.vbcHmacKeys)
+            assertHmacKeysArePopulated("BE", secrets.beHmacKeys)
         }
     }
 
