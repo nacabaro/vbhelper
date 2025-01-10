@@ -44,3 +44,16 @@ fun Secrets.getCryptographicTransformerMap(): Map<UShort, CryptographicTransform
         Pair(DeviceType.VitalBraceletBEDeviceType, CryptographicTransformer(beHmacKeys.hmacKey1, beHmacKeys.hmacKey2, this.aesKey, beCipher)),
     )
 }
+
+fun Secrets.isMissingSecrets(): Boolean {
+    return this.aesKey.length != 24 ||
+            this.vbCipherList.size != 16 ||
+            this.beCipherList.size != 16 ||
+            this.vbdmHmacKeys.isMissingKey() ||
+            this.vbcHmacKeys.isMissingKey() ||
+            this.beHmacKeys.isMissingKey()
+}
+
+fun HmacKeys.isMissingKey(): Boolean {
+    return this.hmacKey1.length != 24 || this.hmacKey2.length != 24
+}
