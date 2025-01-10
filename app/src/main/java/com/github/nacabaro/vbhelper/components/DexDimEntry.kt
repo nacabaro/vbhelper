@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import com.github.nacabaro.vbhelper.utils.BitmapData
+import com.github.nacabaro.vbhelper.utils.getBitmap
 import java.nio.ByteBuffer
 
 @Composable
@@ -27,9 +28,7 @@ fun DexDiMEntry(
     modifier: Modifier = Modifier
 ) {
     val bitmap = remember (logo.bitmap) {
-        Bitmap.createBitmap(logo.width, logo.height, Bitmap.Config.RGB_565).apply {
-            copyPixelsFromBuffer(ByteBuffer.wrap(logo.bitmap))
-        }
+        logo.getBitmap()
     }
     val imageBitmap = remember(bitmap) { bitmap.asImageBitmap() }
 
