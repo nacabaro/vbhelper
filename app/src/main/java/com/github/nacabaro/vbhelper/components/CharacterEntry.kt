@@ -13,7 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
+import com.github.nacabaro.vbhelper.domain.Sprites
 import com.github.nacabaro.vbhelper.utils.BitmapData
+import com.github.nacabaro.vbhelper.utils.getBitmap
 import java.nio.ByteBuffer
 
 @Composable
@@ -23,9 +25,7 @@ fun CharacterEntry(
     onClick: () -> Unit = {  }
 ) {
     val bitmap = remember (icon.bitmap) {
-        Bitmap.createBitmap(icon.width, icon.height, Bitmap.Config.RGB_565).apply {
-            copyPixelsFromBuffer(ByteBuffer.wrap(icon.bitmap))
-        }
+        icon.getBitmap()
     }
     val imageBitmap = remember(bitmap) { bitmap.asImageBitmap() }
 
