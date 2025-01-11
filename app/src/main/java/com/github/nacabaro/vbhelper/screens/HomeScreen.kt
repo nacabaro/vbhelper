@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
-import com.github.nacabaro.vbhelper.navigation.BottomNavItem
+import com.github.nacabaro.vbhelper.navigation.NavigationItems
 
 @Composable
 fun HomeScreen(
@@ -19,7 +19,7 @@ fun HomeScreen(
             TopBanner(
                 text = "VB Helper",
                 onGearClick = {
-                    navController.navigate(BottomNavItem.Settings.route)
+                    navController.navigate(NavigationItems.Settings.route)
                 }
             )
         }

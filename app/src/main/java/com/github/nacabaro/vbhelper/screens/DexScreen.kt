@@ -19,7 +19,7 @@ import com.github.nacabaro.vbhelper.components.DexDiMEntry
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.Dim
-import com.github.nacabaro.vbhelper.navigation.BottomNavItem
+import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.DexRepository
 import kotlinx.coroutines.launch
 
@@ -45,7 +45,7 @@ fun DexScreen(
             TopBanner(
                 text = "Discovered Digimon",
                 onGearClick = {
-                    navController.navigate(BottomNavItem.Viewer.route)
+                    navController.navigate(NavigationItems.Viewer.route)
                 }
             )
         }
@@ -65,7 +65,7 @@ fun DexScreen(
                     onClick = {
                         navController
                             .navigate(
-                                BottomNavItem
+                                NavigationItems
                                     .CardView.route
                                     .replace("{dimId}", "${it.id}")
                             )

@@ -15,11 +15,12 @@ import com.github.nacabaro.vbhelper.components.TopBanner
 
 @Composable
 fun ReadingCharacterScreen(
+    topBannerText: String,
     onClickCancel: () -> Unit,
 ) {
     Scaffold (
         topBar = {
-            TopBanner("Reading Character")
+            TopBanner(topBannerText)
         }
     ) { innerPadding ->
         Column (

@@ -109,6 +109,30 @@ class ScanScreenControllerImpl(
         }
     }
 
+    override fun onClickWrite(
+        secrets: Secrets,
+        nfcCharacter: NfcCharacter,
+        onComplete: () -> Unit
+    ) {
+        handleTag(secrets) { tagCommunicator ->
+            tagCommunicator.sendCharacter(nfcCharacter)
+            onComplete.invoke()
+            "Sent character successfully!"
+        }
+    }
+
+    override fun onClickCheckCard(
+        secrets: Secrets,
+        nfcCharacter: NfcCharacter,
+        onComplete: () -> Unit
+    ) {
+        handleTag(secrets) { tagCommunicator ->
+            tagCommunicator.prepareDIMForCharacter(nfcCharacter.dimId)
+            onComplete.invoke()
+            "Sent DIM successfully!"
+        }
+    }
+
     // EXTRACTED DIRECTLY FROM EXAMPLE APP
     private fun showWirelessSettings() {
         Toast.makeText(context, "NFC must be enabled", Toast.LENGTH_SHORT).show()

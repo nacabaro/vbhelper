@@ -1,11 +1,11 @@
 package com.github.nacabaro.vbhelper.screens
 
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,11 +21,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,18 +32,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun StorageScreen() {
+fun StorageScreen(
+    navController: NavController
+) {
     val coroutineScope = rememberCoroutineScope()
     val application = LocalContext.current.applicationContext as VBHelper
     val storageRepository = StorageRepository(application.container.db)
@@ -96,14 +98,24 @@ fun StorageScreen() {
                     ),
                     modifier = Modifier
                         .padding(8.dp)
-                        .size(96.dp)
-
+                        .size(96.dp),
+                    onClick = {
+                        selectedCharacter = index.id
+                    }
                 )
 
                 if (selectedCharacter != null) {
                     StorageDialog(
                         characterId = selectedCharacter!!,
-                        onDismissRequest = { selectedCharacter = null }
+                        onDismissRequest = { selectedCharacter = null },
+                        onSendToBracelet = {
+                            navController.navigate(
+                                NavigationItems.Scan.route.replace(
+                                    "{characterId}",
+                                    selectedCharacter.toString()
+                                )
+                            )
+                        }
                     )
                 }
             }
@@ -114,7 +126,8 @@ fun StorageScreen() {
 @Composable
 fun StorageDialog(
     characterId: Long,
-    onDismissRequest: () -> Unit
+    onDismissRequest: () -> Unit,
+    onSendToBracelet: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val application = LocalContext.current.applicationContext as VBHelper
@@ -149,10 +162,17 @@ fun StorageDialog(
                             .padding(8.dp)
                     )
                 }
-                Button(
-                    onClick = onDismissRequest
-                ) {
-                    Text(text = "Close")
+                Row {
+                    Button(
+                        onClick = onSendToBracelet
+                    ) {
+                        Text(text = "Send to bracelet")
+                    }
+                    Button(
+                        onClick = onDismissRequest
+                    ) {
+                        Text(text = "Close")
+                    }
                 }
             }
         }
