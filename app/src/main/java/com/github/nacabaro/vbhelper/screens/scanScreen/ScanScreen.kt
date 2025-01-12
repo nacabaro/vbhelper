@@ -67,7 +67,7 @@ fun ScanScreen(
         }
     }
 
-    DisposableEffect(readingScreen || writingScreen) {
+    DisposableEffect(readingScreen || writingScreen, isDoneSendingCard) {
         if(readingScreen) {
             scanScreenController.registerActivityLifecycleListener(SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER, object: ActivityLifecycleListener {
                 override fun onPause() {
@@ -139,12 +139,12 @@ fun ScanScreen(
     } else if (writingScreen) {
         if (!isDoneSendingCard) {
             ReadingCharacterScreen("Sending card") {
-                isDoneSendingCard = true
+                writingScreen = false
                 scanScreenController.cancelRead()
             }
         } else if (!isDoneWritingCharacter) {
             ReadingCharacterScreen("Writing character") {
-                isDoneWritingCharacter = true
+                isDoneSendingCard = false
                 writingScreen = false
                 scanScreenController.cancelRead()
             }

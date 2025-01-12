@@ -6,6 +6,7 @@ import android.nfc.Tag
 import android.nfc.tech.NfcA
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -115,9 +116,14 @@ class ScanScreenControllerImpl(
         onComplete: () -> Unit
     ) {
         handleTag(secrets) { tagCommunicator ->
-            tagCommunicator.sendCharacter(nfcCharacter)
-            onComplete.invoke()
-            "Sent character successfully!"
+            try {
+                tagCommunicator.sendCharacter(nfcCharacter)
+                onComplete.invoke()
+                "Sent character successfully!"
+            } catch (e: Throwable) {
+                Log.e("TAG", e.stackTraceToString())
+                "Whoops"
+            }
         }
     }
 
