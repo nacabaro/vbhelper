@@ -13,11 +13,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
-        BottomNavItem.Scan,
-        BottomNavItem.Battles,
-        BottomNavItem.Home,
-        BottomNavItem.Dex,
-        BottomNavItem.Storage,
+        NavigationItems.Scan,
+        NavigationItems.Battles,
+        NavigationItems.Home,
+        NavigationItems.Dex,
+        NavigationItems.Storage,
     )
     NavigationBar {
         val currentBackStackEntry = navController.currentBackStackEntryAsState()

@@ -35,45 +35,51 @@ fun AppNavigation(
     ) { contentPadding ->
         NavHost(
             navController = navController,
-            startDestination = BottomNavItem.Home.route,
+            startDestination = NavigationItems.Home.route,
             modifier = Modifier
                 .padding(contentPadding)
         ) {
-            composable(BottomNavItem.Battles.route) {
+            composable(NavigationItems.Battles.route) {
                 BattlesScreen()
             }
-            composable(BottomNavItem.Home.route) {
+            composable(NavigationItems.Home.route) {
                 HomeScreen(
                     navController = navController
                 )
             }
-            composable(BottomNavItem.Storage.route) {
-                StorageScreen()
+            composable(NavigationItems.Storage.route) {
+                StorageScreen(
+                    navController = navController
+                )
             }
-            composable(BottomNavItem.Scan.route) {
+            composable(NavigationItems.Scan.route) {
+                val characterIdString = it.arguments?.getString("characterId")
+                val characterId = characterIdString?.toLongOrNull()
+
                 ScanScreen(
                     navController = navController,
                     scanScreenController = applicationNavigationHandlers.scanScreenController,
+                    characterId = characterId
                 )
             }
-            composable(BottomNavItem.Dex.route) {
+            composable(NavigationItems.Dex.route) {
                 DexScreen(
                     navController = navController
                 )
             }
-            composable(BottomNavItem.Settings.route) {
+            composable(NavigationItems.Settings.route) {
                 SettingsScreen(
                     navController = navController,
                     settingsScreenController = applicationNavigationHandlers.settingsScreenController,
                     onClickImportCard = onClickImportCard
                 )
             }
-            composable(BottomNavItem.Viewer.route) {
+            composable(NavigationItems.Viewer.route) {
                 SpriteViewer(
                     navController = navController
                 )
             }
-            composable(BottomNavItem.CardView.route) {
+            composable(NavigationItems.CardView.route) {
                 val dimId = it.arguments?.getString("dimId")
                 Log.d("dimId", dimId.toString())
                 if (dimId != null) {

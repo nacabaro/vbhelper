@@ -21,7 +21,7 @@ interface UserCharacterDao {
     fun insertTransformationHistory(vararg transformationHistory: TransformationHistory)
 
     @Query("SELECT * FROM TransformationHistory WHERE monId = :monId")
-    fun getTransformationHistory(monId: Int): List<TransformationHistory>
+    fun getTransformationHistory(monId: Long): List<TransformationHistory>
 
     @Query("""
         SELECT
@@ -36,4 +36,7 @@ interface UserCharacterDao {
 
     @Query("SELECT * FROM UserCharacter WHERE id = :id")
     suspend fun getCharacter(id: Long): UserCharacter
+
+    @Query("SELECT * FROM BECharacterData WHERE id = :id")
+    suspend fun getBeData(id: Long): BECharacterData
 }

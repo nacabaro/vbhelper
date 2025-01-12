@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.dtos
 
-import androidx.room.PrimaryKey
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.domain.DeviceType
 
@@ -28,5 +27,10 @@ object CharacterDtos {
         val spriteIdle: ByteArray,
         val spriteWidth: Int,
         val spriteHeight: Int
+    )
+
+    data class DiMInfo(
+        val cardId: Int,
+        val charId: Int
     )
 }
