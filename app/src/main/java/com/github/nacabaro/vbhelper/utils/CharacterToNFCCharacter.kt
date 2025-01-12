@@ -56,9 +56,11 @@ suspend fun characterToNfc(context: Context, characterId: Long): NfcCharacter? {
             activityLevel = userCharacter.activityLevel.toByte(),
             heartRateCurrent = userCharacter.heartRateCurrent.toUByte(),
             transformationHistory = transformationHistory,
-            vitalHistory = arrayOf(),
-            appReserved1 = byteArrayOf(),
-            appReserved2 = Array(2, { 0u }),
+            vitalHistory = Array(7) {
+                NfcCharacter.DailyVitals(0u, 0u, 0u, 0u)
+            },
+            appReserved1 = ByteArray(12) {0},
+            appReserved2 = Array(3) {0u},
             trainingHp = beData.trainingHp.toUShort(),
             trainingAp = beData.trainingAp.toUShort(),
             trainingBp = beData.trainingBp.toUShort(),
