@@ -1,5 +1,6 @@
 package com.github.nacabaro.vbhelper.screens
 
+import android.util.Log
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -54,6 +55,7 @@ fun DiMScreen(
             items(characterList.value) { character ->
                 CharacterEntry(
                     onClick = {  },
+                    obscure = true,
                     icon = BitmapData(
                         bitmap = character.sprite1,
                         width = character.spritesWidth,

@@ -16,16 +16,18 @@ import androidx.compose.ui.unit.dp
 import com.github.nacabaro.vbhelper.domain.Sprites
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.utils.getBitmap
+import com.github.nacabaro.vbhelper.utils.getObscuredBitmap
 import java.nio.ByteBuffer
 
 @Composable
 fun CharacterEntry(
     icon: BitmapData,
+    obscure: Boolean = false,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {  }
 ) {
     val bitmap = remember (icon.bitmap) {
-        icon.getBitmap()
+        if(obscure) icon.getObscuredBitmap() else icon.getBitmap()
     }
     val imageBitmap = remember(bitmap) { bitmap.asImageBitmap() }
 
