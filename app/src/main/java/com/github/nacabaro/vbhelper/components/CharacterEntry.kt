@@ -31,17 +31,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
+import com.github.nacabaro.vbhelper.utils.getObscuredBitmap
+import java.nio.ByteBuffer
 
 @Composable
 fun CharacterEntry(
     icon: BitmapData,
+    obscure: Boolean = false,
     modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.medium,
     multiplier: Int = 3,
     onClick: () -> Unit = {  }
 ) {
     val bitmap = remember (icon.bitmap) {
-        icon.getBitmap()
+        if(obscure) icon.getObscuredBitmap() else icon.getBitmap()
     }
     val imageBitmap = remember(bitmap) { bitmap.asImageBitmap() }
     val density: Float = LocalContext.current.resources.displayMetrics.density
