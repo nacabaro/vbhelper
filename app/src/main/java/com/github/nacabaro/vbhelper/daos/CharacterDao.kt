@@ -6,6 +6,7 @@ import androidx.room.Query
 import com.github.nacabaro.vbhelper.domain.Character
 import com.github.nacabaro.vbhelper.domain.Sprites
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import java.util.GregorianCalendar
 
 @Dao
 interface CharacterDao {
@@ -37,4 +38,13 @@ interface CharacterDao {
         WHERE uc.id = :charId
     """)
     suspend fun getCharacterInfo(charId: Long): CharacterDtos.DiMInfo
+
+    @Query("""
+        INSERT INTO TransformationHistory(monId, stageId, transformationDate)
+        VALUES 
+            (:monId, 
+            (SELECT id FROM Character WHERE monIndex = :stage AND dimId = :dimId),
+            :transformationDate)
+    """)
+    fun insertTransformation(monId: Long, stage: Int, dimId: Long, transformationDate: Long)
 }

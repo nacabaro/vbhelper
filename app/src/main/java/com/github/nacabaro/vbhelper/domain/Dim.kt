@@ -13,5 +13,6 @@ data class Dim(
     val logoWidth: Int,
     val logoHeight: Int,
     val name: String,
-    val stageCount: Int
+    val stageCount: Int,
+    val isBEm: Boolean
 )

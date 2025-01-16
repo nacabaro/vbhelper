@@ -11,10 +11,12 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
+import com.github.cfogrady.vb.dim.card.BemCard
 import com.github.cfogrady.vb.dim.card.DimReader
 import com.github.nacabaro.vbhelper.navigation.AppNavigation
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
+import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.Dim
 import com.github.nacabaro.vbhelper.domain.Sprites
@@ -22,6 +24,7 @@ import com.github.nacabaro.vbhelper.domain.Character
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
+import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.navigation.AppNavigationHandlers
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.SettingsScreenController
@@ -29,6 +32,8 @@ import com.github.nacabaro.vbhelper.source.ApkSecretsImporter
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.util.Date
+import java.util.GregorianCalendar
 
 class MainActivity : ComponentActivity() {
 
@@ -105,13 +110,17 @@ class MainActivity : ComponentActivity() {
                 inputStream.use { fileReader ->
                     val dimReader = DimReader()
                     val card = dimReader.readCard(fileReader, false)
+
+                    Log.i("MainActivity", "Card name: ${card is BemCard}")
+
                     val dimModel = Dim(
                         dimId = card.header.dimId,
                         logo = card.spriteData.sprites[0].pixelData,
                         name = card.spriteData.text, // TODO Make user write card name
                         stageCount = card.adventureLevels.levels.size,
                         logoHeight = card.spriteData.sprites[0].height,
-                        logoWidth = card.spriteData.sprites[0].width
+                        logoWidth = card.spriteData.sprites[0].width,
+                        isBEm = card is BemCard
                     )
 
                     val dimId = storageRepository
@@ -120,7 +129,11 @@ class MainActivity : ComponentActivity() {
 
                     val characters = card.characterStats.characterEntries
 
-                    var spriteCounter = 10
+                    var spriteCounter = when (card is BemCard) {
+                        true -> 55
+                        false -> 10
+                    }
+
                     val domainCharacters = mutableListOf<Character>()
 
                     for (index in 0 until characters.size) {
@@ -144,12 +157,14 @@ class MainActivity : ComponentActivity() {
                         )
 
                         // TODO: Improve this
-                        if (index == 0) {
-                            spriteCounter += 6
-                        } else if (index == 1) {
-                            spriteCounter += 7
-                        } else {
+                        if (card is BemCard) {
                             spriteCounter += 14
+                        } else {
+                            when (index) {
+                                0 -> spriteCounter += 6
+                                1 -> spriteCounter += 7
+                                else -> spriteCounter += 14
+                            }
                         }
                     }
 
@@ -216,9 +231,7 @@ class MainActivity : ComponentActivity() {
             .dimDao()
             .getDimById(nfcCharacter.value!!.dimId.toInt())
 
-        if (dimData == null) {
-            return "Card not found"
-        }
+        if (dimData == null) return "Card not found"
 
         val cardCharData = storageRepository
             .characterDao()
@@ -244,60 +257,63 @@ class MainActivity : ComponentActivity() {
             characterType = when (nfcCharacter.value) {
                 is BENfcCharacter -> com.github.nacabaro.vbhelper.domain.DeviceType.BEDevice
                 else -> com.github.nacabaro.vbhelper.domain.DeviceType.VBDevice
-            }
+            },
+            isActive = true
         )
+
+        storageRepository
+            .userCharacterDao()
+            .clearActiveCharacter()
 
         val characterId: Long = storageRepository
             .userCharacterDao()
             .insertCharacterData(characterData)
 
         if (nfcCharacter.value is BENfcCharacter) {
-            val beCharacter = nfcCharacter as MutableStateFlow<BENfcCharacter?>
+            val beCharacter = nfcCharacter.value as BENfcCharacter
             val extraCharacterData = BECharacterData(
                 id = characterId,
-                trainingHp = beCharacter.value!!.trainingHp.toInt(),
-                trainingAp = beCharacter.value!!.trainingAp.toInt(),
-                trainingBp = beCharacter.value!!.trainingBp.toInt(),
-                remainingTrainingTimeInMinutes = beCharacter.value!!.remainingTrainingTimeInMinutes.toInt(),
-                itemEffectActivityLevelValue = beCharacter.value!!.itemEffectActivityLevelValue.toInt(),
-                itemEffectMentalStateValue = beCharacter.value!!.itemEffectMentalStateValue.toInt(),
-                itemEffectMentalStateMinutesRemaining = beCharacter.value!!.itemEffectMentalStateMinutesRemaining.toInt(),
-                itemEffectActivityLevelMinutesRemaining = beCharacter.value!!.itemEffectActivityLevelMinutesRemaining.toInt(),
-                itemEffectVitalPointsChangeValue = beCharacter.value!!.itemEffectVitalPointsChangeValue.toInt(),
-                itemEffectVitalPointsChangeMinutesRemaining = beCharacter.value!!.itemEffectVitalPointsChangeMinutesRemaining.toInt(),
-                abilityRarity = beCharacter.value!!.abilityRarity,
-                abilityType = beCharacter.value!!.abilityType.toInt(),
-                abilityBranch = beCharacter.value!!.abilityBranch.toInt(),
-                abilityReset = beCharacter.value!!.abilityReset.toInt(),
-                rank = beCharacter.value!!.abilityReset.toInt(),
-                itemType = beCharacter.value!!.itemType.toInt(),
-                itemMultiplier = beCharacter.value!!.itemMultiplier.toInt(),
-                itemRemainingTime = beCharacter.value!!.itemRemainingTime.toInt(),
+                trainingHp = beCharacter.trainingHp.toInt(),
+                trainingAp = beCharacter.trainingAp.toInt(),
+                trainingBp = beCharacter.trainingBp.toInt(),
+                remainingTrainingTimeInMinutes = beCharacter.remainingTrainingTimeInMinutes.toInt(),
+                itemEffectActivityLevelValue = beCharacter.itemEffectActivityLevelValue.toInt(),
+                itemEffectMentalStateValue = beCharacter.itemEffectMentalStateValue.toInt(),
+                itemEffectMentalStateMinutesRemaining = beCharacter.itemEffectMentalStateMinutesRemaining.toInt(),
+                itemEffectActivityLevelMinutesRemaining = beCharacter.itemEffectActivityLevelMinutesRemaining.toInt(),
+                itemEffectVitalPointsChangeValue = beCharacter.itemEffectVitalPointsChangeValue.toInt(),
+                itemEffectVitalPointsChangeMinutesRemaining = beCharacter.itemEffectVitalPointsChangeMinutesRemaining.toInt(),
+                abilityRarity = beCharacter.abilityRarity,
+                abilityType = beCharacter.abilityType.toInt(),
+                abilityBranch = beCharacter.abilityBranch.toInt(),
+                abilityReset = beCharacter.abilityReset.toInt(),
+                rank = beCharacter.abilityReset.toInt(),
+                itemType = beCharacter.itemType.toInt(),
+                itemMultiplier = beCharacter.itemMultiplier.toInt(),
+                itemRemainingTime = beCharacter.itemRemainingTime.toInt(),
                 otp0 = "", //beCharacter.value!!.otp0.toString(),
                 otp1 = "", //beCharacter.value!!.otp1.toString(),
-                minorVersion = beCharacter.value!!.characterCreationFirmwareVersion.minorVersion.toInt(),
-                majorVersion = beCharacter.value!!.characterCreationFirmwareVersion.majorVersion.toInt(),
+                minorVersion = beCharacter.characterCreationFirmwareVersion.minorVersion.toInt(),
+                majorVersion = beCharacter.characterCreationFirmwareVersion.majorVersion.toInt(),
             )
 
             storageRepository
                 .userCharacterDao()
                 .insertBECharacterData(extraCharacterData)
 
-            val transformationHistoryWatch = beCharacter.value!!.transformationHistory
-            val domainTransformationHistory = transformationHistoryWatch.map { item ->
-                TransformationHistory(
-                    monId = characterId,
-                    toCharIndex = item.toCharIndex.toInt(),
-                    year = item.year.toInt(),
-                    month = item.month.toInt(),
-                    day = item.day.toInt()
-                )
+            val transformationHistoryWatch = beCharacter.transformationHistory
+            transformationHistoryWatch.map { item ->
+                if (item.toCharIndex.toInt() != 255) {
+                    val date = GregorianCalendar(item.year.toInt(), item.month.toInt(), item.day.toInt())
+                        .time
+                        .time
+                    storageRepository
+                        .characterDao()
+                        .insertTransformation(characterId, item.toCharIndex.toInt(), dimData.id, date)
+                }
             }
 
-            storageRepository
-                .userCharacterDao()
-                .insertTransformationHistory(*domainTransformationHistory.toTypedArray())
-        } else {
+        } else if (nfcCharacter.value is VBNfcCharacter) {
             return "Not implemented yet"
         }
 

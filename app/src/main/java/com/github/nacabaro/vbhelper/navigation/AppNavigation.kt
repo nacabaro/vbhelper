@@ -11,7 +11,8 @@ import androidx.navigation.compose.rememberNavController
 import com.github.nacabaro.vbhelper.screens.BattlesScreen
 import com.github.nacabaro.vbhelper.screens.DexScreen
 import com.github.nacabaro.vbhelper.screens.DiMScreen
-import com.github.nacabaro.vbhelper.screens.HomeScreen
+import com.github.nacabaro.vbhelper.screens.homeScreens.HomeScreen
+import com.github.nacabaro.vbhelper.screens.ItemsScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.SettingsScreen
@@ -88,6 +89,11 @@ fun AppNavigation(
                         dimId = dimId.toInt()
                     )
                 }
+            }
+            composable(NavigationItems.Items.route) {
+                ItemsScreen(
+                    navController = navController
+                )
             }
         }
     }

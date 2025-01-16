@@ -81,6 +81,7 @@ fun SpriteViewer(
                     contentDescription = "Sprite",
                     modifier = Modifier
                         .size(256.dp)
+                        .padding(8.dp)
                 )
             }
         }
