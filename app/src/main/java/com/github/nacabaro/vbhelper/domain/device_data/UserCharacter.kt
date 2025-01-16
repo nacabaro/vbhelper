@@ -35,5 +35,6 @@ data class UserCharacter (
     var totalBattlesLost: Int,
     var activityLevel: Int,
     var heartRateCurrent: Int,
-    var characterType: DeviceType
+    var characterType: DeviceType,
+    var isActive: Boolean
 )

@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
@@ -41,7 +42,9 @@ import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 @Composable
@@ -62,8 +65,6 @@ fun StorageScreen(
         }
     }
 
-    Log.d("StorageScreen", "monList: $monList")
-
     Scaffold (
         topBar = { TopBanner(text = "My Digimon") }
     ) { contentPadding ->
@@ -72,7 +73,7 @@ fun StorageScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .padding(contentPadding)
+                    .padding(top = contentPadding.calculateTopPadding())
                     .fillMaxSize()
             ) {
                 Text(
@@ -96,9 +97,6 @@ fun StorageScreen(
                         width = index.spriteWidth,
                         height = index.spriteHeight
                     ),
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .size(96.dp),
                     onClick = {
                         selectedCharacter = index.id
                     }
@@ -108,6 +106,15 @@ fun StorageScreen(
                     StorageDialog(
                         characterId = selectedCharacter!!,
                         onDismissRequest = { selectedCharacter = null },
+                        onClickSetActive = {
+                            coroutineScope.launch {
+                                withContext(Dispatchers.IO) {
+                                    storageRepository.setActiveCharacter(selectedCharacter!!)
+                                    selectedCharacter = null
+                                }
+                                navController.navigate(NavigationItems.Home.route)
+                            }
+                        },
                         onSendToBracelet = {
                             navController.navigate(
                                 NavigationItems.Scan.route.replace(
@@ -127,7 +134,8 @@ fun StorageScreen(
 fun StorageDialog(
     characterId: Long,
     onDismissRequest: () -> Unit,
-    onSendToBracelet: () -> Unit
+    onSendToBracelet: () -> Unit,
+    onClickSetActive: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val application = LocalContext.current.applicationContext as VBHelper
@@ -162,11 +170,19 @@ fun StorageDialog(
                             .padding(8.dp)
                     )
                 }
-                Row {
+                Row (
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                ) {
                     Button(
                         onClick = onSendToBracelet
                     ) {
                         Text(text = "Send to bracelet")
+                    }
+                    Button(
+                        onClick = onClickSetActive
+                    ) {
+                        Text(text = "Set active")
                     }
                     Button(
                         onClick = onDismissRequest

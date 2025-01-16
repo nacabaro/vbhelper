@@ -21,11 +21,24 @@ class StorageRepository (
         return db.userCharacterDao().getBeData(id)
     }
 
-    fun getTransformationHistory(characterId: Long): List<TransformationHistory> {
+    fun getTransformationHistory(characterId: Long): List<CharacterDtos.TransformationHistory>? {
         return db.userCharacterDao().getTransformationHistory(characterId)
     }
 
     suspend fun getCharacterData(id: Long): CharacterDtos.DiMInfo {
         return db.characterDao().getCharacterInfo(id)
+    }
+
+    suspend fun getActiveCharacter(): CharacterDtos.CharacterWithSprites? {
+        return db.userCharacterDao().getActiveCharacter()
+    }
+
+    fun deleteCharacter(id: Long) {
+        return db.userCharacterDao().deleteCharacterById(id)
+    }
+
+    fun setActiveCharacter(id: Long) {
+        db.userCharacterDao().clearActiveCharacter()
+        return db.userCharacterDao().setActiveCharacter(id)
     }
 }

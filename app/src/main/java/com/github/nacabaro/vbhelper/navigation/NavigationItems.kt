@@ -15,4 +15,5 @@ sealed class NavigationItems (
     object Settings : NavigationItems("Settings", R.drawable.baseline_settings_24, "Settings")
     object Viewer : NavigationItems("Viewer", R.drawable.baseline_image_24, "Viewer")
     object CardView : NavigationItems("Card/{dimId}", R.drawable.baseline_image_24, "Card")
+    object Items : NavigationItems("Items", R.drawable.baseline_data_24, "Items")
 }

@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.domain.device_data
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.github.nacabaro.vbhelper.domain.Character
 
 @Entity(
     foreignKeys = [
@@ -11,14 +12,18 @@ import androidx.room.PrimaryKey
             parentColumns = ["id"],
             childColumns = ["monId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Character::class,
+            parentColumns = ["id"],
+            childColumns = ["stageId"],
+            onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class TransformationHistory (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val monId: Long,
-    val toCharIndex: Int,
-    val year: Int,
-    val month: Int,
-    val day: Int
+    val stageId: Long,
+    val transformationDate: Long
 )

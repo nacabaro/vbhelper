@@ -1,12 +1,15 @@
 package com.github.nacabaro.vbhelper.utils
 
 import android.content.Context
+import android.icu.util.Calendar
+import android.icu.util.GregorianCalendar
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.be.FirmwareVersion
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.DeviceType
 import com.github.nacabaro.vbhelper.source.StorageRepository
+import java.util.Date
 
 suspend fun characterToNfc(context: Context, characterId: Long): NfcCharacter? {
     val app = context.applicationContext as VBHelper
@@ -18,18 +21,27 @@ suspend fun characterToNfc(context: Context, characterId: Long): NfcCharacter? {
     if (userCharacter.characterType == DeviceType.BEDevice) {
         val beData = storageRepository.getCharacterBeData(characterId)
         val transformationHistory = storageRepository
-            .getTransformationHistory(characterId)
+            .getTransformationHistory(characterId)!!
             .map {
+                val date = Date(it.transformationDate)
+                val calendar = GregorianCalendar()
+                calendar.time = date
+
                 NfcCharacter.Transformation(
-                    toCharIndex = it.toCharIndex.toUByte(),
-                    year = it.year.toUShort(),
-                    month = it.month.toUByte(),
-                    day = it.day.toUByte()
+                    toCharIndex = it.monIndex.toUByte(),
+                    year = calendar
+                        .get(Calendar.YEAR)
+                        .toUShort(),
+                    month = calendar
+                        .get(Calendar.MONTH)
+                        .toUByte(),
+                    day = calendar
+                        .get(Calendar.DAY_OF_MONTH)
+                        .toUByte()
                 )
             }.toTypedArray()
 
-        // Maybe this is the issue?
-        val dummyVitalHistory = arrayOf<NfcCharacter.DailyVitals>()
+        val paddedTransformationArray = padTransformationArray(transformationHistory)
 
         val nfcData = BENfcCharacter(
             dimId = characterInfo.cardId.toUShort(),
@@ -55,7 +67,7 @@ suspend fun characterToNfc(context: Context, characterId: Long): NfcCharacter? {
             totalBattlesLost = userCharacter.totalBattlesLost.toUShort(),
             activityLevel = userCharacter.activityLevel.toByte(),
             heartRateCurrent = userCharacter.heartRateCurrent.toUByte(),
-            transformationHistory = transformationHistory,
+            transformationHistory = paddedTransformationArray,
             vitalHistory = Array(7) {
                 NfcCharacter.DailyVitals(0u, 0u, 0u, 0u)
             },

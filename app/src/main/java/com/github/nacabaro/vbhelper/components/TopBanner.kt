@@ -23,6 +23,7 @@ fun TopBanner(
     modifier: Modifier = Modifier,
     onGearClick: (() -> Unit)? = null,
     onBackClick: (() -> Unit)? = null,
+    onScanClick: (() -> Unit)? = null
 ) {
     Box( // Use Box to overlay elements
         modifier = modifier
@@ -37,7 +38,7 @@ fun TopBanner(
             modifier = Modifier
                 .align(Alignment.Center) // Center the text
         )
-        if (onGearClick != null) {
+         if (onGearClick != null) {
             IconButton(
                 onClick = onGearClick,
                 modifier = Modifier
@@ -50,7 +51,18 @@ fun TopBanner(
             }
         }
 
-        if (onBackClick != null) {
+        if (onScanClick != null) {
+            IconButton(
+                onClick = onScanClick,
+                modifier = Modifier
+                    .align(Alignment.CenterStart) // Place gear icon at the end
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.baseline_nfc_24), // Use a gear icon
+                    contentDescription = "Scan"
+                )
+            }
+        } else if (onBackClick != null) {
             IconButton(
                 onClick = onBackClick,
                 modifier = Modifier
