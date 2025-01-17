@@ -7,7 +7,6 @@ import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.be.FirmwareVersion
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.domain.DeviceType
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import java.util.Date
 

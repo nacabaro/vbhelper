@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.domain
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.github.nacabaro.vbhelper.domain.characters.Character
 
 @Entity(
     foreignKeys = [

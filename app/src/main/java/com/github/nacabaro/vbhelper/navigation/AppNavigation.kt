@@ -81,12 +81,11 @@ fun AppNavigation(
                 )
             }
             composable(NavigationItems.CardView.route) {
-                val dimId = it.arguments?.getString("dimId")
-                Log.d("dimId", dimId.toString())
-                if (dimId != null) {
+                val cardId = it.arguments?.getString("cardId")
+                if (cardId != null) {
                     DiMScreen(
                         navController = navController,
-                        dimId = dimId.toInt()
+                        dimId = cardId.toLong()
                     )
                 }
             }

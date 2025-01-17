@@ -18,21 +18,20 @@ import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.domain.Dim
+import com.github.nacabaro.vbhelper.domain.characters.Card
 import com.github.nacabaro.vbhelper.domain.Sprites
-import com.github.nacabaro.vbhelper.domain.Character
+import com.github.nacabaro.vbhelper.domain.characters.Character
+import com.github.nacabaro.vbhelper.domain.characters.Dex
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
-import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
-import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.navigation.AppNavigationHandlers
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.SettingsScreenController
 import com.github.nacabaro.vbhelper.source.ApkSecretsImporter
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
+import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import java.util.Date
 import java.util.GregorianCalendar
 
 class MainActivity : ComponentActivity() {
@@ -113,7 +112,7 @@ class MainActivity : ComponentActivity() {
 
                     Log.i("MainActivity", "Card name: ${card is BemCard}")
 
-                    val dimModel = Dim(
+                    val cardModel = Card(
                         dimId = card.header.dimId,
                         logo = card.spriteData.sprites[0].pixelData,
                         name = card.spriteData.text, // TODO Make user write card name
@@ -125,7 +124,7 @@ class MainActivity : ComponentActivity() {
 
                     val dimId = storageRepository
                         .dimDao()
-                        .insertNewDim(dimModel)
+                        .insertNewDim(cardModel)
 
                     val characters = card.characterStats.characterEntries
 
@@ -216,7 +215,6 @@ class MainActivity : ComponentActivity() {
     //
     /*
     TODO:
-    - Make it able to detect the different model of watches
     - Support for regular VB
 
     The good news is that the theory behind inserting to the database should be working
@@ -255,8 +253,8 @@ class MainActivity : ComponentActivity() {
             activityLevel = nfcCharacter.value!!.activityLevel.toInt(),
             heartRateCurrent = nfcCharacter.value!!.heartRateCurrent.toInt(),
             characterType = when (nfcCharacter.value) {
-                is BENfcCharacter -> com.github.nacabaro.vbhelper.domain.DeviceType.BEDevice
-                else -> com.github.nacabaro.vbhelper.domain.DeviceType.VBDevice
+                is BENfcCharacter -> DeviceType.BEDevice
+                else -> DeviceType.VBDevice
             },
             isActive = true
         )
@@ -307,12 +305,16 @@ class MainActivity : ComponentActivity() {
                     val date = GregorianCalendar(item.year.toInt(), item.month.toInt(), item.day.toInt())
                         .time
                         .time
+
                     storageRepository
                         .characterDao()
                         .insertTransformation(characterId, item.toCharIndex.toInt(), dimData.id, date)
+
+                    storageRepository
+                        .dexDao()
+                        .insertCharacter(item.toCharIndex.toInt(), dimData.id, date)
                 }
             }
-
         } else if (nfcCharacter.value is VBNfcCharacter) {
             return "Not implemented yet"
         }
