@@ -1,4 +1,4 @@
-package com.github.nacabaro.vbhelper.screens
+package com.github.nacabaro.vbhelper.screens.settingsScreen
 
 import android.net.Uri
 import androidx.activity.ComponentActivity
@@ -22,11 +22,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
+import com.github.nacabaro.vbhelper.navigation.AppNavigation
+import com.github.nacabaro.vbhelper.navigation.NavigationItems
 
 @Composable
 fun SettingsScreen(
     navController: NavController,
     settingsScreenController: SettingsScreenController,
+    newSettingsScreenController: NewSettingsScreenControllerImpl,
     onClickImportCard: () -> Unit
 ) {
     Scaffold (
@@ -50,6 +53,13 @@ fun SettingsScreen(
             SettingsSection("NFC Communication")
             SettingsEntry(title = "Import APK", description = "Import Secrets From Vital Arean 2.1.0 APK") {
                 settingsScreenController.apkFilePickLauncher.launch(arrayOf("*/*"))
+            }
+            SettingsSection("Data management")
+            SettingsEntry(title = "Export data", description = "Export application database") {
+                newSettingsScreenController.onClickOpenDirectory()
+            }
+            SettingsEntry(title = "Import data", description = "Import application database") {
+                newSettingsScreenController.onClickImportDatabase()
             }
             SettingsSection("DiM/BEm management")
             SettingsEntry(title = "Import DiM card", description = "Import DiM/BEm card file", onClick = onClickImportCard)

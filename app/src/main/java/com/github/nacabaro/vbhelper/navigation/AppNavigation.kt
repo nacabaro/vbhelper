@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.navigation
 
-import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -15,12 +14,17 @@ import com.github.nacabaro.vbhelper.screens.homeScreens.HomeScreen
 import com.github.nacabaro.vbhelper.screens.ItemsScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
-import com.github.nacabaro.vbhelper.screens.SettingsScreen
-import com.github.nacabaro.vbhelper.screens.SettingsScreenController
+import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreen
+import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenController
 import com.github.nacabaro.vbhelper.screens.SpriteViewer
 import com.github.nacabaro.vbhelper.screens.StorageScreen
+import com.github.nacabaro.vbhelper.screens.settingsScreen.NewSettingsScreenControllerImpl
 
-data class AppNavigationHandlers(val settingsScreenController: SettingsScreenController, val scanScreenController: ScanScreenControllerImpl)
+data class AppNavigationHandlers(
+    val settingsScreenController: SettingsScreenController,
+    val scanScreenController: ScanScreenControllerImpl,
+    val newSettingsScreenController: NewSettingsScreenControllerImpl
+)
 
 @Composable
 fun AppNavigation(
@@ -72,7 +76,8 @@ fun AppNavigation(
                 SettingsScreen(
                     navController = navController,
                     settingsScreenController = applicationNavigationHandlers.settingsScreenController,
-                    onClickImportCard = onClickImportCard
+                    newSettingsScreenController = applicationNavigationHandlers.newSettingsScreenController,
+                    onClickImportCard = onClickImportCard,
                 )
             }
             composable(NavigationItems.Viewer.route) {

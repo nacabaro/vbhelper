@@ -1,4 +1,4 @@
-package com.github.nacabaro.vbhelper.screens
+package com.github.nacabaro.vbhelper.screens.settingsScreen
 
 import android.net.Uri
 import android.widget.Toast
