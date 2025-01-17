@@ -1,4 +1,4 @@
-package com.github.nacabaro.vbhelper.domain
+package com.github.nacabaro.vbhelper.utils
 
 enum class DeviceType {
     VBDevice,

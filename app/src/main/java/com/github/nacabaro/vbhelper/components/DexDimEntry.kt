@@ -2,6 +2,7 @@ package com.github.nacabaro.vbhelper.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,6 +24,8 @@ import com.github.nacabaro.vbhelper.utils.getBitmap
 fun DexDiMEntry(
     name: String,
     logo: BitmapData,
+    obtainedCharacters: Int,
+    totalCharacters: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -50,11 +53,21 @@ fun DexDiMEntry(
                     .padding(8.dp)
                     .size(dpSize)
             )
-            Text(
-                text = name,
+            Column(
                 modifier = Modifier
                     .padding(8.dp)
-            )
+            ) {
+                Text(
+                    text = name,
+                    modifier = Modifier
+                )
+                Text(
+                    text = "$obtainedCharacters of $totalCharacters characters obtained",
+                    fontFamily = MaterialTheme.typography.labelSmall.fontFamily,
+                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                    modifier = Modifier
+                )
+            }
         }
     }
 }

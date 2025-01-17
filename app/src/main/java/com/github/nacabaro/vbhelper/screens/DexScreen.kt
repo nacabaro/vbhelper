@@ -18,7 +18,8 @@ import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.components.DexDiMEntry
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.domain.Dim
+import com.github.nacabaro.vbhelper.domain.characters.Card
+import com.github.nacabaro.vbhelper.dtos.CardDtos
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.DexRepository
 import kotlinx.coroutines.launch
@@ -31,19 +32,19 @@ fun DexScreen(
     val application = LocalContext.current.applicationContext as VBHelper
     val dexRepository = DexRepository(application.container.db)
 
-    val dimList = remember { mutableStateOf<List<Dim>>(emptyList()) }
+    val cardList = remember { mutableStateOf<List<CardDtos.CardProgress>>(emptyList()) }
 
     LaunchedEffect(dexRepository) {
         coroutineScope.launch {
             val newDimList = dexRepository.getAllDims()
-            dimList.value = newDimList // Replace the entire list atomically
+            cardList.value = newDimList // Replace the entire list atomically
         }
     }
 
     Scaffold (
         topBar = {
             TopBanner(
-                text = "Discovered Digimon",
+                text = "Discovered characters",
                 onGearClick = {
                     navController.navigate(NavigationItems.Viewer.route)
                 }
@@ -54,11 +55,11 @@ fun DexScreen(
             modifier = Modifier
                 .padding(top = contentPadding.calculateTopPadding())
         ) {
-            items(dimList.value) {
+            items(cardList.value) {
                 DexDiMEntry(
-                    name = it.name,
+                    name = it.cardName,
                     logo = BitmapData(
-                        bitmap = it.logo,
+                        bitmap = it.cardLogo,
                         width = it.logoWidth,
                         height = it.logoHeight
                     ),
@@ -67,9 +68,11 @@ fun DexScreen(
                             .navigate(
                                 NavigationItems
                                     .CardView.route
-                                    .replace("{dimId}", "${it.id}")
+                                    .replace("{cardId}", "${it.cardId}")
                             )
                     },
+                    obtainedCharacters = it.obtainedCharacters,
+                    totalCharacters = it.totalCharacters,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)

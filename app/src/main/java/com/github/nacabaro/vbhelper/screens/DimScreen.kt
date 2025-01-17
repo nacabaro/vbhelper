@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.screens
 
-import android.util.Log
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -15,21 +14,22 @@ import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.TopBanner
-import com.github.nacabaro.vbhelper.domain.Character
+import com.github.nacabaro.vbhelper.domain.characters.Character
 import com.github.nacabaro.vbhelper.di.VBHelper
+import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.source.DexRepository
 import kotlinx.coroutines.launch
 
 @Composable
 fun DiMScreen(
     navController: NavController,
-    dimId: Int
+    dimId: Long
 ) {
     val coroutineScope = rememberCoroutineScope()
     val application = LocalContext.current.applicationContext as VBHelper
     val dexRepository = DexRepository(application.container.db)
 
-    val characterList = remember { mutableStateOf<List<Character>>(emptyList()) }
+    val characterList = remember { mutableStateOf<List<CharacterDtos.CardProgress>>(emptyList()) }
 
     LaunchedEffect(dexRepository) {
         coroutineScope.launch {
@@ -41,7 +41,7 @@ fun DiMScreen(
     Scaffold (
         topBar = {
             TopBanner(
-                text = "Discovered Digimon",
+                text = "Discovered characters",
                 onBackClick = {
                     navController.popBackStack()
                 }
@@ -55,11 +55,11 @@ fun DiMScreen(
             items(characterList.value) { character ->
                 CharacterEntry(
                     onClick = {  },
-                    obscure = true,
+                    obscure = character.discoveredOn == null,
                     icon = BitmapData(
-                        bitmap = character.sprite1,
-                        width = character.spritesWidth,
-                        height = character.spritesHeight
+                        bitmap = character.spriteIdle,
+                        width = character.spriteWidth,
+                        height = character.spriteHeight,
                     ),
                 )
             }

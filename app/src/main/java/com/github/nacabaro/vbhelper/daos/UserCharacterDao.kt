@@ -34,7 +34,8 @@ interface UserCharacterDao {
     """)
     fun getTransformationHistory(monId: Long): List<CharacterDtos.TransformationHistory>?
 
-    @Query("""
+    @Query(
+        """
         SELECT
             uc.*,
             c.sprite1 AS spriteIdle,
@@ -43,8 +44,9 @@ interface UserCharacterDao {
             d.isBEm as isBemCard
         FROM UserCharacter uc
         JOIN Character c ON uc.charId = c.id
-        JOIN Dim d ON c.dimId = d.id
-        """)
+        JOIN Card d ON c.dimId = d.id
+        """
+    )
     suspend fun getAllCharacters(): List<CharacterDtos.CharacterWithSprites>
 
     @Query("SELECT * FROM UserCharacter WHERE id = :id")
@@ -53,7 +55,8 @@ interface UserCharacterDao {
     @Query("SELECT * FROM BECharacterData WHERE id = :id")
     suspend fun getBeData(id: Long): BECharacterData
 
-    @Query("""
+    @Query(
+        """
         SELECT
             uc.*,
             c.sprite1 AS spriteIdle,
@@ -62,10 +65,11 @@ interface UserCharacterDao {
             d.isBEm as isBemCard
         FROM UserCharacter uc
         JOIN Character c ON uc.charId = c.id
-        JOIN Dim d ON c.dimId = d.id
+        JOIN Card d ON c.dimId = d.id
         WHERE uc.isActive = 1
         LIMIT 1
-    """)
+    """
+    )
     suspend fun getActiveCharacter(): CharacterDtos.CharacterWithSprites?
 
     @Query("DELETE FROM UserCharacter WHERE id = :id")

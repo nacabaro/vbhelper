@@ -1,4 +1,4 @@
-package com.github.nacabaro.vbhelper.domain
+package com.github.nacabaro.vbhelper.domain.characters
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -7,7 +7,7 @@ import androidx.room.ForeignKey
 @Entity(
     foreignKeys = [
         ForeignKey(
-            entity = Dim::class,
+            entity = Card::class,
             parentColumns = ["id"],
             childColumns = ["dimId"],
             onDelete = ForeignKey.CASCADE
