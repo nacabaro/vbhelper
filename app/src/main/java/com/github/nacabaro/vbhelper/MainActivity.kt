@@ -21,13 +21,11 @@ import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.characters.Card
 import com.github.nacabaro.vbhelper.domain.Sprites
 import com.github.nacabaro.vbhelper.domain.characters.Character
-import com.github.nacabaro.vbhelper.domain.characters.Dex
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.navigation.AppNavigationHandlers
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
-import com.github.nacabaro.vbhelper.screens.SettingsScreenController
-import com.github.nacabaro.vbhelper.source.ApkSecretsImporter
+import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,21 +55,20 @@ class MainActivity : ComponentActivity() {
         registerFileActivityResult()
 
         val application = applicationContext as VBHelper
-        val settingsScreenController = SettingsScreenController.Factory(this, ApkSecretsImporter(), application.container.dataStoreSecretsRepository)
-            .buildSettingScreenHandlers()
         val scanScreenController = ScanScreenControllerImpl(
             application.container.dataStoreSecretsRepository.secretsFlow,
             this::handleReceivedNfcCharacter,
             this,
             this::registerActivityLifecycleListener,
-            this::unregisterActivityLifecycleListener)
-
+            this::unregisterActivityLifecycleListener
+        )
+        val settingsScreenController = SettingsScreenControllerImpl(this)
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             VBHelperTheme {
-                MainApplication(settingsScreenController, scanScreenController)
+                MainApplication(scanScreenController, settingsScreenController)
             }
         }
         Log.i("MainActivity", "Activity onCreated")
@@ -190,10 +187,16 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun MainApplication(settingsScreenController: SettingsScreenController, scanScreenController: ScanScreenControllerImpl) {
+    private fun MainApplication(
+        scanScreenController: ScanScreenControllerImpl,
+        settingsScreenController: SettingsScreenControllerImpl
+    ) {
 
         AppNavigation(
-            applicationNavigationHandlers = AppNavigationHandlers(settingsScreenController, scanScreenController),
+            applicationNavigationHandlers = AppNavigationHandlers(
+                settingsScreenController,
+                scanScreenController,
+            ),
             onClickImportCard = {
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
