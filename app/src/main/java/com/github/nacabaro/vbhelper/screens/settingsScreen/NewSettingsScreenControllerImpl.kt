@@ -91,12 +91,16 @@ class NewSettingsScreenControllerImpl(
     private fun importDatabase(roomDbName: String, sourceUri: Uri) {
         context.lifecycleScope.launch(Dispatchers.IO) {
             try {
+                var application = context.applicationContext as VBHelper
+
                 if (!getFileNameFromUri(sourceUri)!!.endsWith(".vbhelper")) {
                     context.runOnUiThread {
                         Toast.makeText(context, "Invalid file format", Toast.LENGTH_SHORT).show()
                     }
                     return@launch
                 }
+
+                application.container.db.close()
 
                 val dbPath = context.getDatabasePath(roomDbName)
                 val shmFile = File(dbPath.parent, "$roomDbName-shm")
