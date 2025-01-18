@@ -17,6 +17,7 @@ import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreen
 import com.github.nacabaro.vbhelper.screens.SpriteViewer
 import com.github.nacabaro.vbhelper.screens.StorageScreen
+import com.github.nacabaro.vbhelper.screens.itemsScreen.MyItems
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
 
 data class AppNavigationHandlers(
@@ -92,7 +93,7 @@ fun AppNavigation(
                 }
             }
             composable(NavigationItems.Items.route) {
-                ItemsScreen(
+                MyItems(
                     navController = navController
                 )
             }

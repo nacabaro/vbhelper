@@ -22,7 +22,9 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
             context = context,
             klass = AppDatabase::class.java,
             "internalDb"
-        ).build()
+        )
+            .createFromAsset("items.db")
+            .build()
     }
 
     override val dataStoreSecretsRepository = DataStoreSecretsRepository(context.secretsStore)
