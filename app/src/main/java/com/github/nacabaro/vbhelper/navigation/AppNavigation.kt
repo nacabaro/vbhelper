@@ -15,15 +15,13 @@ import com.github.nacabaro.vbhelper.screens.ItemsScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreen
-import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenController
 import com.github.nacabaro.vbhelper.screens.SpriteViewer
 import com.github.nacabaro.vbhelper.screens.StorageScreen
-import com.github.nacabaro.vbhelper.screens.settingsScreen.NewSettingsScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
 
 data class AppNavigationHandlers(
-    val settingsScreenController: SettingsScreenController,
+    val settingsScreenController: SettingsScreenControllerImpl,
     val scanScreenController: ScanScreenControllerImpl,
-    val newSettingsScreenController: NewSettingsScreenControllerImpl
 )
 
 @Composable
@@ -76,7 +74,6 @@ fun AppNavigation(
                 SettingsScreen(
                     navController = navController,
                     settingsScreenController = applicationNavigationHandlers.settingsScreenController,
-                    newSettingsScreenController = applicationNavigationHandlers.newSettingsScreenController,
                     onClickImportCard = onClickImportCard,
                 )
             }

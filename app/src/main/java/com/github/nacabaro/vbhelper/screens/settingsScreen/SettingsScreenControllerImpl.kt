@@ -10,24 +10,33 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import com.github.nacabaro.vbhelper.di.VBHelper
+import com.github.nacabaro.vbhelper.source.ApkSecretsImporter
+import com.github.nacabaro.vbhelper.source.SecretsImporter
+import com.github.nacabaro.vbhelper.source.SecretsRepository
+import com.github.nacabaro.vbhelper.source.proto.Secrets
 import kotlinx.coroutines.Dispatchers
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 
 
-class NewSettingsScreenControllerImpl(
+class SettingsScreenControllerImpl(
     private val context: ComponentActivity,
-): NewSettingsScreenController {
+): SettingsScreenController {
+    private val roomDbName = "internalDb"
     private val filePickerLauncher: ActivityResultLauncher<String>
     private val filePickerOpenerLauncher: ActivityResultLauncher<Array<String>>
+    private val filePickerApk: ActivityResultLauncher<Array<String>>
+    private val secretsImporter: SecretsImporter = ApkSecretsImporter()
+    private val application = context.applicationContext as VBHelper
+    private val secretsRepository: SecretsRepository = application.container.dataStoreSecretsRepository
 
     init {
         filePickerLauncher = context.registerForActivityResult(
             ActivityResultContracts.CreateDocument("application/octet-stream")
         ) { uri ->
                 if (uri != null) {
-                    exportDatabase("internalDb", uri)
+                    exportDatabase(uri)
                 } else {
                     context.runOnUiThread {
                         Toast.makeText(context, "No destination selected", Toast.LENGTH_SHORT)
@@ -40,10 +49,22 @@ class NewSettingsScreenControllerImpl(
             ActivityResultContracts.OpenDocument()
         ) { uri ->
             if (uri != null) {
-                importDatabase("internalDb", uri)
+                importDatabase(uri)
             } else {
                 context.runOnUiThread {
                     Toast.makeText(context, "No source selected", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        filePickerApk = context.registerForActivityResult(
+            ActivityResultContracts.OpenDocument()
+        ) { uri ->
+            if (uri != null) {
+                importApk(uri)
+            } else {
+                context.runOnUiThread {
+                    Toast.makeText(context, "APK import cancelled", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -57,10 +78,13 @@ class NewSettingsScreenControllerImpl(
         filePickerOpenerLauncher.launch(arrayOf("application/octet-stream"))
     }
 
-    private fun exportDatabase(roomDbName: String, destinationUri: Uri) {
+    override fun onClickImportApk() {
+        filePickerApk.launch(arrayOf("*/*"))
+    }
+
+    private fun exportDatabase(destinationUri: Uri) {
         context.lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val application = context.applicationContext as VBHelper
                 val dbFile = File(context.getDatabasePath(roomDbName).absolutePath)
                 if (!dbFile.exists()) {
                     throw IllegalStateException("Database file does not exist!")
@@ -88,11 +112,9 @@ class NewSettingsScreenControllerImpl(
         }
     }
 
-    private fun importDatabase(roomDbName: String, sourceUri: Uri) {
+    private fun importDatabase(sourceUri: Uri) {
         context.lifecycleScope.launch(Dispatchers.IO) {
             try {
-                var application = context.applicationContext as VBHelper
-
                 if (!getFileNameFromUri(sourceUri)!!.endsWith(".vbhelper")) {
                     context.runOnUiThread {
                         Toast.makeText(context, "Invalid file format", Toast.LENGTH_SHORT).show()
@@ -152,5 +174,38 @@ class NewSettingsScreenControllerImpl(
             outputStream.write(buffer, 0, bytesRead)
         }
         outputStream.flush()
+    }
+
+    private fun importApk(uri: Uri) {
+        context.lifecycleScope.launch(Dispatchers.IO) {
+            context.contentResolver.openInputStream(uri).use {
+                if(it == null) {
+                    context.runOnUiThread {
+                        Toast.makeText(
+                            context,
+                            "Selected file is empty!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    return@launch
+                }
+                val secrets: Secrets?
+                try {
+                    secrets = secretsImporter.importSecrets(it)
+                } catch (e: Exception) {
+                    context.runOnUiThread {
+                        Toast.makeText(context, "Secrets import failed. Please only select the official Vital Arena App 2.1.0 APK.", Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
+                context.lifecycleScope.launch(Dispatchers.IO) {
+                    secretsRepository.updateSecrets(secrets)
+                }.invokeOnCompletion {
+                    context.runOnUiThread {
+                        Toast.makeText(context, "Secrets successfully imported. Connections with devices are now possible.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
     }
 }
