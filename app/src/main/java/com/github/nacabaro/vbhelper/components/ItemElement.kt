@@ -1,8 +1,5 @@
 package com.github.nacabaro.vbhelper.components
 
-import android.graphics.drawable.Icon
-import android.util.EventLogTags.Description
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,8 +18,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,8 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.github.nacabaro.vbhelper.R
-import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
+import kotlin.math.absoluteValue
 
 @Composable
 fun ItemElement(
@@ -167,15 +162,24 @@ fun getIconResource(index: Int): Int {
         1 -> R.drawable.baseline_agility_24
         2 -> R.drawable.baseline_attack_24
         3 -> R.drawable.baseline_shield_24
+        4 -> R.drawable.baseline_trophy_24
+        5 -> R.drawable.baseline_arrow_up_24
+        6 -> R.drawable.baseline_timer_24
+        7 -> R.drawable.baseline_rank_24
         else -> R.drawable.baseline_question_mark_24
     }
 }
 
 fun getLengthResource(index: Int): Int {
-    return when (index) {
-        1 -> R.drawable.baseline_15_min_timer
-        2 -> R.drawable.baseline_30_min_timer
-        3 -> R.drawable.baseline_60_min_timer
+    return when (index.absoluteValue) {
+        15 -> R.drawable.baseline_15_min_timer
+        30 -> R.drawable.baseline_30_min_timer
+        60 -> R.drawable.baseline_60_min_timer
+        300 -> R.drawable.baseline_5_hour_timer
+        600 -> R.drawable.baseline_10_hour_timer
+        720 -> R.drawable.baseline_12_hour_timer
+        1440 -> R.drawable.baseline_24_hour_timer
+        6000 -> R.drawable.baseline_reset_24
         else -> R.drawable.baseline_question_mark_24
     }
 }

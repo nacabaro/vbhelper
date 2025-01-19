@@ -51,7 +51,7 @@ fun ItemsStore(
             items(myItems.value) { index ->
                 ItemElement(
                     itemIcon = getIconResource(index.itemIcon),
-                    lengthIcon = getLengthResource(index.lengthIcon),
+                    lengthIcon = getLengthResource(index.itemLength),
                     modifier = Modifier
                         .padding(8.dp),
                     onClick = {
@@ -65,7 +65,7 @@ fun ItemsStore(
                         name = myItems.value[selectedElementIndex!!].name,
                         description = myItems.value[selectedElementIndex!!].description,
                         itemIcon = getIconResource(myItems.value[selectedElementIndex!!].itemIcon),
-                        lengthIcon = getLengthResource(myItems.value[selectedElementIndex!!].lengthIcon),
+                        lengthIcon = getLengthResource(myItems.value[selectedElementIndex!!].itemLength),
                         amount = myItems.value[selectedElementIndex!!].quantity,
                         onClickUse = { },
                         onClickCancel = { showDialog = false }

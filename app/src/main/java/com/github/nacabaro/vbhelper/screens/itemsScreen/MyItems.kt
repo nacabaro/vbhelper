@@ -1,11 +1,9 @@
 package com.github.nacabaro.vbhelper.screens.itemsScreen
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,10 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.components.ItemDialog
 import com.github.nacabaro.vbhelper.components.ItemElement
-import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.components.getIconResource
 import com.github.nacabaro.vbhelper.components.getLengthResource
 import com.github.nacabaro.vbhelper.di.VBHelper
@@ -55,7 +51,7 @@ fun MyItems(
             items(myItems.value) { index ->
                 ItemElement(
                     itemIcon = getIconResource(index.itemIcon),
-                    lengthIcon = getLengthResource(index.lengthIcon),
+                    lengthIcon = getLengthResource(index.itemLength),
                     modifier = Modifier
                         .padding(8.dp),
                     onClick = {
@@ -69,7 +65,7 @@ fun MyItems(
                         name = myItems.value[selectedElementIndex!!].name,
                         description = myItems.value[selectedElementIndex!!].description,
                         itemIcon = getIconResource(myItems.value[selectedElementIndex!!].itemIcon),
-                        lengthIcon = getLengthResource(myItems.value[selectedElementIndex!!].lengthIcon),
+                        lengthIcon = getLengthResource(myItems.value[selectedElementIndex!!].itemLength),
                         amount = myItems.value[selectedElementIndex!!].quantity,
                         onClickUse = { },
                         onClickCancel = { showDialog = false }

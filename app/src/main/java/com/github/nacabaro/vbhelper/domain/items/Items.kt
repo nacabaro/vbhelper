@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.domain.items
 
-import android.content.Intent
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -10,6 +9,6 @@ data class Items(
     val name: String,
     val description: String,
     val itemIcon: Int,
-    val lengthIcon: Int,
+    val itemLength: Int,
     val price: Int
 )
