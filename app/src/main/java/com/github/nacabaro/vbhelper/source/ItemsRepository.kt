@@ -7,7 +7,7 @@ import com.github.nacabaro.vbhelper.dtos.ItemDtos
 class ItemsRepository(
     private val db: AppDatabase
 ) {
-    suspend fun getAllItems(): List<Items> {
+    suspend fun getAllItems(): List<ItemDtos.ItemsWithQuantities> {
         return db.itemDao().getAllItems()
     }
 

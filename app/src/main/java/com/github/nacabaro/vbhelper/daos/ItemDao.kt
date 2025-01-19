@@ -7,8 +7,12 @@ import com.github.nacabaro.vbhelper.dtos.ItemDtos
 
 @Dao
 interface ItemDao {
-    @Query("SELECT * FROM Items")
-    suspend fun getAllItems(): List<Items>
+    @Query("""
+        SELECT Items.*, UserItems.quantity
+        FROM Items
+        LEFT JOIN UserItems ON Items.id = UserItems.itemId
+    """)
+    suspend fun getAllItems(): List<ItemDtos.ItemsWithQuantities>
 
     @Query("""
         SELECT Items.*, UserItems.quantity

@@ -66,7 +66,7 @@ fun StorageScreen(
     }
 
     Scaffold (
-        topBar = { TopBanner(text = "My Digimon") }
+        topBar = { TopBanner(text = "My characters") }
     ) { contentPadding ->
         if (monList.value.isEmpty()) {
             Column (

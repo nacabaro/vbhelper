@@ -93,7 +93,7 @@ fun AppNavigation(
                 }
             }
             composable(NavigationItems.Items.route) {
-                MyItems(
+                ItemsScreen(
                     navController = navController
                 )
             }
