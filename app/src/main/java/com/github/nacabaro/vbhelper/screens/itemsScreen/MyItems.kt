@@ -1,5 +1,8 @@
 package com.github.nacabaro.vbhelper.screens.itemsScreen
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -11,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -21,6 +25,7 @@ import com.github.nacabaro.vbhelper.components.getIconResource
 import com.github.nacabaro.vbhelper.components.getLengthResource
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
+import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.ItemsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -42,7 +47,13 @@ fun MyItems(
     }
 
     if (myItems.value.isEmpty()) {
-        Text("No items")
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text("No items")
+        }
     } else {
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -67,7 +78,18 @@ fun MyItems(
                         itemIcon = getIconResource(myItems.value[selectedElementIndex!!].itemIcon),
                         lengthIcon = getLengthResource(myItems.value[selectedElementIndex!!].itemLength),
                         amount = myItems.value[selectedElementIndex!!].quantity,
-                        onClickUse = { },
+                        onClickUse = {
+                            showDialog = false
+                            navController
+                                .navigate(
+                                    NavigationItems
+                                        .ApplyItem.route
+                                        .replace(
+                                            "{itemId}",
+                                            myItems.value[selectedElementIndex!!].id.toString()
+                                        )
+                                )
+                        },
                         onClickCancel = { showDialog = false }
                     )
                 }

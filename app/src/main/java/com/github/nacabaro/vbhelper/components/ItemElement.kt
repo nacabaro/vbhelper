@@ -166,6 +166,7 @@ fun getIconResource(index: Int): Int {
         5 -> R.drawable.baseline_arrow_up_24
         6 -> R.drawable.baseline_timer_24
         7 -> R.drawable.baseline_rank_24
+        8 -> R.drawable.baseline_vitals_24
         else -> R.drawable.baseline_question_mark_24
     }
 }

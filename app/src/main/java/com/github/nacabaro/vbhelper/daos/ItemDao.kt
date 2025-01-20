@@ -22,6 +22,14 @@ interface ItemDao {
     suspend fun getAllUserItems(): List<ItemDtos.ItemsWithQuantities>
 
     @Query("""
+        SELECT Items.*, UserItems.quantity
+        FROM Items
+        JOIN UserItems ON Items.id = UserItems.itemId
+        WHERE UserItems.itemId = :itemId
+    """)
+    fun getUserItem(itemId: Long): ItemDtos.ItemsWithQuantities
+
+    @Query("""
         UPDATE UserItems
         SET quantity = quantity - 1
         WHERE itemId = :itemId
