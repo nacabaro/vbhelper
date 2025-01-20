@@ -15,8 +15,10 @@ import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.ItemDisplay
 import com.github.nacabaro.vbhelper.components.TransformationHistoryCard
+import com.github.nacabaro.vbhelper.components.getIconResource
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import java.util.Locale
 
@@ -153,6 +155,24 @@ fun BEBEmHomeScreen(
                     .aspectRatio(1f)
                     .padding(8.dp)
             )
+            if (beData.itemRemainingTime != 0) {
+                ItemDisplay(
+                    icon = getIconResource(beData.itemType),
+                    textValue = "${beData.itemRemainingTime} m",
+                    definition = when (beData.itemType) {
+                        ItemsScreenControllerImpl.ItemTypes.PPTraining.id -> "PP Training"
+                        ItemsScreenControllerImpl.ItemTypes.HPTraining.id -> "HP Training"
+                        ItemsScreenControllerImpl.ItemTypes.APTraining.id -> "AP Training"
+                        ItemsScreenControllerImpl.ItemTypes.BPTraining.id -> "BP Training"
+                        ItemsScreenControllerImpl.ItemTypes.AllTraining.id -> "All Training"
+                        else -> ""
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f)
+                        .padding(8.dp)
+                )
+            }
         }
         Row (
             modifier = Modifier

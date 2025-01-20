@@ -32,7 +32,6 @@ fun ItemsStore(
     val application = LocalContext.current.applicationContext as VBHelper
     val itemsRepository = ItemsRepository(application.container.db)
     val myItems = remember { mutableStateOf(emptyList<ItemDtos.ItemsWithQuantities>()) }
-    var showDialog by remember { mutableStateOf(false) }
     var selectedElementIndex by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(itemsRepository) {
@@ -55,23 +54,22 @@ fun ItemsStore(
                     modifier = Modifier
                         .padding(8.dp),
                     onClick = {
-                        showDialog = true
                         selectedElementIndex = myItems.value.indexOf(index)
                     }
                 )
-
-                if (showDialog && selectedElementIndex != null) {
-                    ItemDialog(
-                        name = myItems.value[selectedElementIndex!!].name,
-                        description = myItems.value[selectedElementIndex!!].description,
-                        itemIcon = getIconResource(myItems.value[selectedElementIndex!!].itemIcon),
-                        lengthIcon = getLengthResource(myItems.value[selectedElementIndex!!].itemLength),
-                        amount = myItems.value[selectedElementIndex!!].quantity,
-                        onClickUse = { },
-                        onClickCancel = { showDialog = false }
-                    )
-                }
             }
+        }
+
+        if (selectedElementIndex != null) {
+            ItemDialog(
+                name = myItems.value[selectedElementIndex!!].name,
+                description = myItems.value[selectedElementIndex!!].description,
+                itemIcon = getIconResource(myItems.value[selectedElementIndex!!].itemIcon),
+                lengthIcon = getLengthResource(myItems.value[selectedElementIndex!!].itemLength),
+                amount = myItems.value[selectedElementIndex!!].quantity,
+                onClickUse = { },
+                onClickCancel = { selectedElementIndex = null }
+            )
         }
     }
 }

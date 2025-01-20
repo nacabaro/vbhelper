@@ -5,7 +5,6 @@ import androidx.lifecycle.lifecycleScope
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
-import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +16,7 @@ class ItemsScreenControllerImpl (
 ): ItemsScreenController {
     private var database: AppDatabase
 
-    private enum class ItemTypes(val id: Int) {
+    enum class ItemTypes(val id: Int) {
         PPTraining(1),
         HPTraining(2),
         APTraining(3),
@@ -39,7 +38,7 @@ class ItemsScreenControllerImpl (
                 val item = getItem(itemId)
                 val characterData = database.userCharacterDao().getCharacter(characterId)
                 val beCharacterData: BECharacterData
-                var vbCharacterData: VBCharacterData
+                //var vbCharacterData: VBCharacterData
 
                 if (characterData.characterType == DeviceType.BEDevice) {
                     beCharacterData = database.userCharacterDao().getBeData(characterId)

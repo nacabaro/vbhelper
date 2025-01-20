@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.components
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -23,22 +22,18 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.utils.getBitmap
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import com.github.nacabaro.vbhelper.utils.getObscuredBitmap
-import java.nio.ByteBuffer
 
 @Composable
 fun CharacterEntry(
     icon: BitmapData,
-    obscure: Boolean = false,
     modifier: Modifier = Modifier,
+    obscure: Boolean = false,
     shape: Shape = MaterialTheme.shapes.medium,
     multiplier: Int = 3,
     onClick: () -> Unit = {  }
@@ -79,8 +74,6 @@ fun ItemDisplay(
     icon: Int,
     textValue: String,
     modifier: Modifier = Modifier,
-    iconSize: Dp = 48.dp,
-    textSize: TextUnit = 24.sp,
     definition: String = "",
 ) {
     val context = LocalContext.current
@@ -101,15 +94,14 @@ fun ItemDisplay(
                 painter = painterResource(icon),
                 contentDescription = "Vitals",
                 modifier = Modifier
+                    .fillMaxSize(0.5f)
                     .padding(8.dp)
-                    .size(iconSize)
             )
             Text(
                 text = textValue,
                 textAlign = TextAlign.Center,
-                fontSize = textSize,
                 fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
     }

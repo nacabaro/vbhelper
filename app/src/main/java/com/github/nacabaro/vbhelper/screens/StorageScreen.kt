@@ -99,31 +99,31 @@ fun StorageScreen(
                         selectedCharacter = index.id
                     }
                 )
+            }
+        }
 
-                if (selectedCharacter != null) {
-                    StorageDialog(
-                        characterId = selectedCharacter!!,
-                        onDismissRequest = { selectedCharacter = null },
-                        onClickSetActive = {
-                            coroutineScope.launch {
-                                withContext(Dispatchers.IO) {
-                                    storageRepository.setActiveCharacter(selectedCharacter!!)
-                                    selectedCharacter = null
-                                }
-                                navController.navigate(NavigationItems.Home.route)
-                            }
-                        },
-                        onSendToBracelet = {
-                            navController.navigate(
-                                NavigationItems.Scan.route.replace(
-                                    "{characterId}",
-                                    selectedCharacter.toString()
-                                )
-                            )
+        if (selectedCharacter != null) {
+            StorageDialog(
+                characterId = selectedCharacter!!,
+                onDismissRequest = { selectedCharacter = null },
+                onClickSetActive = {
+                    coroutineScope.launch {
+                        withContext(Dispatchers.IO) {
+                            storageRepository.setActiveCharacter(selectedCharacter!!)
+                            selectedCharacter = null
                         }
+                        navController.navigate(NavigationItems.Home.route)
+                    }
+                },
+                onSendToBracelet = {
+                    navController.navigate(
+                        NavigationItems.Scan.route.replace(
+                            "{characterId}",
+                            selectedCharacter.toString()
+                        )
                     )
                 }
-            }
+            )
         }
     }
 }

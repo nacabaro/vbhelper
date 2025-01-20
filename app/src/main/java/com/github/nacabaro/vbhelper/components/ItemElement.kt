@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.github.nacabaro.vbhelper.R
+import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 import kotlin.math.absoluteValue
 
@@ -159,11 +160,11 @@ fun ItemDialog(
 
 fun getIconResource(index: Int): Int {
     return when (index) {
-        1 -> R.drawable.baseline_agility_24
-        2 -> R.drawable.baseline_attack_24
-        3 -> R.drawable.baseline_shield_24
-        4 -> R.drawable.baseline_trophy_24
-        5 -> R.drawable.baseline_arrow_up_24
+        ItemsScreenControllerImpl.ItemTypes.PPTraining.id -> R.drawable.baseline_agility_24
+        ItemsScreenControllerImpl.ItemTypes.APTraining.id -> R.drawable.baseline_attack_24
+        ItemsScreenControllerImpl.ItemTypes.HPTraining.id -> R.drawable.baseline_shield_24
+        ItemsScreenControllerImpl.ItemTypes.BPTraining.id -> R.drawable.baseline_trophy_24
+        ItemsScreenControllerImpl.ItemTypes.AllTraining.id -> R.drawable.baseline_arrow_up_24
         6 -> R.drawable.baseline_timer_24
         7 -> R.drawable.baseline_rank_24
         8 -> R.drawable.baseline_vitals_24
