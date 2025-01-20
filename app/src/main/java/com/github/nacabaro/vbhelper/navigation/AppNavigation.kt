@@ -11,17 +11,20 @@ import com.github.nacabaro.vbhelper.screens.BattlesScreen
 import com.github.nacabaro.vbhelper.screens.DexScreen
 import com.github.nacabaro.vbhelper.screens.DiMScreen
 import com.github.nacabaro.vbhelper.screens.homeScreens.HomeScreen
-import com.github.nacabaro.vbhelper.screens.ItemsScreen
+import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreen
 import com.github.nacabaro.vbhelper.screens.SpriteViewer
 import com.github.nacabaro.vbhelper.screens.StorageScreen
+import com.github.nacabaro.vbhelper.screens.itemsScreen.ChooseCharacterScreen
+import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
 
 data class AppNavigationHandlers(
     val settingsScreenController: SettingsScreenControllerImpl,
     val scanScreenController: ScanScreenControllerImpl,
+    val itemsScreenController: ItemsScreenControllerImpl
 )
 
 @Composable
@@ -95,6 +98,17 @@ fun AppNavigation(
                 ItemsScreen(
                     navController = navController
                 )
+            }
+            composable(NavigationItems.ApplyItem.route) {
+                val itemId = it.arguments?.getString("itemId")
+                if (itemId != null) {
+                    ChooseCharacterScreen(
+                        itemsScreenController = applicationNavigationHandlers
+                            .itemsScreenController,
+                        navController = navController,
+                        itemId = itemId.toLong()
+                    )
+                }
             }
         }
     }

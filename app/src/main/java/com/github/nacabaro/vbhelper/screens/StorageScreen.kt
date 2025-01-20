@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.screens
 
-import android.util.Log
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -66,7 +64,7 @@ fun StorageScreen(
     }
 
     Scaffold (
-        topBar = { TopBanner(text = "My Digimon") }
+        topBar = { TopBanner(text = "My characters") }
     ) { contentPadding ->
         if (monList.value.isEmpty()) {
             Column (
@@ -101,31 +99,31 @@ fun StorageScreen(
                         selectedCharacter = index.id
                     }
                 )
+            }
+        }
 
-                if (selectedCharacter != null) {
-                    StorageDialog(
-                        characterId = selectedCharacter!!,
-                        onDismissRequest = { selectedCharacter = null },
-                        onClickSetActive = {
-                            coroutineScope.launch {
-                                withContext(Dispatchers.IO) {
-                                    storageRepository.setActiveCharacter(selectedCharacter!!)
-                                    selectedCharacter = null
-                                }
-                                navController.navigate(NavigationItems.Home.route)
-                            }
-                        },
-                        onSendToBracelet = {
-                            navController.navigate(
-                                NavigationItems.Scan.route.replace(
-                                    "{characterId}",
-                                    selectedCharacter.toString()
-                                )
-                            )
+        if (selectedCharacter != null) {
+            StorageDialog(
+                characterId = selectedCharacter!!,
+                onDismissRequest = { selectedCharacter = null },
+                onClickSetActive = {
+                    coroutineScope.launch {
+                        withContext(Dispatchers.IO) {
+                            storageRepository.setActiveCharacter(selectedCharacter!!)
+                            selectedCharacter = null
                         }
+                        navController.navigate(NavigationItems.Home.route)
+                    }
+                },
+                onSendToBracelet = {
+                    navController.navigate(
+                        NavigationItems.Scan.route.replace(
+                            "{characterId}",
+                            selectedCharacter.toString()
+                        )
                     )
                 }
-            }
+            )
         }
     }
 }

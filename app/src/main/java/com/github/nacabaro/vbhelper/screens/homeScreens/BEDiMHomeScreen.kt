@@ -16,8 +16,10 @@ import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.ItemDisplay
 import com.github.nacabaro.vbhelper.components.TransformationHistoryCard
+import com.github.nacabaro.vbhelper.components.getIconResource
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import kotlin.text.format
 
@@ -33,7 +35,7 @@ fun BEDiMHomeScreen(
             .padding(top = contentPadding.calculateTopPadding())
             .verticalScroll(state = rememberScrollState())
     ) {
-        Row (
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
@@ -49,7 +51,7 @@ fun BEDiMHomeScreen(
                     .weight(1f)
                     .aspectRatio(1f)
             )
-            Column (
+            Column(
                 modifier = Modifier
                     .weight(0.5f)
                     .aspectRatio(0.5f)
@@ -74,7 +76,7 @@ fun BEDiMHomeScreen(
                 )
             }
         }
-        Row (
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
@@ -108,7 +110,7 @@ fun BEDiMHomeScreen(
                     .padding(8.dp)
             )
         }
-        Row (
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
@@ -130,8 +132,13 @@ fun BEDiMHomeScreen(
                 textValue = when {
                     activeMon.totalBattlesLost == 0 -> "0.00 %"
                     else -> {
-                        val battleWinPercentage = activeMon.totalBattlesWon.toFloat() / (activeMon.totalBattlesWon + activeMon.totalBattlesLost).toFloat()
-                        String.format(Locale.getDefault(), "%.2f", battleWinPercentage * 100) + " %" // Specify locale
+                        val battleWinPercentage =
+                            activeMon.totalBattlesWon.toFloat() / (activeMon.totalBattlesWon + activeMon.totalBattlesLost).toFloat()
+                        String.format(
+                            Locale.getDefault(),
+                            "%.2f",
+                            battleWinPercentage * 100
+                        ) + " %" // Specify locale
                     }
                 },
                 definition = "Total battle win %",
@@ -145,8 +152,13 @@ fun BEDiMHomeScreen(
                 textValue = when {
                     activeMon.totalBattlesLost == 0 -> "0.00 %"
                     else -> {
-                        val battleWinPercentage = activeMon.currentPhaseBattlesWon.toFloat() / (activeMon.currentPhaseBattlesWon + activeMon.currentPhaseBattlesLost).toFloat()
-                        String.format(Locale.getDefault(), "%.2f", battleWinPercentage * 100) + " %" // Specify locale
+                        val battleWinPercentage =
+                            activeMon.currentPhaseBattlesWon.toFloat() / (activeMon.currentPhaseBattlesWon + activeMon.currentPhaseBattlesLost).toFloat()
+                        String.format(
+                            Locale.getDefault(),
+                            "%.2f",
+                            battleWinPercentage * 100
+                        ) + " %" // Specify locale
                     }
                 },
                 definition = "Current phase win %",
@@ -155,8 +167,26 @@ fun BEDiMHomeScreen(
                     .aspectRatio(1f)
                     .padding(8.dp)
             )
+            if (beData.itemRemainingTime != 0) {
+                ItemDisplay(
+                    icon = getIconResource(beData.itemType),
+                    textValue = "${beData.itemRemainingTime} m",
+                    definition = when (beData.itemType) {
+                        ItemsScreenControllerImpl.ItemTypes.PPTraining.id -> "PP Training"
+                        ItemsScreenControllerImpl.ItemTypes.HPTraining.id -> "HP Training"
+                        ItemsScreenControllerImpl.ItemTypes.APTraining.id -> "AP Training"
+                        ItemsScreenControllerImpl.ItemTypes.BPTraining.id -> "BP Training"
+                        ItemsScreenControllerImpl.ItemTypes.AllTraining.id -> "All Training"
+                        else -> ""
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f)
+                        .padding(8.dp)
+                )
+            }
         }
-        Row (
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
         ) {

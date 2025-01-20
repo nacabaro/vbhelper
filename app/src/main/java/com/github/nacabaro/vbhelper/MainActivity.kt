@@ -24,6 +24,7 @@ import com.github.nacabaro.vbhelper.domain.characters.Character
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.navigation.AppNavigationHandlers
+import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
@@ -63,12 +64,17 @@ class MainActivity : ComponentActivity() {
             this::unregisterActivityLifecycleListener
         )
         val settingsScreenController = SettingsScreenControllerImpl(this)
+        val itemsScreenController = ItemsScreenControllerImpl(this)
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             VBHelperTheme {
-                MainApplication(scanScreenController, settingsScreenController)
+                MainApplication(
+                    scanScreenController = scanScreenController,
+                    settingsScreenController = settingsScreenController,
+                    itemsScreenController = itemsScreenController
+                )
             }
         }
         Log.i("MainActivity", "Activity onCreated")
@@ -189,13 +195,15 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun MainApplication(
         scanScreenController: ScanScreenControllerImpl,
-        settingsScreenController: SettingsScreenControllerImpl
+        settingsScreenController: SettingsScreenControllerImpl,
+        itemsScreenController: ItemsScreenControllerImpl
     ) {
 
         AppNavigation(
             applicationNavigationHandlers = AppNavigationHandlers(
                 settingsScreenController,
                 scanScreenController,
+                itemsScreenController
             ),
             onClickImportCard = {
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {

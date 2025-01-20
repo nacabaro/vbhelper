@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
@@ -16,6 +17,12 @@ interface UserCharacterDao {
 
     @Insert
     fun insertBECharacterData(characterData: BECharacterData)
+
+    @Upsert
+    fun updateCharacter(character: UserCharacter)
+
+    @Upsert
+    fun updateBECharacterData(characterData: BECharacterData)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertTransformationHistory(vararg transformationHistory: TransformationHistory)
