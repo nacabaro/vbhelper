@@ -55,8 +55,7 @@ fun ItemElement(
                 tint = MaterialTheme.colorScheme.surfaceTint,
                 modifier = Modifier
                     .size(48.dp) // Set the size of the overlay image
-                    .padding(4.dp
-                    )
+                    .padding(4.dp)
                     .align(Alignment.TopStart) // Align to the top end (top-right corner)
             )
         }
