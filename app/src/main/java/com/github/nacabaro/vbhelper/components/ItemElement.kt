@@ -41,13 +41,13 @@ fun ItemElement(
             .aspectRatio(1f)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Background image (full size)
             Icon(
                 painter = painterResource(id = itemIcon),
                 contentDescription = null,
                 modifier = Modifier
                     .size(96.dp)
                     .align(Alignment.Center)
+                    .padding(16.dp)
             )
             Icon(
                 painter = painterResource(id = lengthIcon),
@@ -55,8 +55,8 @@ fun ItemElement(
                 tint = MaterialTheme.colorScheme.surfaceTint,
                 modifier = Modifier
                     .size(48.dp) // Set the size of the overlay image
-                    .padding(4.dp)
                     .align(Alignment.TopStart) // Align to the top end (top-right corner)
+                    .padding(8.dp)
             )
         }
     }
