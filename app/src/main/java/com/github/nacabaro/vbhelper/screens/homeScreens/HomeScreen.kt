@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.screens.homeScreens
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -72,7 +71,6 @@ fun HomeScreen(
             }
         } else {
             if (activeMon.value!!.isBemCard) {
-                Log.d("HomeScreen", "BEDeviceBEm")
                 BEBEmHomeScreen(
                     activeMon = activeMon.value!!,
                     beData = beData.value!!,
@@ -80,7 +78,6 @@ fun HomeScreen(
                     contentPadding = contentPadding
                 )
             } else if (!activeMon.value!!.isBemCard && activeMon.value!!.characterType == DeviceType.BEDevice) {
-                Log.d("HomeScreen", "BEDevice")
                 BEDiMHomeScreen(
                     activeMon = activeMon.value!!,
                     beData = beData.value!!,

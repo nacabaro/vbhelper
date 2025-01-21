@@ -9,7 +9,13 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import com.github.cfogrady.vb.dim.card.BemCard
+import com.github.cfogrady.vb.dim.card.DimReader
+import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
+import com.github.nacabaro.vbhelper.domain.Sprites
+import com.github.nacabaro.vbhelper.domain.characters.Card
+import com.github.nacabaro.vbhelper.domain.characters.Character
 import com.github.nacabaro.vbhelper.source.ApkSecretsImporter
 import com.github.nacabaro.vbhelper.source.SecretsImporter
 import com.github.nacabaro.vbhelper.source.SecretsRepository
@@ -27,9 +33,11 @@ class SettingsScreenControllerImpl(
     private val filePickerLauncher: ActivityResultLauncher<String>
     private val filePickerOpenerLauncher: ActivityResultLauncher<Array<String>>
     private val filePickerApk: ActivityResultLauncher<Array<String>>
+    private val filePickerCard: ActivityResultLauncher<Array<String>>
     private val secretsImporter: SecretsImporter = ApkSecretsImporter()
     private val application = context.applicationContext as VBHelper
     private val secretsRepository: SecretsRepository = application.container.dataStoreSecretsRepository
+    private val database: AppDatabase = application.container.db
 
     init {
         filePickerLauncher = context.registerForActivityResult(
@@ -68,6 +76,18 @@ class SettingsScreenControllerImpl(
                 }
             }
         }
+
+        filePickerCard = context.registerForActivityResult(
+            ActivityResultContracts.OpenDocument()
+        ) { uri ->
+            if (uri != null) {
+                importCard(uri)
+            } else {
+                context.runOnUiThread {
+                    Toast.makeText(context, "Card import cancelled", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     override fun onClickOpenDirectory() {
@@ -80,6 +100,96 @@ class SettingsScreenControllerImpl(
 
     override fun onClickImportApk() {
         filePickerApk.launch(arrayOf("*/*"))
+    }
+
+    override fun onClickImportCard() {
+        filePickerCard.launch(arrayOf("*/*"))
+    }
+
+    private fun importCard(uri: Uri) {
+        context.lifecycleScope.launch(Dispatchers.IO) {
+            val contentResolver = context.contentResolver
+            val inputStream = contentResolver.openInputStream(uri)
+            inputStream.use { fileReader ->
+                val dimReader = DimReader()
+                val card = dimReader.readCard(fileReader, false)
+
+                val cardModel = Card(
+                    dimId = card.header.dimId,
+                    logo = card.spriteData.sprites[0].pixelData,
+                    name = card.spriteData.text, // TODO Make user write card name// TODO Make user write card name
+                    stageCount = card.adventureLevels.levels.size,
+                    logoHeight = card.spriteData.sprites[0].height,
+                    logoWidth = card.spriteData.sprites[0].width,
+                    isBEm = card is BemCard
+                )
+
+                val dimId = database
+                    .dimDao()
+                    .insertNewDim(cardModel)
+
+                val characters = card.characterStats.characterEntries
+
+                var spriteCounter = when (card is BemCard) {
+                    true -> 55
+                    false -> 10
+                }
+
+                val domainCharacters = mutableListOf<Character>()
+
+                for (index in 0 until characters.size) {
+                    domainCharacters.add(
+                        Character(
+                            dimId = dimId,
+                            monIndex = index,
+                            name = card.spriteData.sprites[spriteCounter].pixelData,
+                            stage = characters[index].stage,
+                            attribute = characters[index].attribute,
+                            baseHp = characters[index].hp,
+                            baseBp = characters[index].dp,
+                            baseAp = characters[index].ap,
+                            sprite1 = card.spriteData.sprites[spriteCounter + 1].pixelData,
+                            sprite2 = card.spriteData.sprites[spriteCounter + 2].pixelData,
+                            nameWidth = card.spriteData.sprites[spriteCounter].width,
+                            nameHeight = card.spriteData.sprites[spriteCounter].height,
+                            spritesWidth = card.spriteData.sprites[spriteCounter + 1].width,
+                            spritesHeight = card.spriteData.sprites[spriteCounter + 1].height
+                        )
+                    )
+
+                    spriteCounter += if (card is BemCard) {
+                        14
+                    } else {
+                        when (index) {
+                            0 -> 6
+                            1 -> 7
+                            else -> 14
+                        }
+                    }
+                }
+
+                database
+                    .characterDao()
+                    .insertCharacter(*domainCharacters.toTypedArray())
+
+                val sprites = card.spriteData.sprites.map { sprite ->
+                    Sprites(
+                        id = 0,
+                        sprite = sprite.pixelData,
+                        width = sprite.width,
+                        height = sprite.height
+                    )
+                }
+                database
+                    .characterDao()
+                    .insertSprite(*sprites.toTypedArray())
+            }
+
+            inputStream?.close()
+            context.runOnUiThread {
+                Toast.makeText(context, "Import successful!", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun exportDatabase(destinationUri: Uri) {
