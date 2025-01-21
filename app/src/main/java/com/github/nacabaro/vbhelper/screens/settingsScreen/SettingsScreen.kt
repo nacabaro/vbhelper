@@ -23,7 +23,6 @@ import com.github.nacabaro.vbhelper.components.TopBanner
 fun SettingsScreen(
     navController: NavController,
     settingsScreenController: SettingsScreenControllerImpl,
-    onClickImportCard: () -> Unit
 ) {
     Scaffold (
         topBar = {
@@ -55,7 +54,9 @@ fun SettingsScreen(
                 settingsScreenController.onClickImportDatabase()
             }
             SettingsSection("DiM/BEm management")
-            SettingsEntry(title = "Import DiM card", description = "Import DiM/BEm card file", onClick = onClickImportCard)
+            SettingsEntry(title = "Import DiM card", description = "Import DiM/BEm card file") {
+                settingsScreenController.onClickImportCard()
+            }
             SettingsEntry(title = "Rename DiM/BEm", description = "Set card name") { }
             SettingsSection("About and credits")
             SettingsEntry(title = "Credits", description = "Credits") { }

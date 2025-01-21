@@ -1,26 +1,16 @@
 package com.github.nacabaro.vbhelper
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.lifecycleScope
-import com.github.cfogrady.vb.dim.card.BemCard
-import com.github.cfogrady.vb.dim.card.DimReader
 import com.github.nacabaro.vbhelper.navigation.AppNavigation
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.domain.characters.Card
-import com.github.nacabaro.vbhelper.domain.Sprites
-import com.github.nacabaro.vbhelper.domain.characters.Character
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.navigation.AppNavigationHandlers
@@ -30,14 +20,11 @@ import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import java.util.GregorianCalendar
 
 class MainActivity : ComponentActivity() {
 
     private var nfcCharacter = MutableStateFlow<NfcCharacter?>(null)
-
-    private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
 
     private val onActivityLifecycleListeners = HashMap<String, ActivityLifecycleListener>()
 
@@ -53,8 +40,6 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        registerFileActivityResult()
-
         val application = applicationContext as VBHelper
         val scanScreenController = ScanScreenControllerImpl(
             application.container.dataStoreSecretsRepository.secretsFlow,
@@ -67,7 +52,9 @@ class MainActivity : ComponentActivity() {
         val itemsScreenController = ItemsScreenControllerImpl(this)
 
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
+
         setContent {
             VBHelperTheme {
                 MainApplication(
@@ -77,6 +64,7 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+
         Log.i("MainActivity", "Activity onCreated")
     }
 
@@ -96,122 +84,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun registerFileActivityResult() {
-        activityResultLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) {
-            lifecycleScope.launch {
-                val application = applicationContext as VBHelper
-                val storageRepository = application.container.db
-
-                if (it.resultCode != RESULT_OK) {
-                    Toast.makeText(applicationContext, "Import operation cancelled.", Toast.LENGTH_SHORT).show()
-                }
-                val contentResolver = applicationContext.contentResolver
-                val inputStream = contentResolver.openInputStream(it.data!!.data!!)
-                inputStream.use { fileReader ->
-                    val dimReader = DimReader()
-                    val card = dimReader.readCard(fileReader, false)
-
-                    Log.i("MainActivity", "Card name: ${card is BemCard}")
-
-                    val cardModel = Card(
-                        dimId = card.header.dimId,
-                        logo = card.spriteData.sprites[0].pixelData,
-                        name = card.spriteData.text, // TODO Make user write card name
-                        stageCount = card.adventureLevels.levels.size,
-                        logoHeight = card.spriteData.sprites[0].height,
-                        logoWidth = card.spriteData.sprites[0].width,
-                        isBEm = card is BemCard
-                    )
-
-                    val dimId = storageRepository
-                        .dimDao()
-                        .insertNewDim(cardModel)
-
-                    val characters = card.characterStats.characterEntries
-
-                    var spriteCounter = when (card is BemCard) {
-                        true -> 55
-                        false -> 10
-                    }
-
-                    val domainCharacters = mutableListOf<Character>()
-
-                    for (index in 0 until characters.size) {
-                        domainCharacters.add(
-                            Character(
-                                dimId = dimId,
-                                monIndex = index,
-                                name = card.spriteData.sprites[spriteCounter].pixelData,
-                                stage = characters[index].stage,
-                                attribute = characters[index].attribute,
-                                baseHp = characters[index].hp,
-                                baseBp = characters[index].dp,
-                                baseAp = characters[index].ap,
-                                sprite1 = card.spriteData.sprites[spriteCounter + 1].pixelData,
-                                sprite2 = card.spriteData.sprites[spriteCounter + 2].pixelData,
-                                nameWidth = card.spriteData.sprites[spriteCounter].width,
-                                nameHeight = card.spriteData.sprites[spriteCounter].height,
-                                spritesWidth = card.spriteData.sprites[spriteCounter + 1].width,
-                                spritesHeight = card.spriteData.sprites[spriteCounter + 1].height
-                            )
-                        )
-
-                        // TODO: Improve this
-                        if (card is BemCard) {
-                            spriteCounter += 14
-                        } else {
-                            when (index) {
-                                0 -> spriteCounter += 6
-                                1 -> spriteCounter += 7
-                                else -> spriteCounter += 14
-                            }
-                        }
-                    }
-
-                    storageRepository
-                        .characterDao()
-                        .insertCharacter(*domainCharacters.toTypedArray())
-
-                    val sprites = card.spriteData.sprites.map { sprite ->
-                        Sprites(
-                            id = 0,
-                            sprite = sprite.pixelData,
-                            width = sprite.width,
-                            height = sprite.height
-                        )
-                    }
-                    storageRepository
-                        .characterDao()
-                        .insertSprite(*sprites.toTypedArray())
-                }
-                inputStream?.close()
-                Toast.makeText(applicationContext, "Import successful!", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     @Composable
     private fun MainApplication(
         scanScreenController: ScanScreenControllerImpl,
         settingsScreenController: SettingsScreenControllerImpl,
         itemsScreenController: ItemsScreenControllerImpl
     ) {
-
         AppNavigation(
             applicationNavigationHandlers = AppNavigationHandlers(
                 settingsScreenController,
                 scanScreenController,
                 itemsScreenController
-            ),
-            onClickImportCard = {
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                    addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "*/*"
-                }
-                activityResultLauncher.launch(intent)
-            }
+            )
         )
     }
 

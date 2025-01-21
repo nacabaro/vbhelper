@@ -30,7 +30,6 @@ data class AppNavigationHandlers(
 @Composable
 fun AppNavigation(
     applicationNavigationHandlers: AppNavigationHandlers,
-    onClickImportCard: () -> Unit,
 ) {
     val navController = rememberNavController()
 
@@ -76,8 +75,7 @@ fun AppNavigation(
             composable(NavigationItems.Settings.route) {
                 SettingsScreen(
                     navController = navController,
-                    settingsScreenController = applicationNavigationHandlers.settingsScreenController,
-                    onClickImportCard = onClickImportCard,
+                    settingsScreenController = applicationNavigationHandlers.settingsScreenController
                 )
             }
             composable(NavigationItems.Viewer.route) {
