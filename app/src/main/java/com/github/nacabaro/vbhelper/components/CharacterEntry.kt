@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
@@ -35,7 +36,7 @@ fun CharacterEntry(
     modifier: Modifier = Modifier,
     obscure: Boolean = false,
     shape: Shape = MaterialTheme.shapes.medium,
-    multiplier: Int = 3,
+    multiplier: Int = 4,
     onClick: () -> Unit = {  }
 ) {
     val bitmap = remember (icon.bitmap) {
@@ -56,12 +57,16 @@ fun CharacterEntry(
             contentAlignment = Alignment.BottomCenter,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(4.dp)
         ) {
             Image(
                 bitmap = imageBitmap,
                 contentDescription = "Icon",
                 filterQuality = FilterQuality.None,
+                colorFilter = when (obscure) {
+                    true -> ColorFilter.tint(color = MaterialTheme.colorScheme.secondary)
+                    false -> null
+                },
                 modifier = Modifier
                     .size(dpSize)
             )
