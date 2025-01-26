@@ -117,8 +117,10 @@ fun StorageDialog(
                 ) {
                     Button(
                         onClick = onSendToBracelet,
+                        modifier = Modifier
+                            .weight(1f)
                     ) {
-                        Text(text = "Send to bracelet")
+                        Text(text = "Send to watch")
                     }
                     Spacer(
                         modifier = Modifier
@@ -134,8 +136,10 @@ fun StorageDialog(
                     onClick = {
                         onSendToAdventureClicked = true
                     },
+                    modifier = Modifier
+                        .fillMaxWidth()
                 ) {
-                    Text(text = "Send to adventure")
+                    Text(text = "Send on adventure")
                 }
                 Button(
                     modifier = Modifier

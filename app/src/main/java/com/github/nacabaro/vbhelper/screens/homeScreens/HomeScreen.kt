@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.screens.homeScreens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -18,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
@@ -120,10 +122,18 @@ fun HomeScreen(
                     modifier = Modifier
                         .padding(16.dp)
                 ) {
-                    Text(text = "One of your characters has finished their adventure mission!")
-                    Button(onClick = {
-                        adventureMissionsFinished = false
-                    }) {
+                    Text(
+                        text = "One of your characters has finished their adventure mission!",
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = {
+                            adventureMissionsFinished = false
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                    ) {
                         Text(text = "Dismiss")
                     }
                 }

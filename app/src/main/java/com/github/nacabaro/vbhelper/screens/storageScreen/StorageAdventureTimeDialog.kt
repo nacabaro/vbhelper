@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
@@ -92,6 +93,8 @@ fun StorageAdventureTimeDialog(
                     }
                 }
                 Button(
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     onClick = {
                         if (itemPosition != -1) {
                             onClickSendToAdventure(times[itemPosition].toLong())
@@ -100,6 +103,13 @@ fun StorageAdventureTimeDialog(
                     }
                 ) {
                     Text(text = "Send on adventure")
+                }
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    onClick = onDismissRequest
+                ) {
+                    Text(text = "Dismiss")
                 }
             }
         }

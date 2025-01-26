@@ -64,7 +64,7 @@ fun CancelAdventureDialog(
                     Button(
                         onClick = onDismissRequest
                     ) {
-                        Text(text = "Cancel")
+                        Text(text = "Dismiss")
                     }
                 }
             }

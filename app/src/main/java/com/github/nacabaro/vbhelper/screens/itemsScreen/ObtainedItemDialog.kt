@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -70,7 +71,11 @@ fun ObtainedItemDialog(
                         textAlign = TextAlign.Center,
                         fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                         fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
-                        text = obtainedItem.itemDescription
+                        text = obtainedItem.itemDescription,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp)
+
                     )
                     Text(
                         textAlign = TextAlign.Center,
@@ -79,11 +84,17 @@ fun ObtainedItemDialog(
                         text = "You have obtained ${obtainedItem.itemAmount} of this item",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(5.dp)
                     )
+                    Button(
+                        onClick = onClickDismiss,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        Text(text = "Dismiss")
+                    }
                 }
             }
         }
     }
-
 }

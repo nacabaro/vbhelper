@@ -122,7 +122,10 @@ fun ItemDialog(
                     textAlign = TextAlign.Center,
                     fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                     fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
-                    text = description
+                    text = description,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp)
                 )
                 Text(
                     textAlign = TextAlign.Center,
@@ -131,7 +134,7 @@ fun ItemDialog(
                     text = "You have $amount of this item",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(8.dp)
                 )
                 Row (
                     horizontalArrangement = Arrangement.Center,
