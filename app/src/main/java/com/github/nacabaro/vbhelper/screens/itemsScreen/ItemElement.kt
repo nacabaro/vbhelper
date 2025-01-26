@@ -1,4 +1,4 @@
-package com.github.nacabaro.vbhelper.components
+package com.github.nacabaro.vbhelper.screens.itemsScreen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.github.nacabaro.vbhelper.R
-import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 
 @Composable

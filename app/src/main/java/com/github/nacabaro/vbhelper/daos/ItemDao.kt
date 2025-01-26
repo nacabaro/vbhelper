@@ -6,40 +6,48 @@ import com.github.nacabaro.vbhelper.dtos.ItemDtos
 
 @Dao
 interface ItemDao {
-    @Query("""
-        SELECT Items.*, UserItems.quantity
+    @Query(
+        """
+        SELECT *
         FROM Items
-        LEFT JOIN UserItems ON Items.id = UserItems.itemId
         ORDER BY Items.itemIcon ASC
-    """)
+    """
+    )
     suspend fun getAllItems(): List<ItemDtos.ItemsWithQuantities>
 
-    @Query("""
-        SELECT Items.*, UserItems.quantity
+    @Query(
+        """
+        SELECT *
         FROM Items
-        JOIN UserItems ON Items.id = UserItems.itemId
-    """)
+        WHERE quantity > 0
+    """
+    )
     suspend fun getAllUserItems(): List<ItemDtos.ItemsWithQuantities>
 
-    @Query("""
-        SELECT Items.*, UserItems.quantity
+    @Query(
+        """
+        SELECT *
         FROM Items
-        JOIN UserItems ON Items.id = UserItems.itemId
-        WHERE UserItems.itemId = :itemId
-    """)
-    fun getUserItem(itemId: Long): ItemDtos.ItemsWithQuantities
+        WHERE Items.id = :itemId
+    """
+    )
+    fun getItem(itemId: Long): ItemDtos.ItemsWithQuantities
 
-    @Query("""
-        UPDATE UserItems
+    @Query(
+        """
+        UPDATE Items
         SET quantity = quantity - 1
-        WHERE itemId = :itemId
-    """)
+        WHERE id = :itemId
+    """
+    )
     fun useItem(itemId: Long)
 
-    @Query("""
-        UPDATE UserItems
-        SET quantity = quantity - :itemAmount
-        WHERE itemId = :itemId
-    """)
+    @Query(
+        """
+        UPDATE Items
+        SET quantity = quantity + :itemAmount
+        WHERE id = :itemId
+    """
+    )
     suspend fun purchaseItem(itemId: Long, itemAmount: Int)
 }

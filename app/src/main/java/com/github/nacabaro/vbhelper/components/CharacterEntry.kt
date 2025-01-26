@@ -35,6 +35,7 @@ fun CharacterEntry(
     icon: BitmapData,
     modifier: Modifier = Modifier,
     obscure: Boolean = false,
+    disabled: Boolean = false,
     shape: Shape = MaterialTheme.shapes.medium,
     multiplier: Int = 4,
     onClick: () -> Unit = {  }
@@ -48,7 +49,10 @@ fun CharacterEntry(
 
     Card(
         shape = shape,
-        onClick = onClick,
+        onClick = when (disabled) {
+            true -> { {} }
+            false -> onClick
+        },
         modifier = modifier
             .aspectRatio(1f)
             .padding(8.dp)

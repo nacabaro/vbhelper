@@ -107,7 +107,7 @@ class ItemsScreenControllerImpl (
     private fun getItem(itemId: Long): ItemDtos.ItemsWithQuantities {
         return database
             .itemDao()
-            .getUserItem(itemId)
+            .getItem(itemId)
     }
 
     private fun consumeItem(itemId: Long) {

@@ -16,15 +16,22 @@ import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreen
 import com.github.nacabaro.vbhelper.screens.SpriteViewer
-import com.github.nacabaro.vbhelper.screens.StorageScreen
+import com.github.nacabaro.vbhelper.screens.homeScreens.HomeScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreen
 import com.github.nacabaro.vbhelper.screens.itemsScreen.ChooseCharacterScreen
 import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreen
+import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 
 data class AppNavigationHandlers(
     val settingsScreenController: SettingsScreenControllerImpl,
     val scanScreenController: ScanScreenControllerImpl,
-    val itemsScreenController: ItemsScreenControllerImpl
+    val itemsScreenController: ItemsScreenControllerImpl,
+    val adventureScreenController: AdventureScreenControllerImpl,
+    val storageScreenController: StorageScreenControllerImpl,
+    val homeScreenController: HomeScreenControllerImpl
 )
 
 @Composable
@@ -49,12 +56,15 @@ fun AppNavigation(
             }
             composable(NavigationItems.Home.route) {
                 HomeScreen(
-                    navController = navController
+                    navController = navController,
+                    homeScreenController = applicationNavigationHandlers.homeScreenController
                 )
             }
             composable(NavigationItems.Storage.route) {
                 StorageScreen(
-                    navController = navController
+                    navController = navController,
+                    adventureScreenController = applicationNavigationHandlers.adventureScreenController,
+                    storageScreenController = applicationNavigationHandlers.storageScreenController
                 )
             }
             composable(NavigationItems.Scan.route) {
@@ -107,6 +117,13 @@ fun AppNavigation(
                         itemId = itemId.toLong()
                     )
                 }
+            }
+            composable(NavigationItems.Adventure.route) {
+                AdventureScreen(
+                    navController = navController,
+                    storageScreenController = applicationNavigationHandlers
+                        .adventureScreenController
+                )
             }
         }
     }

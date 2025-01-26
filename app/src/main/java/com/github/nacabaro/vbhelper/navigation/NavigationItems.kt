@@ -19,4 +19,5 @@ sealed class NavigationItems (
     object MyItems : NavigationItems("MyItems", R.drawable.baseline_data_24, "My items")
     object ItemsStore : NavigationItems("ItemsStore", R.drawable.baseline_data_24, "Items store")
     object ApplyItem : NavigationItems("ApplyItem/{itemId}", R.drawable.baseline_data_24, "Apply item")
+    object Adventure : NavigationItems("Adventure", R.drawable.baseline_fort_24, "Adventure")
 }
