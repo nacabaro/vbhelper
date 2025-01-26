@@ -17,7 +17,7 @@ class AdventureScreenControllerImpl(
     private val database = application.container.db
 
     override fun sendCharacterToAdventure(characterId: Long, timeInMinutes: Long) {
-        val timeInSeconds = timeInMinutes * 60
+        val finishesAdventureAt = timeInMinutes * 60
         componentActivity.lifecycleScope.launch(Dispatchers.IO) {
             val characterData = database
                 .userCharacterDao()
@@ -31,7 +31,7 @@ class AdventureScreenControllerImpl(
 
             database
                 .adventureDao()
-                .insertNewAdventure(characterId, timeInSeconds)
+                .insertNewAdventure(characterId, timeInMinutes, finishesAdventureAt)
         }
     }
 

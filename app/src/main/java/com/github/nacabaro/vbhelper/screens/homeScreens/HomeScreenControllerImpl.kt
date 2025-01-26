@@ -20,7 +20,7 @@ class HomeScreenControllerImpl(
                 .getAdventureCharacters()
 
             val finishedAdventureCharacters = adventureCharacters.filter { character ->
-                character.timeLeft <= currentTime
+                character.finishesAdventure <= currentTime
             }
 
             onCompletion(finishedAdventureCharacters.isNotEmpty())

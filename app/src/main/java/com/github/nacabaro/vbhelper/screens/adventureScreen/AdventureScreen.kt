@@ -1,9 +1,13 @@
 package com.github.nacabaro.vbhelper.screens.adventureScreen
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -12,6 +16,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
@@ -71,29 +76,41 @@ fun AdventureScreen(
             )
         }
     ) { contentPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .padding(top = contentPadding.calculateTopPadding())
-        ) {
-            items(characterList.value) {
-                AdventureEntry(
-                    icon = BitmapData(
-                        bitmap = it.spriteIdle,
-                        width = it.spriteWidth,
-                        height = it.spriteHeight
-                    ),
-                    timeLeft = it.timeLeft - currentTime,
-                    onClick = {
-                        if (it.timeLeft < currentTime) {
-                            storageScreenController
-                                .getItemFromAdventure(it.id) { adventureResult ->
-                                    obtainedItem = adventureResult
-                                }
-                        } else {
-                            cancelAdventureDialog = it
+        if (characterList.value.isEmpty()) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .padding(top = contentPadding.calculateTopPadding())
+                    .fillMaxSize()
+            ) {
+                Text(text = "Nothing to see here")
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(top = contentPadding.calculateTopPadding())
+            ) {
+                items(characterList.value) {
+                    AdventureEntry(
+                        icon = BitmapData(
+                            bitmap = it.spriteIdle,
+                            width = it.spriteWidth,
+                            height = it.spriteHeight
+                        ),
+                        timeLeft = it.finishesAdventure - currentTime,
+                        onClick = {
+                            if (it.finishesAdventure < currentTime) {
+                                storageScreenController
+                                    .getItemFromAdventure(it.id) { adventureResult ->
+                                        obtainedItem = adventureResult
+                                    }
+                            } else {
+                                cancelAdventureDialog = it
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }

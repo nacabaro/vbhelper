@@ -17,5 +17,6 @@ import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 )
 data class Adventure(
     @PrimaryKey val characterId: Long,
+    val originalDuration: Long,
     val finishesAdventure: Long
 )

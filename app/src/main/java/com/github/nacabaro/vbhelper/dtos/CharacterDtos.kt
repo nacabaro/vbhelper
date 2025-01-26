@@ -79,6 +79,7 @@ object CharacterDtos {
         val spriteWidth: Int,
         val spriteHeight: Int,
         val isBemCard: Boolean,
-        val timeLeft: Long
+        val finishesAdventure: Long,
+        val originalTimeInMinutes: Long
     )
 }

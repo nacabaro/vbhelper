@@ -8,10 +8,10 @@ import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 @Dao
 interface AdventureDao {
     @Query("""
-        INSERT INTO Adventure (characterId, finishesAdventure)
-        VALUES (:characterId, strftime('%s', 'now') + :timeInSeconds)
+        INSERT INTO Adventure (characterId, originalDuration, finishesAdventure)
+        VALUES (:characterId, :originalDuration, strftime('%s', 'now') + :timeInSeconds)
     """)
-    fun insertNewAdventure(characterId: Long, timeInSeconds: Long)
+    fun insertNewAdventure(characterId: Long, originalDuration: Long, timeInSeconds: Long)
 
     @Query("""
         SELECT COUNT(*) FROM Adventure
@@ -25,7 +25,8 @@ interface AdventureDao {
             c.spritesWidth AS spriteWidth,
             c.spritesHeight AS spriteHeight,
             d.isBEm as isBemCard,
-            a.finishesAdventure AS timeLeft
+            a.finishesAdventure AS finishesAdventure,
+            a.originalDuration AS originalTimeInMinutes
         FROM UserCharacter uc
         JOIN Character c ON uc.charId = c.id
         JOIN Card d ON c.dimId = d.id
