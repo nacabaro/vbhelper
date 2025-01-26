@@ -23,7 +23,8 @@ fun TopBanner(
     modifier: Modifier = Modifier,
     onGearClick: (() -> Unit)? = null,
     onBackClick: (() -> Unit)? = null,
-    onScanClick: (() -> Unit)? = null
+    onScanClick: (() -> Unit)? = null,
+    onAdventureClick: (() -> Unit)? = null
 ) {
     Box( // Use Box to overlay elements
         modifier = modifier
@@ -49,7 +50,18 @@ fun TopBanner(
                     contentDescription = "Settings"
                 )
             }
-        }
+        } else if (onAdventureClick != null) {
+            IconButton(
+                onClick = onAdventureClick,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd) // Place gear icon at the end
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.baseline_fort_24), // Use a gear icon
+                    contentDescription = "Adventure"
+                )
+            }
+         }
 
         if (onScanClick != null) {
             IconButton(

@@ -131,7 +131,7 @@ class SettingsScreenControllerImpl(
                 val characters = card.characterStats.characterEntries
 
                 var spriteCounter = when (card is BemCard) {
-                    true -> 55
+                    true -> 54
                     false -> 10
                 }
 

@@ -16,7 +16,7 @@ import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.ItemDisplay
 import com.github.nacabaro.vbhelper.components.TransformationHistoryCard
-import com.github.nacabaro.vbhelper.components.getIconResource
+import com.github.nacabaro.vbhelper.screens.itemsScreen.getIconResource
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl

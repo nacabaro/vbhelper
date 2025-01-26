@@ -9,9 +9,12 @@ import androidx.compose.runtime.Composable
 import com.github.nacabaro.vbhelper.navigation.AppNavigation
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.navigation.AppNavigationHandlers
+import com.github.nacabaro.vbhelper.screens.homeScreens.HomeScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 
 
@@ -39,6 +42,9 @@ class MainActivity : ComponentActivity() {
         )
         val settingsScreenController = SettingsScreenControllerImpl(this)
         val itemsScreenController = ItemsScreenControllerImpl(this)
+        val adventureScreenController = AdventureScreenControllerImpl(this)
+        val storageScreenController = StorageScreenControllerImpl(this)
+        val homeScreenController = HomeScreenControllerImpl(this)
 
         super.onCreate(savedInstanceState)
 
@@ -49,7 +55,10 @@ class MainActivity : ComponentActivity() {
                 MainApplication(
                     scanScreenController = scanScreenController,
                     settingsScreenController = settingsScreenController,
-                    itemsScreenController = itemsScreenController
+                    itemsScreenController = itemsScreenController,
+                    adventureScreenController = adventureScreenController,
+                    homeScreenController = homeScreenController,
+                    storageScreenController = storageScreenController
                 )
             }
         }
@@ -77,13 +86,20 @@ class MainActivity : ComponentActivity() {
     private fun MainApplication(
         scanScreenController: ScanScreenControllerImpl,
         settingsScreenController: SettingsScreenControllerImpl,
-        itemsScreenController: ItemsScreenControllerImpl
-    ) {
+        itemsScreenController: ItemsScreenControllerImpl,
+        adventureScreenController: AdventureScreenControllerImpl,
+        storageScreenController: StorageScreenControllerImpl,
+        homeScreenController: HomeScreenControllerImpl,
+
+        ) {
         AppNavigation(
             applicationNavigationHandlers = AppNavigationHandlers(
                 settingsScreenController,
                 scanScreenController,
-                itemsScreenController
+                itemsScreenController,
+                adventureScreenController,
+                storageScreenController,
+                homeScreenController
             )
         )
     }

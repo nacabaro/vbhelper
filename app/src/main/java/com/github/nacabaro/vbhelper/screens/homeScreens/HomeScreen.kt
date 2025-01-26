@@ -3,16 +3,25 @@ package com.github.nacabaro.vbhelper.screens.homeScreens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
@@ -27,7 +36,8 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun HomeScreen(
-    navController: NavController
+    navController: NavController,
+    homeScreenController: HomeScreenControllerImpl
 ) {
     val application = LocalContext.current.applicationContext as VBHelper
     val storageRepository = StorageRepository(application.container.db)
@@ -35,6 +45,7 @@ fun HomeScreen(
     val transformationHistory = remember { mutableStateOf<List<CharacterDtos.TransformationHistory>?>(null) }
     val beData = remember { mutableStateOf<BECharacterData?>(null) }
     val vbData = remember { mutableStateOf<VBCharacterData?>(null) }
+    var adventureMissionsFinished by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(storageRepository, activeMon) {
         withContext(Dispatchers.IO) {
@@ -44,6 +55,13 @@ fun HomeScreen(
                 transformationHistory.value = storageRepository.getTransformationHistory(activeMon.value!!.id)
             }
         }
+    }
+
+    LaunchedEffect(true) {
+        homeScreenController
+            .didAdventureMissionsFinish {
+                adventureMissionsFinished = it
+            }
     }
 
     Scaffold (
@@ -91,6 +109,34 @@ fun HomeScreen(
                     transformationHistory = transformationHistory.value!!,
                     contentPadding = contentPadding
                 )
+            }
+        }
+    }
+
+    if (adventureMissionsFinished) {
+        Dialog(
+            onDismissRequest = { adventureMissionsFinished = false },
+        ) {
+            Card {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "One of your characters has finished their adventure mission!",
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = {
+                            adventureMissionsFinished = false
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(text = "Dismiss")
+                    }
+                }
             }
         }
     }

@@ -19,10 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.github.nacabaro.vbhelper.components.ItemDialog
-import com.github.nacabaro.vbhelper.components.ItemElement
-import com.github.nacabaro.vbhelper.components.getIconResource
-import com.github.nacabaro.vbhelper.components.getLengthResource
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.navigation.NavigationItems

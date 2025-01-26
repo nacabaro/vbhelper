@@ -1,4 +1,4 @@
-package com.github.nacabaro.vbhelper.components
+package com.github.nacabaro.vbhelper.screens.itemsScreen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.github.nacabaro.vbhelper.R
-import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 
 @Composable
@@ -123,7 +122,10 @@ fun ItemDialog(
                     textAlign = TextAlign.Center,
                     fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                     fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
-                    text = description
+                    text = description,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp)
                 )
                 Text(
                     textAlign = TextAlign.Center,
@@ -132,7 +134,7 @@ fun ItemDialog(
                     text = "You have $amount of this item",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(8.dp)
                 )
                 Row (
                     horizontalArrangement = Arrangement.Center,

@@ -10,5 +10,6 @@ data class Items(
     val description: String,
     val itemIcon: Int,
     val itemLength: Int,
-    val price: Int
+    val price: Int,
+    val quantity: Int
 )

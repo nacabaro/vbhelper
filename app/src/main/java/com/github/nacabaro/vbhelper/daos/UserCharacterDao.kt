@@ -48,13 +48,38 @@ interface UserCharacterDao {
             c.sprite1 AS spriteIdle,
             c.spritesWidth AS spriteWidth,
             c.spritesHeight AS spriteHeight,
-            d.isBEm as isBemCard
+            c.name as nameSprite,
+            c.nameWidth as nameSpriteWidth,
+            c.nameHeight as nameSpriteHeight,
+            d.isBEm as isBemCard,
+            a.characterId = uc.id as isInAdventure
         FROM UserCharacter uc
         JOIN Character c ON uc.charId = c.id
         JOIN Card d ON c.dimId = d.id
+        LEFT JOIN Adventure a ON a.characterId = uc.id
         """
     )
     suspend fun getAllCharacters(): List<CharacterDtos.CharacterWithSprites>
+
+    @Query(
+        """
+        SELECT
+            uc.*,
+            c.sprite1 AS spriteIdle,
+            c.spritesWidth AS spriteWidth,
+            c.spritesHeight AS spriteHeight,
+            c.name as nameSprite,
+            c.nameWidth as nameSpriteWidth,
+            c.nameHeight as nameSpriteHeight,
+            d.isBEm as isBemCard,
+            a.characterId = uc.id as isInAdventure
+        FROM UserCharacter uc
+        JOIN Character c ON uc.charId = c.id
+        JOIN Card d ON c.dimId = d.id
+        LEFT JOIN Adventure a ON a.characterId = uc.id
+        WHERE uc.id = :id
+    """)
+    suspend fun getCharacterWithSprites(id: Long): CharacterDtos.CharacterWithSprites
 
     @Query("SELECT * FROM UserCharacter WHERE id = :id")
     suspend fun getCharacter(id: Long): UserCharacter
@@ -69,14 +94,18 @@ interface UserCharacterDao {
             c.sprite1 AS spriteIdle,
             c.spritesWidth AS spriteWidth,
             c.spritesHeight AS spriteHeight,
-            d.isBEm as isBemCard
+            c.name as nameSprite,
+            c.nameWidth as nameSpriteWidth,
+            c.nameHeight as nameSpriteHeight,
+            d.isBEm as isBemCard,
+            a.characterId as isInAdventure            
         FROM UserCharacter uc
         JOIN Character c ON uc.charId = c.id
         JOIN Card d ON c.dimId = d.id
+        LEFT JOIN Adventure a ON a.characterId = uc.id
         WHERE uc.isActive = 1
         LIMIT 1
-    """
-    )
+    """)
     suspend fun getActiveCharacter(): CharacterDtos.CharacterWithSprites?
 
     @Query("DELETE FROM UserCharacter WHERE id = :id")

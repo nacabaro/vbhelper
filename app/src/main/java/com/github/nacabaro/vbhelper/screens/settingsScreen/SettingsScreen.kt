@@ -46,6 +46,14 @@ fun SettingsScreen(
             SettingsEntry(title = "Import APK", description = "Import Secrets From Vital Arean 2.1.0 APK") {
                 settingsScreenController.onClickImportApk()
             }
+            SettingsSection("DiM/BEm management")
+            SettingsEntry(title = "Import card", description = "Import DiM/BEm card file") {
+                settingsScreenController.onClickImportCard()
+            }
+            SettingsEntry(title = "Rename DiM/BEm", description = "Set card name") { }
+            SettingsSection("About and credits")
+            SettingsEntry(title = "Credits", description = "Credits") { }
+            SettingsEntry(title = "About", description = "About") { }
             SettingsSection("Data management")
             SettingsEntry(title = "Export data", description = "Export application database") {
                 settingsScreenController.onClickOpenDirectory()
@@ -53,14 +61,6 @@ fun SettingsScreen(
             SettingsEntry(title = "Import data", description = "Import application database") {
                 settingsScreenController.onClickImportDatabase()
             }
-            SettingsSection("DiM/BEm management")
-            SettingsEntry(title = "Import DiM card", description = "Import DiM/BEm card file") {
-                settingsScreenController.onClickImportCard()
-            }
-            SettingsEntry(title = "Rename DiM/BEm", description = "Set card name") { }
-            SettingsSection("About and credits")
-            SettingsEntry(title = "Credits", description = "Credits") { }
-            SettingsEntry(title = "About", description = "About") { }
         }
     }
 }
