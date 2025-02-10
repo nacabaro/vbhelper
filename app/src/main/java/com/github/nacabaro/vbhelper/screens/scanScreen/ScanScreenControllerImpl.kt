@@ -11,22 +11,19 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.github.cfogrady.vbnfc.TagCommunicator
-import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
-import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.ActivityLifecycleListener
+import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
-import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.source.getCryptographicTransformerMap
 import com.github.nacabaro.vbhelper.source.isMissingSecrets
 import com.github.nacabaro.vbhelper.source.proto.Secrets
-import com.github.nacabaro.vbhelper.utils.DeviceType
+import com.github.nacabaro.vbhelper.screens.scanScreen.converters.FromNfcConverter
+import com.github.nacabaro.vbhelper.screens.scanScreen.converters.ToNfcConverter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.GregorianCalendar
 
 class ScanScreenControllerImpl(
     override val secretsFlow: Flow<Secrets>,
@@ -37,6 +34,8 @@ class ScanScreenControllerImpl(
 
     private val nfcAdapter: NfcAdapter
 
+    private val storageRepository: AppDatabase
+
     init {
         val maybeNfcAdapter = NfcAdapter.getDefaultAdapter(componentActivity)
         if (maybeNfcAdapter == null) {
@@ -44,6 +43,8 @@ class ScanScreenControllerImpl(
         }
         nfcAdapter = maybeNfcAdapter
         checkSecrets()
+        val application = componentActivity.applicationContext as VBHelper
+        storageRepository = application.container.db
     }
 
     override fun onClickRead(secrets: Secrets, onComplete: ()->Unit) {
@@ -152,102 +153,13 @@ class ScanScreenControllerImpl(
     }
 
     private fun addCharacterScannedIntoDatabase(nfcCharacter: NfcCharacter): String {
-        val application = componentActivity.applicationContext as VBHelper
-        val storageRepository = application.container.db
+        val fromNfcConverter = FromNfcConverter(componentActivity)
+        return fromNfcConverter.addCharacter(nfcCharacter)
+    }
 
-        val dimData = storageRepository
-            .dimDao()
-            .getDimById(nfcCharacter.dimId.toInt())
 
-        if (dimData == null) return "Card not found"
-
-        val cardCharData = storageRepository
-            .characterDao()
-            .getCharacterByMonIndex(nfcCharacter.charIndex.toInt(), dimData.id)
-
-        val characterData = UserCharacter(
-            charId = cardCharData.id,
-            stage = nfcCharacter.stage.toInt(),
-            attribute = nfcCharacter.attribute,
-            ageInDays = nfcCharacter.ageInDays.toInt(),
-            nextAdventureMissionStage = nfcCharacter.nextAdventureMissionStage.toInt(),
-            mood = nfcCharacter.mood.toInt(),
-            vitalPoints = nfcCharacter.vitalPoints.toInt(),
-            transformationCountdown = nfcCharacter.transformationCountdownInMinutes.toInt(),
-            injuryStatus = nfcCharacter.injuryStatus,
-            trophies = nfcCharacter.trophies.toInt(),
-            currentPhaseBattlesWon = nfcCharacter.currentPhaseBattlesWon.toInt(),
-            currentPhaseBattlesLost = nfcCharacter.currentPhaseBattlesLost.toInt(),
-            totalBattlesWon = nfcCharacter.totalBattlesWon.toInt(),
-            totalBattlesLost = nfcCharacter.totalBattlesLost.toInt(),
-            activityLevel = nfcCharacter.activityLevel.toInt(),
-            heartRateCurrent = nfcCharacter.heartRateCurrent.toInt(),
-            characterType = when (nfcCharacter) {
-                is BENfcCharacter -> DeviceType.BEDevice
-                else -> DeviceType.VBDevice
-            },
-            isActive = true
-        )
-
-        storageRepository
-            .userCharacterDao()
-            .clearActiveCharacter()
-
-        val characterId: Long = storageRepository
-            .userCharacterDao()
-            .insertCharacterData(characterData)
-
-        if (nfcCharacter is BENfcCharacter) {
-            val extraCharacterData = BECharacterData(
-                id = characterId,
-                trainingHp = nfcCharacter.trainingHp.toInt(),
-                trainingAp = nfcCharacter.trainingAp.toInt(),
-                trainingBp = nfcCharacter.trainingBp.toInt(),
-                remainingTrainingTimeInMinutes = nfcCharacter.remainingTrainingTimeInMinutes.toInt(),
-                itemEffectActivityLevelValue = nfcCharacter.itemEffectActivityLevelValue.toInt(),
-                itemEffectMentalStateValue = nfcCharacter.itemEffectMentalStateValue.toInt(),
-                itemEffectMentalStateMinutesRemaining = nfcCharacter.itemEffectMentalStateMinutesRemaining.toInt(),
-                itemEffectActivityLevelMinutesRemaining = nfcCharacter.itemEffectActivityLevelMinutesRemaining.toInt(),
-                itemEffectVitalPointsChangeValue = nfcCharacter.itemEffectVitalPointsChangeValue.toInt(),
-                itemEffectVitalPointsChangeMinutesRemaining = nfcCharacter.itemEffectVitalPointsChangeMinutesRemaining.toInt(),
-                abilityRarity = nfcCharacter.abilityRarity,
-                abilityType = nfcCharacter.abilityType.toInt(),
-                abilityBranch = nfcCharacter.abilityBranch.toInt(),
-                abilityReset = nfcCharacter.abilityReset.toInt(),
-                rank = nfcCharacter.abilityReset.toInt(),
-                itemType = nfcCharacter.itemType.toInt(),
-                itemMultiplier = nfcCharacter.itemMultiplier.toInt(),
-                itemRemainingTime = nfcCharacter.itemRemainingTime.toInt(),
-                otp0 = "", //nfcCharacter.value!!.otp0.toString(),
-                otp1 = "", //nfcCharacter.value!!.otp1.toString(),
-                minorVersion = nfcCharacter.characterCreationFirmwareVersion.minorVersion.toInt(),
-                majorVersion = nfcCharacter.characterCreationFirmwareVersion.majorVersion.toInt(),
-            )
-
-            storageRepository
-                .userCharacterDao()
-                .insertBECharacterData(extraCharacterData)
-
-            val transformationHistoryWatch = nfcCharacter.transformationHistory
-            transformationHistoryWatch.map { item ->
-                if (item.toCharIndex.toInt() != 255) {
-                    val date = GregorianCalendar(item.year.toInt(), item.month.toInt(), item.day.toInt())
-                        .time
-                        .time
-
-                    storageRepository
-                        .characterDao()
-                        .insertTransformation(characterId, item.toCharIndex.toInt(), dimData.id, date)
-
-                    storageRepository
-                        .dexDao()
-                        .insertCharacter(item.toCharIndex.toInt(), dimData.id, date)
-                }
-            }
-        } else if (nfcCharacter is VBNfcCharacter) {
-            return "Not implemented yet"
-        }
-
-        return "Done reading character!"
+    override suspend fun characterToNfc(characterId: Long): NfcCharacter {
+        val nfcCharacterConverter = ToNfcConverter(componentActivity)
+        return nfcCharacterConverter.characterToNfc(characterId)
     }
 }

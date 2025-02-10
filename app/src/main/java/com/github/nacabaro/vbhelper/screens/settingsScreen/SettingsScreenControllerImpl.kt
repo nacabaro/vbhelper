@@ -115,10 +115,11 @@ class SettingsScreenControllerImpl(
                 val card = dimReader.readCard(fileReader, false)
 
                 val cardModel = Card(
-                    dimId = card.header.dimId,
+                    cardId = card.header.dimId,
                     logo = card.spriteData.sprites[0].pixelData,
-                    name = card.spriteData.text, // TODO Make user write card name// TODO Make user write card name
+                    name = card.spriteData.text, // TODO Make user write card name
                     stageCount = card.adventureLevels.levels.size,
+                    currentStage = 0,
                     logoHeight = card.spriteData.sprites[0].height,
                     logoWidth = card.spriteData.sprites[0].width,
                     isBEm = card is BemCard

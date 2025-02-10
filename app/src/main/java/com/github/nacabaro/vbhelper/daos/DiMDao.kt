@@ -11,9 +11,22 @@ interface DiMDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertNewDim(card: Card): Long
 
-    @Query("SELECT * FROM Card")
-    suspend fun getAllDims(): List<Card>
-
-    @Query("SELECT * FROM Card WHERE dimId = :id")
+    @Query("SELECT * FROM Card WHERE cardId = :id")
     fun getDimById(id: Int): Card?
+
+    @Query(
+        """
+        UPDATE Card
+        SET currentStage = :currentStage
+        WHERE cardId = :id
+    """
+    )
+    fun updateCurrentStage(id: Int, currentStage: Int)
+
+    @Query("""
+        SELECT currentStage 
+        FROM Card
+        WHERE cardId = :id
+    """)
+    fun getCurrentStage(id: Int): Int
 }

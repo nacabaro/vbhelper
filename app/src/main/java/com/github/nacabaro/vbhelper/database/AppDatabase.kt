@@ -14,8 +14,10 @@ import com.github.nacabaro.vbhelper.domain.Sprites
 import com.github.nacabaro.vbhelper.domain.characters.Adventure
 import com.github.nacabaro.vbhelper.domain.characters.Dex
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
+import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.domain.items.Items
 
 @Database(
@@ -26,6 +28,8 @@ import com.github.nacabaro.vbhelper.domain.items.Items
         Sprites::class,
         UserCharacter::class,
         BECharacterData::class,
+        VBCharacterData::class,
+        SpecialMissions::class,
         TransformationHistory::class,
         Dex::class,
         Items::class,

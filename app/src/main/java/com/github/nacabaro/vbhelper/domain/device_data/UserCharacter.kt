@@ -23,7 +23,6 @@ data class UserCharacter (
     var stage: Int,
     var attribute: NfcCharacter.Attribute,
     var ageInDays: Int,
-    var nextAdventureMissionStage: Int, // next adventure mission stage on the character's dim
     var mood: Int,
     var vitalPoints: Int,
     var transformationCountdown: Int,

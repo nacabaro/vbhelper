@@ -15,4 +15,6 @@ interface ScanScreenController {
 
     fun registerActivityLifecycleListener(key: String, activityLifecycleListener: ActivityLifecycleListener)
     fun unregisterActivityLifecycleListener(key: String)
+
+    suspend fun characterToNfc(characterId: Long): NfcCharacter?
 }

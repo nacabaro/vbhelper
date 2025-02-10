@@ -34,7 +34,6 @@ import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.source.isMissingSecrets
 import com.github.nacabaro.vbhelper.source.proto.Secrets
-import com.github.nacabaro.vbhelper.utils.characterToNfc
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
@@ -62,29 +61,43 @@ fun ScanScreen(
     LaunchedEffect(storageRepository) {
         withContext(Dispatchers.IO) {
             if(characterId != null && nfcCharacter == null) {
-                nfcCharacter = characterToNfc(context, characterId)
+                nfcCharacter = scanScreenController.characterToNfc(characterId)
             }
         }
     }
 
-    DisposableEffect(readingScreen || writingScreen, isDoneSendingCard) {
+    DisposableEffect(readingScreen) {
         if(readingScreen) {
-            scanScreenController.registerActivityLifecycleListener(SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER, object: ActivityLifecycleListener {
-                override fun onPause() {
-                    scanScreenController.cancelRead()
-                }
+            scanScreenController.registerActivityLifecycleListener(
+                SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER,
+                object: ActivityLifecycleListener {
+                    override fun onPause() {
+                        scanScreenController.cancelRead()
+                    }
 
-                override fun onResume() {
-                    scanScreenController.onClickRead(secrets!!) {
-                        isDoneReadingCharacter = true
+                    override fun onResume() {
+                        scanScreenController.onClickRead(secrets!!) {
+                            isDoneReadingCharacter = true
+                        }
                     }
                 }
-
-            })
+            )
             scanScreenController.onClickRead(secrets!!) {
                 isDoneReadingCharacter = true
             }
-        } else if (writingScreen) {
+        }
+        onDispose {
+            if(readingScreen) {
+                scanScreenController.unregisterActivityLifecycleListener(
+                    SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER
+                )
+                scanScreenController.cancelRead()
+            }
+        }
+    }
+
+    DisposableEffect(writingScreen, isDoneSendingCard) {
+        if (writingScreen) {
             scanScreenController.registerActivityLifecycleListener(
                 SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER,
                 object : ActivityLifecycleListener {
@@ -105,18 +118,20 @@ fun ScanScreen(
                     }
                 }
             )
-            if (!isDoneSendingCard) {
-                scanScreenController.onClickCheckCard(secrets!!, nfcCharacter!!) {
-                    isDoneSendingCard = true
-                }
-            } else if (!isDoneWritingCharacter) {
-                scanScreenController.onClickWrite(secrets!!, nfcCharacter!!) {
-                    isDoneWritingCharacter = true
-                }
+        }
+
+        if (!isDoneSendingCard) {
+            scanScreenController.onClickCheckCard(secrets!!, nfcCharacter!!) {
+                isDoneSendingCard = true
+            }
+        } else if (!isDoneWritingCharacter) {
+            scanScreenController.onClickWrite(secrets!!, nfcCharacter!!) {
+                isDoneWritingCharacter = true
             }
         }
+
         onDispose {
-            if(readingScreen || writingScreen) {
+            if(writingScreen) {
                 scanScreenController.unregisterActivityLifecycleListener(SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER)
                 scanScreenController.cancelRead()
             }
@@ -259,6 +274,7 @@ fun ScanScreenPreview() {
             override fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
             override fun onClickWrite(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
             override fun cancelRead() {}
+            override suspend fun characterToNfc(characterId: Long): NfcCharacter? { return null }
         },
         characterId = null
     )

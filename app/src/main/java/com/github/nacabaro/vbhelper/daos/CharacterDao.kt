@@ -12,12 +12,6 @@ interface CharacterDao {
     @Insert
     suspend fun insertCharacter(vararg characterData: Character)
 
-    @Query("SELECT * FROM Character")
-    suspend fun getAllCharacters(): List<Character>
-
-    @Query("SELECT * FROM Character WHERE dimId = :dimId")
-    suspend fun getCharacterByDimId(dimId: Int): List<Character>
-
     @Query("SELECT * FROM Character WHERE monIndex = :monIndex AND dimId = :dimId LIMIT 1")
     fun getCharacterByMonIndex(monIndex: Int, dimId: Long): Character
 
@@ -30,7 +24,7 @@ interface CharacterDao {
     @Query(
         """
         SELECT 
-            d.dimId as cardId,
+            d.cardId as cardId,
             c.monIndex as charId
         FROM Character c
         JOIN UserCharacter uc ON c.id = uc.charId
