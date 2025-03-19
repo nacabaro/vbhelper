@@ -72,7 +72,7 @@ class AdventureScreenControllerImpl(
     private suspend fun generateItem(characterId: Long): ItemDtos.PurchasedItem {
         val character = database
             .userCharacterDao()
-            .getCharacter(characterId)
+            .getCharacterInfo(characterId)
 
         val randomItem = database
             .itemDao()

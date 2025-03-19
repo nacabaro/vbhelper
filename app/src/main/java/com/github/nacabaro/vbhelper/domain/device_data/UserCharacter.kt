@@ -17,11 +17,12 @@ import com.github.nacabaro.vbhelper.domain.characters.Character
         )
     ]
 )
+/**
+ * UserCharacter represents and instance of a character. The charId should map to a Character
+ */
 data class UserCharacter (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     var charId: Long,
-    var stage: Int,
-    var attribute: NfcCharacter.Attribute,
     var ageInDays: Int,
     var nextAdventureMissionStage: Int, // next adventure mission stage on the character's dim
     var mood: Int,
