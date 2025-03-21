@@ -14,6 +14,11 @@ import androidx.room.ForeignKey
         )
     ]
 )
+/*
+ * Character represents a character on a DIM card. There should only be one of these per dimId
+ * and monIndex.
+ * TODO: Customs will mean this should be unique per cardName and monIndex
+ */
 data class Character (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val dimId: Long,

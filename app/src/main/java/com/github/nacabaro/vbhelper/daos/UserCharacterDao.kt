@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
+import com.github.nacabaro.vbhelper.domain.characters.Character
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
@@ -116,4 +117,15 @@ interface UserCharacterDao {
 
     @Query("UPDATE UserCharacter SET isActive = 1 WHERE id = :id")
     fun setActiveCharacter(id: Long)
+
+    @Query(
+        """
+        SELECT c.*
+        FROM Character c
+        join UserCharacter uc on c.id = uc.charId
+        where uc.id = :charId
+        LIMIT 1
+        """
+    )
+    suspend fun getCharacterInfo(charId: Long): Character
 }

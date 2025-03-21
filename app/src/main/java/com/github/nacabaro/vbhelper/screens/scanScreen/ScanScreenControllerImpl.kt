@@ -167,8 +167,6 @@ class ScanScreenControllerImpl(
 
         val characterData = UserCharacter(
             charId = cardCharData.id,
-            stage = nfcCharacter.stage.toInt(),
-            attribute = nfcCharacter.attribute,
             ageInDays = nfcCharacter.ageInDays.toInt(),
             nextAdventureMissionStage = nfcCharacter.nextAdventureMissionStage.toInt(),
             mood = nfcCharacter.mood.toInt(),
