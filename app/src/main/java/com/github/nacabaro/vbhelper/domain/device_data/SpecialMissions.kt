@@ -1,11 +1,19 @@
 package com.github.nacabaro.vbhelper.domain.device_data
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.github.cfogrady.vbnfc.vb.SpecialMission
 
 @Entity(
-
+    foreignKeys = [
+        ForeignKey(
+            entity = UserCharacter::class,
+            parentColumns = ["id"],
+            childColumns = ["characterId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
 )
 data class SpecialMissions (
     @PrimaryKey(autoGenerate = true) var id: Long = 0,

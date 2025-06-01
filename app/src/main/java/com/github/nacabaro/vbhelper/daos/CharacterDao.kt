@@ -42,4 +42,14 @@ interface CharacterDao {
             :transformationDate)
     """)
     fun insertTransformation(monId: Long, stage: Int, dimId: Long, transformationDate: Long)
+
+    @Query("""
+        INSERT INTO VitalsHistory(characterId, date, vitalPoints)
+        VALUES 
+            (:characterId, 
+            (:date),
+            :vitalPoints)
+    """)
+    fun insertVitals(characterId: Long, date: Long, vitalPoints: Int)
+
 }

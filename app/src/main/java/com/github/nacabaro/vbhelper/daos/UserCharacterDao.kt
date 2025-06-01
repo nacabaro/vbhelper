@@ -10,6 +10,7 @@ import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 
 @Dao

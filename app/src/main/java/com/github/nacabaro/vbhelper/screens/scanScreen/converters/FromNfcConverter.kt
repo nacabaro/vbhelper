@@ -10,6 +10,7 @@ import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import java.util.GregorianCalendar
 
@@ -112,6 +113,9 @@ class FromNfcConverter (
             )
         }
 
+        val vitalsHistory = nfcCharacter.vitalHistory
+
+
         database
             .userCharacterDao()
             .insertVBCharacterData(extraCharacterData)
@@ -151,6 +155,27 @@ class FromNfcConverter (
         database
             .userCharacterDao()
             .insertBECharacterData(extraCharacterData)
+    }
+
+    private fun addVitalsHistoryToDatabase(characterId: Long, nfcCharacter: NfcCharacter) {
+        val vitalsHistoryWatch = nfcCharacter.vitalHistory
+        vitalsHistoryWatch.map { item ->
+            val date = GregorianCalendar(
+                item.year.toInt(),
+                item.month.toInt(),
+                item.day.toInt()
+            )
+                .time
+                .time
+
+            database
+                .characterDao()
+                .insertVitals(
+                    characterId,
+                    date,
+                    item.vitalsGained.toInt()
+                )
+        }
     }
 
     private fun addTransformationHistoryToDatabase(characterId: Long, nfcCharacter: NfcCharacter, dimData: Card) {
