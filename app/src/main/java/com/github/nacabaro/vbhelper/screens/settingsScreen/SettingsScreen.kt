@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
+import com.github.nacabaro.vbhelper.navigation.NavigationItems
 
 @Composable
 fun SettingsScreen(
@@ -52,7 +53,9 @@ fun SettingsScreen(
             }
             SettingsEntry(title = "Rename DiM/BEm", description = "Set card name") { }
             SettingsSection("About and credits")
-            SettingsEntry(title = "Credits", description = "Credits") { }
+            SettingsEntry(title = "Credits", description = "Credits") {
+                navController.navigate(NavigationItems.Credits.route)
+            }
             SettingsEntry(title = "About", description = "About") { }
             SettingsSection("Data management")
             SettingsEntry(title = "Export data", description = "Export application database") {

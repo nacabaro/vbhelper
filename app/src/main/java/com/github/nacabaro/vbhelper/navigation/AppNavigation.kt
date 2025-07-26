@@ -23,6 +23,7 @@ import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImp
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreen
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.settingsScreen.CreditsScreen
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 
 data class AppNavigationHandlers(
@@ -123,6 +124,11 @@ fun AppNavigation(
                     navController = navController,
                     storageScreenController = applicationNavigationHandlers
                         .adventureScreenController
+                )
+            }
+            composable(NavigationItems.Credits.route) {
+                CreditsScreen(
+                    navController = navController
                 )
             }
         }
