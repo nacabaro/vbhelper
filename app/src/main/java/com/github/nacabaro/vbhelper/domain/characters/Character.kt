@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.domain.characters
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
+import com.github.cfogrady.vbnfc.data.NfcCharacter
 
 @Entity(
     foreignKeys = [
@@ -25,7 +26,7 @@ data class Character (
     val monIndex: Int,
     val name: ByteArray,
     val stage: Int, // These should be replaced with enums
-    val attribute: Int, // This one too
+    val attribute: NfcCharacter.Attribute, // This one too
     val baseHp: Int,
     val baseBp: Int,
     val baseAp: Int,

@@ -11,6 +11,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import com.github.cfogrady.vb.dim.card.BemCard
 import com.github.cfogrady.vb.dim.card.DimReader
+import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.Sprites
@@ -144,7 +145,7 @@ class SettingsScreenControllerImpl(
                             monIndex = index,
                             name = card.spriteData.sprites[spriteCounter].pixelData,
                             stage = characters[index].stage,
-                            attribute = characters[index].attribute,
+                            attribute = NfcCharacter.Attribute.entries[characters[index].attribute],
                             baseHp = characters[index].hp,
                             baseBp = characters[index].dp,
                             baseAp = characters[index].ap,
