@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.github.nacabaro.vbhelper.domain.characters.Character
-import com.github.nacabaro.vbhelper.domain.Sprites
+import com.github.nacabaro.vbhelper.domain.characters.Sprite
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 
 @Dao
@@ -22,10 +22,10 @@ interface CharacterDao {
     fun getCharacterByMonIndex(monIndex: Int, dimId: Long): Character
 
     @Insert
-    suspend fun insertSprite(vararg sprite: Sprites)
+    suspend fun insertSprite(vararg sprite: Sprite)
 
-    @Query("SELECT * FROM Sprites")
-    suspend fun getAllSprites(): List<Sprites>
+    @Query("SELECT * FROM Sprite")
+    suspend fun getAllSprites(): List<Sprite>
 
     @Query(
         """

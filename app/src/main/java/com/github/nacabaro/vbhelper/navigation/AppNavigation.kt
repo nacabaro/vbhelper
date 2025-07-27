@@ -15,7 +15,7 @@ import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreen
-import com.github.nacabaro.vbhelper.screens.SpriteViewer
+import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewer
 import com.github.nacabaro.vbhelper.screens.homeScreens.HomeScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreen
 import com.github.nacabaro.vbhelper.screens.itemsScreen.ChooseCharacterScreen
@@ -24,6 +24,7 @@ import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControl
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreen
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.CreditsScreen
+import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 
 data class AppNavigationHandlers(
@@ -32,7 +33,8 @@ data class AppNavigationHandlers(
     val itemsScreenController: ItemsScreenControllerImpl,
     val adventureScreenController: AdventureScreenControllerImpl,
     val storageScreenController: StorageScreenControllerImpl,
-    val homeScreenController: HomeScreenControllerImpl
+    val homeScreenController: HomeScreenControllerImpl,
+    val spriteViewerController: SpriteViewerControllerImpl
 )
 
 @Composable
@@ -91,7 +93,8 @@ fun AppNavigation(
             }
             composable(NavigationItems.Viewer.route) {
                 SpriteViewer(
-                    navController = navController
+                    navController = navController,
+                    spriteViewerController = applicationNavigationHandlers.spriteViewerController
                 )
             }
             composable(NavigationItems.CardView.route) {
