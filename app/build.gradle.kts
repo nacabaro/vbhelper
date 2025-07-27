@@ -91,4 +91,7 @@ dependencies {
     implementation("com.google.android.material:material:1.2.0")
     implementation(libs.protobuf.javalite)
     implementation("androidx.compose.material:material")
+    implementation("androidx.glance:glance:1.1.1")
+    implementation("androidx.glance:glance-appwidget:1.1.1")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }
