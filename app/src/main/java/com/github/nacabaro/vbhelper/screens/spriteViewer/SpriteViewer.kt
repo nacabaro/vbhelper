@@ -16,22 +16,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
-import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.source.SpriteRepo
-import kotlinx.coroutines.launch
-import java.nio.ByteBuffer
 
 @Composable
 fun SpriteViewer(
     navController: NavController,
     spriteViewerController: SpriteViewerController
 ) {
-    val coroutineScope = rememberCoroutineScope()
-
     val spriteList = remember { mutableStateListOf<Bitmap>() }
 
     Log.d("SpriteViewer", "spriteList: $spriteList")
