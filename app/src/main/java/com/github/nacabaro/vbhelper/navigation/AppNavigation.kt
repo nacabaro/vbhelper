@@ -1,7 +1,5 @@
 package com.github.nacabaro.vbhelper.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -71,9 +69,7 @@ fun AppNavigation(
 
         ) {
             composable(NavigationItems.Battles.route) {
-                BattlesScreen(
-                    navController = navController
-                )
+                BattlesScreen()
             }
             composable(NavigationItems.Home.route) {
                 HomeScreen(
