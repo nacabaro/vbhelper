@@ -1,5 +1,8 @@
 package com.github.nacabaro.vbhelper.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -51,8 +54,19 @@ fun AppNavigation(
         NavHost(
             navController = navController,
             startDestination = NavigationItems.Home.route,
+            enterTransition = {
+                fadeIn(
+                    animationSpec = tween(200)
+                )
+            },
+            exitTransition = {
+                fadeOut(
+                    animationSpec = tween(200)
+                )
+            },
             modifier = Modifier
                 .padding(contentPadding)
+
         ) {
             composable(NavigationItems.Battles.route) {
                 BattlesScreen()
