@@ -19,11 +19,12 @@ interface DexDao {
     @Query("""
         SELECT 
             c.id AS id,
-            c.sprite1 AS spriteIdle,
-            c.spritesWidth AS spriteWidth,
-            c.spritesHeight AS spriteHeight,
+            s.spriteIdle1 AS spriteIdle,
+            s.width AS spriteWidth,
+            s.height AS spriteHeight,
             d.discoveredOn AS discoveredOn
-        FROM character c
+        FROM Character c
+        JOIN Sprite s ON c.spriteId = s.id
         LEFT JOIN dex d ON c.id = d.id
         WHERE c.dimId = :cardId
     """)

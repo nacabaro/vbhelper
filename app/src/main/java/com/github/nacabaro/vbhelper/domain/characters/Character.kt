@@ -12,9 +12,16 @@ import com.github.cfogrady.vbnfc.data.NfcCharacter
             parentColumns = ["id"],
             childColumns = ["dimId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Sprite::class,
+            parentColumns = ["id"],
+            childColumns = ["spriteId"],
+            onDelete = ForeignKey.CASCADE
         )
     ]
 )
+
 /*
  * Character represents a character on a DIM card. There should only be one of these per dimId
  * and monIndex.
@@ -23,6 +30,7 @@ import com.github.cfogrady.vbnfc.data.NfcCharacter
 data class Character (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val dimId: Long,
+    val spriteId: Long,
     val monIndex: Int,
     val name: ByteArray,
     val stage: Int, // These should be replaced with enums
@@ -30,10 +38,6 @@ data class Character (
     val baseHp: Int,
     val baseBp: Int,
     val baseAp: Int,
-    val sprite1: ByteArray,
-    val sprite2: ByteArray,
     val nameWidth: Int,
-    val nameHeight: Int,
-    val spritesWidth: Int,
-    val spritesHeight: Int
+    val nameHeight: Int
 )

@@ -23,14 +23,15 @@ interface AdventureDao {
             uc.*,
             c.stage,
             c.attribute,
-            c.sprite1 AS spriteIdle,
-            c.spritesWidth AS spriteWidth,
-            c.spritesHeight AS spriteHeight,
+            s.spriteIdle1 AS spriteIdle,
+            s.width AS spriteWidth,
+            s.height AS spriteHeight,
             d.isBEm as isBemCard,
             a.finishesAdventure AS finishesAdventure,
             a.originalDuration AS originalTimeInMinutes
         FROM UserCharacter uc
         JOIN Character c ON uc.charId = c.id
+        JOIN Sprite s ON s.id = c.spriteId
         JOIN Card d ON c.dimId = d.id
         JOIN Adventure a ON uc.id = a.characterId
     """)

@@ -31,13 +31,14 @@ interface UserCharacterDao {
     @Query("""
         SELECT 
             c.id AS id,
-            c.sprite1 AS spriteIdle,
-            c.spritesWidth AS spriteWidth,
-            c.spritesHeight AS spriteHeight,
+            s.spriteIdle1 AS spriteIdle,
+            s.width AS spriteWidth,
+            s.height AS spriteHeight,
             c.monIndex AS monIndex, 
             t.transformationDate AS transformationDate
         FROM TransformationHistory t 
         JOIN Character c ON c.id = t.stageId
+        JOIN Sprite s ON s.id = c.spriteId
         WHERE monId = :monId
     """)
     fun getTransformationHistory(monId: Long): List<CharacterDtos.TransformationHistory>?
@@ -48,9 +49,10 @@ interface UserCharacterDao {
             uc.*,
             c.stage,
             c.attribute,
-            c.sprite1 AS spriteIdle,
-            c.spritesWidth AS spriteWidth,
-            c.spritesHeight AS spriteHeight,
+            s.spriteIdle1 AS spriteIdle,
+            s.spriteIdle2 AS spriteIdle2,
+            s.width AS spriteWidth,
+            s.height AS spriteHeight,
             c.name as nameSprite,
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
@@ -58,7 +60,8 @@ interface UserCharacterDao {
             a.characterId = uc.id as isInAdventure
         FROM UserCharacter uc
         JOIN Character c ON uc.charId = c.id
-        JOIN Card d ON c.dimId = d.id
+        JOIN Card d ON  d.id = c.dimId
+        JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
         """
     )
@@ -70,9 +73,10 @@ interface UserCharacterDao {
             uc.*,
             c.stage,
             c.attribute,
-            c.sprite1 AS spriteIdle,
-            c.spritesWidth AS spriteWidth,
-            c.spritesHeight AS spriteHeight,
+            s.spriteIdle1 AS spriteIdle,
+            s.spriteIdle2 AS spriteIdle2,
+            s.width AS spriteWidth,
+            s.height AS spriteHeight,
             c.name as nameSprite,
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
@@ -81,6 +85,7 @@ interface UserCharacterDao {
         FROM UserCharacter uc
         JOIN Character c ON uc.charId = c.id
         JOIN Card d ON c.dimId = d.id
+        JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
         WHERE uc.id = :id
     """)
@@ -98,9 +103,10 @@ interface UserCharacterDao {
             uc.*,
             c.stage,
             c.attribute,
-            c.sprite1 AS spriteIdle,
-            c.spritesWidth AS spriteWidth,
-            c.spritesHeight AS spriteHeight,
+            s.spriteIdle1 AS spriteIdle,
+            s.spriteIdle2 AS spriteIdle2,
+            s.width AS spriteWidth,
+            s.height AS spriteHeight,
             c.name as nameSprite,
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
@@ -109,6 +115,7 @@ interface UserCharacterDao {
         FROM UserCharacter uc
         JOIN Character c ON uc.charId = c.id
         JOIN Card d ON c.dimId = d.id
+        JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
         WHERE uc.isActive = 1
         LIMIT 1
