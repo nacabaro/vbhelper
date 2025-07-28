@@ -199,7 +199,8 @@ fun ScanScreen(
                         }
                     }
                 }
-            }
+            },
+            navController = navController
         )
     }
 }
@@ -208,9 +209,17 @@ fun ScanScreen(
 fun ChooseConnectOption(
     onClickRead: (() -> Unit)? = null,
     onClickWrite: (() -> Unit)? = null,
+    navController: NavController
 ) {
     Scaffold(
-        topBar = { TopBanner(text = "Scan a Vital Bracelet") }
+        topBar = {
+            TopBanner(
+                text = "Scan a Vital Bracelet",
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
     ) { contentPadding ->
         Column(
             verticalArrangement = Arrangement.Center,

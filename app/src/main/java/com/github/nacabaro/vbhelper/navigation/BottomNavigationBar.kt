@@ -19,6 +19,7 @@ fun BottomNavigationBar(navController: NavController) {
         NavigationItems.Dex,
         NavigationItems.Storage,
     )
+
     NavigationBar {
         val currentBackStackEntry = navController.currentBackStackEntryAsState()
         val currentRoute = currentBackStackEntry.value?.destination?.route

@@ -14,6 +14,7 @@ import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImp
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
 
@@ -45,6 +46,7 @@ class MainActivity : ComponentActivity() {
         val adventureScreenController = AdventureScreenControllerImpl(this)
         val storageScreenController = StorageScreenControllerImpl(this)
         val homeScreenController = HomeScreenControllerImpl(this)
+        val spriteViewerController = SpriteViewerControllerImpl(this)
 
         super.onCreate(savedInstanceState)
 
@@ -58,7 +60,8 @@ class MainActivity : ComponentActivity() {
                     itemsScreenController = itemsScreenController,
                     adventureScreenController = adventureScreenController,
                     homeScreenController = homeScreenController,
-                    storageScreenController = storageScreenController
+                    storageScreenController = storageScreenController,
+                    spriteViewerController = spriteViewerController
                 )
             }
         }
@@ -90,7 +93,7 @@ class MainActivity : ComponentActivity() {
         adventureScreenController: AdventureScreenControllerImpl,
         storageScreenController: StorageScreenControllerImpl,
         homeScreenController: HomeScreenControllerImpl,
-
+        spriteViewerController: SpriteViewerControllerImpl
         ) {
         AppNavigation(
             applicationNavigationHandlers = AppNavigationHandlers(
@@ -99,7 +102,8 @@ class MainActivity : ComponentActivity() {
                 itemsScreenController,
                 adventureScreenController,
                 storageScreenController,
-                homeScreenController
+                homeScreenController,
+                spriteViewerController
             )
         )
     }

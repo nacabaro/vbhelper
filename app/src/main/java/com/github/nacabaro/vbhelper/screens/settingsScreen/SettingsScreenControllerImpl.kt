@@ -10,10 +10,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import com.github.cfogrady.vb.dim.card.BemCard
+import com.github.cfogrady.vb.dim.card.DimCard
 import com.github.cfogrady.vb.dim.card.DimReader
+import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.domain.Sprites
+import com.github.nacabaro.vbhelper.domain.characters.Sprite
 import com.github.nacabaro.vbhelper.domain.characters.Card
 import com.github.nacabaro.vbhelper.domain.characters.Character
 import com.github.nacabaro.vbhelper.source.ApkSecretsImporter
@@ -139,22 +141,62 @@ class SettingsScreenControllerImpl(
                 val domainCharacters = mutableListOf<Character>()
 
                 for (index in 0 until characters.size) {
+                    var domainSprite: Sprite? = null;
+
+                    if (index < 2 && card is DimCard) {
+                        domainSprite = Sprite(
+                            width = card.spriteData.sprites[spriteCounter + 1].spriteDimensions.width,
+                            height = card.spriteData.sprites[spriteCounter + 1].spriteDimensions.height,
+                            spriteIdle1 = card.spriteData.sprites[spriteCounter + 1].pixelData,
+                            spriteIdle2 = card.spriteData.sprites[spriteCounter + 2].pixelData,
+                            spriteWalk1 = card.spriteData.sprites[spriteCounter + 1].pixelData,
+                            spriteWalk2 = card.spriteData.sprites[spriteCounter + 3].pixelData,
+                            spriteRun1 = card.spriteData.sprites[spriteCounter + 1].pixelData,
+                            spriteRun2 = card.spriteData.sprites[spriteCounter + 3].pixelData,
+                            spriteTrain1 = card.spriteData.sprites[spriteCounter + 1].pixelData,
+                            spriteTrain2 = card.spriteData.sprites[spriteCounter + 3].pixelData,
+                            spriteHappy = card.spriteData.sprites[spriteCounter + 4].pixelData,
+                            spriteSleep = card.spriteData.sprites[spriteCounter + 5].pixelData,
+                            spriteAttack = card.spriteData.sprites[spriteCounter + 2].pixelData,
+                            spriteDodge = card.spriteData.sprites[spriteCounter + 3].pixelData
+                        )
+                    } else {
+                        domainSprite = Sprite(
+                            width = card.spriteData.sprites[spriteCounter + 1].spriteDimensions.width,
+                            height = card.spriteData.sprites[spriteCounter + 1].spriteDimensions.height,
+                            spriteIdle1 = card.spriteData.sprites[spriteCounter + 1].pixelData,
+                            spriteIdle2 = card.spriteData.sprites[spriteCounter + 2].pixelData,
+                            spriteWalk1 = card.spriteData.sprites[spriteCounter + 3].pixelData,
+                            spriteWalk2 = card.spriteData.sprites[spriteCounter + 4].pixelData,
+                            spriteRun1 = card.spriteData.sprites[spriteCounter + 5].pixelData,
+                            spriteRun2 = card.spriteData.sprites[spriteCounter + 6].pixelData,
+                            spriteTrain1 = card.spriteData.sprites[spriteCounter + 7].pixelData,
+                            spriteTrain2 = card.spriteData.sprites[spriteCounter + 8].pixelData,
+                            spriteHappy = card.spriteData.sprites[spriteCounter + 9].pixelData,
+                            spriteSleep = card.spriteData.sprites[spriteCounter + 10].pixelData,
+                            spriteAttack = card.spriteData.sprites[spriteCounter + 11].pixelData,
+                            spriteDodge = card.spriteData.sprites[spriteCounter + 12].pixelData
+                        )
+                    }
+
+
+                    val spriteId = database
+                        .spriteDao()
+                        .insertSprite(domainSprite)
+
                     domainCharacters.add(
                         Character(
                             dimId = dimId,
+                            spriteId = spriteId,
                             monIndex = index,
                             name = card.spriteData.sprites[spriteCounter].pixelData,
                             stage = characters[index].stage,
-                            attribute = characters[index].attribute,
+                            attribute = NfcCharacter.Attribute.entries[characters[index].attribute],
                             baseHp = characters[index].hp,
                             baseBp = characters[index].dp,
                             baseAp = characters[index].ap,
-                            sprite1 = card.spriteData.sprites[spriteCounter + 1].pixelData,
-                            sprite2 = card.spriteData.sprites[spriteCounter + 2].pixelData,
-                            nameWidth = card.spriteData.sprites[spriteCounter].width,
-                            nameHeight = card.spriteData.sprites[spriteCounter].height,
-                            spritesWidth = card.spriteData.sprites[spriteCounter + 1].width,
-                            spritesHeight = card.spriteData.sprites[spriteCounter + 1].height
+                            nameWidth = card.spriteData.sprites[spriteCounter].spriteDimensions.width,
+                            nameHeight = card.spriteData.sprites[spriteCounter].spriteDimensions.height,
                         )
                     )
 
@@ -172,18 +214,6 @@ class SettingsScreenControllerImpl(
                 database
                     .characterDao()
                     .insertCharacter(*domainCharacters.toTypedArray())
-
-                val sprites = card.spriteData.sprites.map { sprite ->
-                    Sprites(
-                        id = 0,
-                        sprite = sprite.pixelData,
-                        width = sprite.width,
-                        height = sprite.height
-                    )
-                }
-                database
-                    .characterDao()
-                    .insertSprite(*sprites.toTypedArray())
             }
 
             inputStream?.close()

@@ -25,6 +25,7 @@ object CharacterDtos {
         var heartRateCurrent: Int,
         var characterType: DeviceType,
         val spriteIdle: ByteArray,
+        val spriteIdle2: ByteArray,
         val spriteWidth: Int,
         val spriteHeight: Int,
         val nameSprite: ByteArray,

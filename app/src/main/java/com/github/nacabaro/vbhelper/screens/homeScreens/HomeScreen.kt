@@ -46,6 +46,7 @@ fun HomeScreen(
     val beData = remember { mutableStateOf<BECharacterData?>(null) }
     val vbData = remember { mutableStateOf<VBCharacterData?>(null) }
     var adventureMissionsFinished by rememberSaveable { mutableStateOf(false) }
+    var betaWarning by rememberSaveable { mutableStateOf(true) }
 
     LaunchedEffect(storageRepository, activeMon) {
         withContext(Dispatchers.IO) {
@@ -138,6 +139,12 @@ fun HomeScreen(
                     }
                 }
             }
+        }
+    }
+
+    if (betaWarning) {
+        BetaWarning {
+            betaWarning = false
         }
     }
 }
