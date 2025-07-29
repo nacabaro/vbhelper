@@ -5,12 +5,14 @@ import androidx.room.RoomDatabase
 import com.github.nacabaro.vbhelper.daos.AdventureDao
 import com.github.nacabaro.vbhelper.daos.CharacterDao
 import com.github.nacabaro.vbhelper.daos.DexDao
-import com.github.nacabaro.vbhelper.daos.DiMDao
+import com.github.nacabaro.vbhelper.daos.CardDao
+import com.github.nacabaro.vbhelper.daos.CardProgressDao
 import com.github.nacabaro.vbhelper.daos.ItemDao
 import com.github.nacabaro.vbhelper.daos.SpriteDao
 import com.github.nacabaro.vbhelper.daos.UserCharacterDao
 import com.github.nacabaro.vbhelper.domain.characters.Character
-import com.github.nacabaro.vbhelper.domain.characters.Card
+import com.github.nacabaro.vbhelper.domain.card.Card
+import com.github.nacabaro.vbhelper.domain.card.CardProgress
 import com.github.nacabaro.vbhelper.domain.characters.Sprite
 import com.github.nacabaro.vbhelper.domain.characters.Adventure
 import com.github.nacabaro.vbhelper.domain.characters.Dex
@@ -19,12 +21,14 @@ import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
 import com.github.nacabaro.vbhelper.domain.items.Items
 
 @Database(
     version = 1,
     entities = [
         Card::class,
+        CardProgress::class,
         Character::class,
         Sprite::class,
         UserCharacter::class,
@@ -32,13 +36,15 @@ import com.github.nacabaro.vbhelper.domain.items.Items
         VBCharacterData::class,
         SpecialMissions::class,
         TransformationHistory::class,
+        VitalsHistory::class,
         Dex::class,
         Items::class,
         Adventure::class
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun dimDao(): DiMDao
+    abstract fun cardDao(): CardDao
+    abstract fun cardProgressDao(): CardProgressDao
     abstract fun characterDao(): CharacterDao
     abstract fun userCharacterDao(): UserCharacterDao
     abstract fun dexDao(): DexDao

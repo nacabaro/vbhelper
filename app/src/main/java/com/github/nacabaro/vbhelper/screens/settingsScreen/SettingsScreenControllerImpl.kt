@@ -16,7 +16,8 @@ import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.characters.Sprite
-import com.github.nacabaro.vbhelper.domain.characters.Card
+import com.github.nacabaro.vbhelper.domain.card.Card
+import com.github.nacabaro.vbhelper.domain.card.CardProgress
 import com.github.nacabaro.vbhelper.domain.characters.Character
 import com.github.nacabaro.vbhelper.source.ApkSecretsImporter
 import com.github.nacabaro.vbhelper.source.SecretsImporter
@@ -121,17 +122,28 @@ class SettingsScreenControllerImpl(
                     logo = card.spriteData.sprites[0].pixelData,
                     name = card.spriteData.text, // TODO Make user write card name
                     stageCount = card.adventureLevels.levels.size,
-                    currentStage = 0,
                     logoHeight = card.spriteData.sprites[0].height,
                     logoWidth = card.spriteData.sprites[0].width,
                     isBEm = card is BemCard
                 )
 
                 val dimId = database
-                    .dimDao()
+                    .cardDao()
                     .insertNewDim(cardModel)
 
-                val characters = card.characterStats.characterEntries
+                val cardProgress = CardProgress(
+                    cardId = cardModel.cardId,
+                    currentStage = 0,
+                    unlocked = false
+                )
+
+                database
+                    .cardProgressDao()
+                    .updateDimProgress(cardProgress)
+
+                val characters = card
+                    .characterStats
+                    .characterEntries
 
                 var spriteCounter = when (card is BemCard) {
                     true -> 54
@@ -141,7 +153,7 @@ class SettingsScreenControllerImpl(
                 val domainCharacters = mutableListOf<Character>()
 
                 for (index in 0 until characters.size) {
-                    var domainSprite: Sprite? = null;
+                    var domainSprite: Sprite?
 
                     if (index < 2 && card is DimCard) {
                         domainSprite = Sprite(

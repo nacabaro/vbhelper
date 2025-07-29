@@ -283,6 +283,7 @@ fun ScanScreenPreview() {
             override fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
             override fun onClickWrite(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
             override fun cancelRead() {}
+            override fun characterFromNfc(nfcCharacter: NfcCharacter): String { return "" }
             override suspend fun characterToNfc(characterId: Long): NfcCharacter? { return null }
         },
         characterId = null

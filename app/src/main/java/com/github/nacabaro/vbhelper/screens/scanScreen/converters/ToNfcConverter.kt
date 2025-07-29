@@ -20,7 +20,11 @@ class ToNfcConverter(
     private val application: VBHelper = componentActivity.applicationContext as VBHelper
     private val database: AppDatabase = application.container.db
 
-    suspend fun characterToNfc(characterId: Long): NfcCharacter {
+
+
+    suspend fun characterToNfc(
+        characterId: Long
+    ): NfcCharacter {
         val app = componentActivity.applicationContext as VBHelper
         val database = app.container.db
 
@@ -32,7 +36,9 @@ class ToNfcConverter(
             .characterDao()
             .getCharacterInfo(userCharacter.charId)
 
-        val currentCardStage = database.dimDao().getCurrentStage(characterInfo.cardId)
+        val currentCardStage = database
+            .cardProgressDao()
+            .getCardProgress(characterInfo.cardId)
 
         return if (userCharacter.characterType == DeviceType.BEDevice)
             nfcToBENfc(characterId, characterInfo, currentCardStage, userCharacter)
@@ -40,9 +46,11 @@ class ToNfcConverter(
             nfcToVBNfc(characterId, characterInfo, currentCardStage, userCharacter)
     }
 
+
+
     private suspend fun nfcToVBNfc(
         characterId: Long,
-        characterInfo: CharacterDtos.DiMInfo,
+        characterInfo: CharacterDtos.CardCharacterInfo,
         currentCardStage: Int,
         userCharacter: UserCharacter
     ): VBNfcCharacter {
@@ -50,29 +58,15 @@ class ToNfcConverter(
             .userCharacterDao()
             .getVbData(characterId)
 
-        val specialMissions = database
-            .userCharacterDao()
-            .getSpecialMissions(characterId)
-
         val paddedTransformationArray = generateTransformationHistory(characterId)
 
-        val watchSpecialMissions = specialMissions.map {
-            SpecialMission(
-                goal = it.goal.toUShort(),
-                id = it.watchId.toUShort(),
-                progress = it.progress.toUShort(),
-                status = it.status,
-                timeElapsedInMinutes = it.timeElapsedInMinutes.toUShort(),
-                timeLimitInMinutes = it.timeLimitInMinutes.toUShort(),
-                type = it.missionType
-            )
-        }
+        val watchSpecialMissions = generateSpecialMissionsArray(characterId)
 
         val nfcData = VBNfcCharacter(
             dimId = characterInfo.cardId.toUShort(),
             charIndex = characterInfo.charId.toUShort(),
-            stage = userCharacter.stage.toByte(),
-            attribute = userCharacter.attribute,
+            stage = characterInfo.stage.toByte(),
+            attribute = characterInfo.attribute,
             ageInDays = userCharacter.ageInDays.toByte(),
             nextAdventureMissionStage = currentCardStage.toByte(),
             mood = userCharacter.mood.toByte(),
@@ -100,9 +94,35 @@ class ToNfcConverter(
         return nfcData
     }
 
+
+
+    private suspend fun generateSpecialMissionsArray(
+        characterId: Long
+    ): List<SpecialMission> {
+        val specialMissions = database
+            .userCharacterDao()
+            .getSpecialMissions(characterId)
+
+        val watchSpecialMissions = specialMissions.map {
+            SpecialMission(
+                goal = it.goal.toUShort(),
+                id = it.watchId.toUShort(),
+                progress = it.progress.toUShort(),
+                status = it.status,
+                timeElapsedInMinutes = it.timeElapsedInMinutes.toUShort(),
+                timeLimitInMinutes = it.timeLimitInMinutes.toUShort(),
+                type = it.missionType
+            )
+        }
+
+        return watchSpecialMissions
+    }
+
+
+
     private suspend fun nfcToBENfc(
         characterId: Long,
-        characterInfo: CharacterDtos.DiMInfo,
+        characterInfo: CharacterDtos.CardCharacterInfo,
         currentCardStage: Int,
         userCharacter: UserCharacter
     ): BENfcCharacter {
@@ -115,8 +135,8 @@ class ToNfcConverter(
         val nfcData = BENfcCharacter(
             dimId = characterInfo.cardId.toUShort(),
             charIndex = characterInfo.charId.toUShort(),
-            stage = userCharacter.stage.toByte(),
-            attribute = userCharacter.attribute,
+            stage = characterInfo.stage.toByte(),
+            attribute = characterInfo.attribute,
             ageInDays = userCharacter.ageInDays.toByte(),
             nextAdventureMissionStage = currentCardStage.toByte(),
             mood = userCharacter.mood.toByte(),
@@ -163,8 +183,9 @@ class ToNfcConverter(
         )
 
         return nfcData
-
     }
+
+
 
     private suspend fun generateTransformationHistory(
         characterId: Long
@@ -195,6 +216,8 @@ class ToNfcConverter(
 
         return paddedTransformationArray
     }
+
+
 
     private fun padTransformationArray(
         transformationArray: Array<NfcCharacter.Transformation>

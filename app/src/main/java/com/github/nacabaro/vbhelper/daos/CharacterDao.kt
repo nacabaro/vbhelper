@@ -18,21 +18,20 @@ interface CharacterDao {
     @Insert
     suspend fun insertSprite(vararg sprite: Sprite)
 
-    @Query("SELECT * FROM Sprite")
-    suspend fun getAllSprites(): List<Sprite>
-
     @Query(
         """
         SELECT 
             d.cardId as cardId,
-            c.monIndex as charId
+            c.monIndex as charId,
+            c.stage as stage,
+            c.attribute as attribute
         FROM Character c
         JOIN UserCharacter uc ON c.id = uc.charId
         JOIN Card d ON c.dimId = d.id
         WHERE uc.id = :charId
     """
     )
-    suspend fun getCharacterInfo(charId: Long): CharacterDtos.DiMInfo
+    suspend fun getCharacterInfo(charId: Long): CharacterDtos.CardCharacterInfo
 
     @Query("""
         INSERT INTO TransformationHistory(monId, stageId, transformationDate)
@@ -44,12 +43,12 @@ interface CharacterDao {
     fun insertTransformation(monId: Long, stage: Int, dimId: Long, transformationDate: Long)
 
     @Query("""
-        INSERT INTO VitalsHistory(characterId, date, vitalPoints)
+        INSERT INTO VitalsHistory(charId, date, vitalPoints)
         VALUES 
-            (:characterId, 
+            (:charId, 
             (:date),
             :vitalPoints)
     """)
-    fun insertVitals(characterId: Long, date: Long, vitalPoints: Int)
+    fun insertVitals(charId: Long, date: Long, vitalPoints: Int)
 
 }

@@ -5,12 +5,12 @@ import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.domain.characters.Card
+import com.github.nacabaro.vbhelper.domain.card.Card
+import com.github.nacabaro.vbhelper.domain.card.CardProgress
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
-import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import java.util.GregorianCalendar
 
@@ -20,29 +20,24 @@ class FromNfcConverter (
     private val application = componentActivity.applicationContext as VBHelper
     private val database = application.container.db
 
+
+
     fun addCharacter(nfcCharacter: NfcCharacter): String {
-        val dimData = database
-            .dimDao()
+        val cardData = database
+            .cardDao()
             .getDimById(nfcCharacter.dimId.toInt())
 
-        if (dimData == null)
+        if (cardData == null)
             return "Card not found"
 
         val cardCharData = database
             .characterDao()
-            .getCharacterByMonIndex(nfcCharacter.charIndex.toInt(), dimData.id)
+            .getCharacterByMonIndex(nfcCharacter.charIndex.toInt(), cardData.id)
 
-        database
-            .dimDao()
-            .updateCurrentStage(
-                id = nfcCharacter.dimId.toInt(),
-                currentStage = nfcCharacter.nextAdventureMissionStage.toInt()
-            )
+        updateCardProgress(nfcCharacter, cardData)
 
         val characterData = UserCharacter(
             charId = cardCharData.id,
-            stage = nfcCharacter.stage.toInt(),
-            attribute = nfcCharacter.attribute,
             ageInDays = nfcCharacter.ageInDays.toInt(),
             mood = nfcCharacter.mood.toInt(),
             vitalPoints = nfcCharacter.vitalPoints.toInt(),
@@ -61,6 +56,8 @@ class FromNfcConverter (
             },
             isActive = true
         )
+
+        updateCardProgress(cardData, nfcCharacter)
 
         database
             .userCharacterDao()
@@ -85,20 +82,73 @@ class FromNfcConverter (
         addTransformationHistoryToDatabase(
             characterId = characterId,
             nfcCharacter = nfcCharacter,
-            dimData = dimData
+            dimData = cardData
         )
 
         return "Done reading character!"
-
     }
 
-    private fun addVbCharacterToDatabase(characterId: Long, nfcCharacter: VBNfcCharacter) {
+
+
+    private fun updateCardProgress(
+        nfcCharacter: NfcCharacter,
+        cardData: Card
+    ) {
+        val currentCardProgress = CardProgress(
+            cardId = cardData.cardId,
+            currentStage = nfcCharacter.nextAdventureMissionStage.toInt(),
+            unlocked = nfcCharacter.nextAdventureMissionStage.toInt() > cardData.stageCount
+        )
+
+        database
+            .cardProgressDao()
+            .updateDimProgress(currentCardProgress)
+    }
+
+
+
+    private fun updateCardProgress(
+        cardData: Card,
+        nfcCharacter: NfcCharacter,
+    ) {
+        val cardProgress = CardProgress(
+            cardId = cardData.cardId,
+            currentStage = nfcCharacter.nextAdventureMissionStage.toInt(),
+            unlocked = nfcCharacter.nextAdventureMissionStage.toInt() > cardData.stageCount
+        )
+
+        database
+            .cardProgressDao()
+            .updateDimProgress(cardProgress)
+    }
+
+
+
+    private fun addVbCharacterToDatabase(
+        characterId: Long,
+        nfcCharacter: VBNfcCharacter
+    ) {
         val extraCharacterData = VBCharacterData(
             id = characterId,
             generation = nfcCharacter.generation.toInt(),
             totalTrophies = nfcCharacter.totalTrophies.toInt()
         )
 
+        database
+            .userCharacterDao()
+            .insertVBCharacterData(extraCharacterData)
+
+        addSpecialMissionsToDatabase(nfcCharacter, characterId)
+
+        addVitalsHistoryToDatabase(characterId, nfcCharacter)
+    }
+
+
+
+    private fun addSpecialMissionsToDatabase(
+        nfcCharacter: VBNfcCharacter,
+        characterId: Long
+    ) {
         val specialMissionsWatch = nfcCharacter.specialMissions
         val specialMissionsDb = specialMissionsWatch.map { item ->
             SpecialMissions(
@@ -113,19 +163,17 @@ class FromNfcConverter (
             )
         }
 
-        val vitalsHistory = nfcCharacter.vitalHistory
-
-
-        database
-            .userCharacterDao()
-            .insertVBCharacterData(extraCharacterData)
-
         database
             .userCharacterDao()
             .insertSpecialMissions(*specialMissionsDb.toTypedArray())
     }
 
-    private fun addBeCharacterToDatabase(characterId: Long, nfcCharacter: BENfcCharacter) {
+
+
+    private fun addBeCharacterToDatabase(
+        characterId: Long,
+        nfcCharacter: BENfcCharacter
+    ) {
         val extraCharacterData = BECharacterData(
             id = characterId,
             trainingHp = nfcCharacter.trainingHp.toInt(),
@@ -157,7 +205,12 @@ class FromNfcConverter (
             .insertBECharacterData(extraCharacterData)
     }
 
-    private fun addVitalsHistoryToDatabase(characterId: Long, nfcCharacter: NfcCharacter) {
+
+
+    private fun addVitalsHistoryToDatabase(
+        characterId: Long,
+        nfcCharacter: NfcCharacter
+    ) {
         val vitalsHistoryWatch = nfcCharacter.vitalHistory
         vitalsHistoryWatch.map { item ->
             val date = GregorianCalendar(
@@ -178,7 +231,12 @@ class FromNfcConverter (
         }
     }
 
-    private fun addTransformationHistoryToDatabase(characterId: Long, nfcCharacter: NfcCharacter, dimData: Card) {
+
+    private fun addTransformationHistoryToDatabase(
+        characterId: Long,
+        nfcCharacter: NfcCharacter,
+        dimData: Card
+    ) {
         val transformationHistoryWatch = nfcCharacter.transformationHistory
         transformationHistoryWatch.map { item ->
             if (item.toCharIndex.toInt() != 255) {

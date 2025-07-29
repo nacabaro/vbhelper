@@ -11,22 +11,17 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.github.cfogrady.vbnfc.TagCommunicator
-import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
-import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.ActivityLifecycleListener
-import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
-import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
+import com.github.nacabaro.vbhelper.screens.scanScreen.converters.FromNfcConverter
+import com.github.nacabaro.vbhelper.screens.scanScreen.converters.ToNfcConverter
 import com.github.nacabaro.vbhelper.source.getCryptographicTransformerMap
 import com.github.nacabaro.vbhelper.source.isMissingSecrets
 import com.github.nacabaro.vbhelper.source.proto.Secrets
-import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.GregorianCalendar
 
 class ScanScreenControllerImpl(
     override val secretsFlow: Flow<Secrets>,
@@ -49,7 +44,7 @@ class ScanScreenControllerImpl(
     override fun onClickRead(secrets: Secrets, onComplete: ()->Unit) {
         handleTag(secrets) { tagCommunicator ->
             val character = tagCommunicator.receiveCharacter()
-            val resultMessage = addCharacterScannedIntoDatabase(character)
+            val resultMessage = characterFromNfc(character)
             onComplete.invoke()
             resultMessage
         }
@@ -151,6 +146,11 @@ class ScanScreenControllerImpl(
         componentActivity.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
     }
 
+    /*
+    // Todo: Move all of this to a separate class
+    // Todo: Test the new mess
+    // Todo: Remove this
+
     private fun addCharacterScannedIntoDatabase(nfcCharacter: NfcCharacter): String {
         val application = componentActivity.applicationContext as VBHelper
         val storageRepository = application.container.db
@@ -168,7 +168,6 @@ class ScanScreenControllerImpl(
         val characterData = UserCharacter(
             charId = cardCharData.id,
             ageInDays = nfcCharacter.ageInDays.toInt(),
-            nextAdventureMissionStage = nfcCharacter.nextAdventureMissionStage.toInt(),
             mood = nfcCharacter.mood.toInt(),
             vitalPoints = nfcCharacter.vitalPoints.toInt(),
             transformationCountdown = nfcCharacter.transformationCountdownInMinutes.toInt(),
@@ -247,5 +246,19 @@ class ScanScreenControllerImpl(
         }
 
         return "Done reading character!"
+    }*/
+
+    override fun characterFromNfc(nfcCharacter: NfcCharacter): String {
+        val nfcConverter = FromNfcConverter(
+            componentActivity = componentActivity
+        )
+        return nfcConverter.addCharacter(nfcCharacter)
+    }
+
+    override suspend fun characterToNfc(characterId: Long): NfcCharacter {
+        val nfcGenerator = ToNfcConverter(
+            componentActivity = componentActivity
+        )
+        return nfcGenerator.characterToNfc(characterId)
     }
 }

@@ -8,15 +8,15 @@ import androidx.room.PrimaryKey
     foreignKeys = [
         ForeignKey(
             entity = UserCharacter::class,
-            parentColumns = ["characterId"],
-            childColumns = ["id"],
+            parentColumns = ["id"],
+            childColumns = ["charId"],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class VitalsHistory (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val characterId: Long,
+    val charId: Long,
     val date: Long,
     val vitalPoints: Int
 )

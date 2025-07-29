@@ -1,4 +1,4 @@
-package com.github.nacabaro.vbhelper.domain.characters
+package com.github.nacabaro.vbhelper.domain.card
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -13,6 +13,5 @@ data class Card(
     val logoHeight: Int,
     val name: String,
     val stageCount: Int,
-    val currentStage: Int,
     val isBEm: Boolean
 )
