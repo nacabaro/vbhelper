@@ -1,15 +1,23 @@
 package com.github.nacabaro.vbhelper.navigation
 
+import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.screens.BattlesScreen
 import com.github.nacabaro.vbhelper.screens.DexScreen
 import com.github.nacabaro.vbhelper.screens.DiMScreen
@@ -29,6 +37,7 @@ import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenContr
 import com.github.nacabaro.vbhelper.screens.settingsScreen.CreditsScreen
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
+import com.github.nacabaro.vbhelper.source.StorageRepository
 
 data class AppNavigationHandlers(
     val settingsScreenController: SettingsScreenControllerImpl,
@@ -86,12 +95,29 @@ fun AppNavigation(
             }
             composable(NavigationItems.Scan.route) {
                 val characterIdString = it.arguments?.getString("characterId")
-                val characterId = characterIdString?.toLongOrNull()
+                var characterId by remember { mutableStateOf(characterIdString?.toLongOrNull()) }
+                Log.d("ScanScreen", "characterId: $characterId")
+                val launchedFromHomeScreen = (characterIdString?.toLongOrNull() == null)
+
+                if (characterId == null) {
+                    val context = LocalContext.current.applicationContext as VBHelper
+                    val storageRepository = StorageRepository(context.container.db)
+
+                    LaunchedEffect(characterId) {
+                        if (characterId == null) {
+                            val characterData = storageRepository.getActiveCharacter()
+                            if (characterData != null) {
+                                characterId = characterData.id
+                            }
+                        }
+                    }
+                }
 
                 ScanScreen(
                     navController = navController,
                     scanScreenController = applicationNavigationHandlers.scanScreenController,
-                    characterId = characterId
+                    characterId = characterId,
+                    launchedFromHomeScreen = launchedFromHomeScreen
                 )
             }
             composable(NavigationItems.Dex.route) {

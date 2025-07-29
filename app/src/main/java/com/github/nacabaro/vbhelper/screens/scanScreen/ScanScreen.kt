@@ -45,24 +45,13 @@ fun ScanScreen(
     navController: NavController,
     characterId: Long?,
     scanScreenController: ScanScreenController,
+    launchedFromHomeScreen: Boolean
 ) {
     val secrets by scanScreenController.secretsFlow.collectAsState(null)
-    var readingScreen by remember { mutableStateOf(false) }
-    var writingScreen by remember { mutableStateOf(false) }
-    var isDoneReadingCharacter by remember { mutableStateOf(false) }
-    var isDoneSendingCard by remember { mutableStateOf(false) }
-    var isDoneWritingCharacter by remember { mutableStateOf(false) }
 
     val application = LocalContext.current.applicationContext as VBHelper
     val storageRepository = StorageRepository(application.container.db)
     var nfcCharacter by remember { mutableStateOf<NfcCharacter?>(null) }
-
-    /*
-    This is in the case there is an active character,
-    that way active characters are quicker to send.
-     */
-    var selectedCharacterId by remember { mutableStateOf<Long?>(null) }
-    selectedCharacterId = characterId
 
     val context = LocalContext.current
 
@@ -75,18 +64,16 @@ fun ScanScreen(
             an active character.
              */
             if (characterId != null && nfcCharacter == null) {
-                selectedCharacterId = characterId
-                nfcCharacter = scanScreenController.characterToNfc(selectedCharacterId!!)
-            }
-            else if (characterId == null && nfcCharacter == null) {
-               val activeCharacter = storageRepository.getActiveCharacter()
-               if (activeCharacter != null) {
-                   selectedCharacterId = activeCharacter.id
-                   nfcCharacter = scanScreenController.characterToNfc(selectedCharacterId!!)
-               }
+                nfcCharacter = scanScreenController.characterToNfc(characterId)
             }
         }
     }
+
+    var readingScreen by remember { mutableStateOf(false) }
+    var writingScreen by remember { mutableStateOf(false) }
+    var isDoneReadingCharacter by remember { mutableStateOf(false) }
+    var isDoneSendingCard by remember { mutableStateOf(false) }
+    var isDoneWritingCharacter by remember { mutableStateOf(false) }
 
     DisposableEffect(readingScreen) {
         if(readingScreen) {
@@ -171,7 +158,7 @@ fun ScanScreen(
         LaunchedEffect(storageRepository) {
             withContext(Dispatchers.IO) {
                 storageRepository
-                    .deleteCharacter(selectedCharacterId!!)
+                    .deleteCharacter(characterId!!)
             }
         }
     }
@@ -197,7 +184,7 @@ fun ScanScreen(
     } else {
         ChooseConnectOption(
             onClickRead = when {
-                selectedCharacterId != null -> null
+                !launchedFromHomeScreen -> null
                 else -> {
                     {
                         if(secrets == null) {
@@ -310,6 +297,7 @@ fun ScanScreenPreview() {
             override fun characterFromNfc(nfcCharacter: NfcCharacter): String { return "" }
             override suspend fun characterToNfc(characterId: Long): NfcCharacter? { return null }
         },
-        characterId = null
+        characterId = null,
+        launchedFromHomeScreen = false
     )
 }
