@@ -132,7 +132,7 @@ class SettingsScreenControllerImpl(
                     .insertNewDim(cardModel)
 
                 val cardProgress = CardProgress(
-                    cardId = cardModel.cardId,
+                    cardId = dimId,
                     currentStage = 0,
                     unlocked = false
                 )

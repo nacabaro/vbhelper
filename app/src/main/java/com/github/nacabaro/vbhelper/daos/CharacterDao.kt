@@ -28,27 +28,8 @@ interface CharacterDao {
         FROM Character c
         JOIN UserCharacter uc ON c.id = uc.charId
         JOIN Card d ON c.dimId = d.id
-        WHERE uc.id = :charId
+        WHERE c.id = :charId
     """
     )
     suspend fun getCharacterInfo(charId: Long): CharacterDtos.CardCharacterInfo
-
-    @Query("""
-        INSERT INTO TransformationHistory(monId, stageId, transformationDate)
-        VALUES 
-            (:monId, 
-            (SELECT id FROM Character WHERE monIndex = :stage AND dimId = :dimId),
-            :transformationDate)
-    """)
-    fun insertTransformation(monId: Long, stage: Int, dimId: Long, transformationDate: Long)
-
-    @Query("""
-        INSERT INTO VitalsHistory(charId, date, vitalPoints)
-        VALUES 
-            (:charId, 
-            (:date),
-            :vitalPoints)
-    """)
-    fun insertVitals(charId: Long, date: Long, vitalPoints: Int)
-
 }

@@ -17,6 +17,8 @@ import androidx.room.PrimaryKey
 data class VitalsHistory (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val charId: Long,
-    val date: Long,
+    val year: Int,
+    val month: Int,
+    val day: Int,
     val vitalPoints: Int
 )

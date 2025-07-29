@@ -57,11 +57,33 @@ fun ScanScreen(
     val storageRepository = StorageRepository(application.container.db)
     var nfcCharacter by remember { mutableStateOf<NfcCharacter?>(null) }
 
+    /*
+    This is in the case there is an active character,
+    that way active characters are quicker to send.
+     */
+    var selectedCharacterId by remember { mutableStateOf<Long?>(null) }
+    selectedCharacterId = characterId
+
     val context = LocalContext.current
+
     LaunchedEffect(storageRepository) {
         withContext(Dispatchers.IO) {
-            if(characterId != null && nfcCharacter == null) {
-                nfcCharacter = scanScreenController.characterToNfc(characterId)
+            /*
+            First check if there is a character sent through the navigation system
+            If there is not, that means we got here through the home screen nfc button
+            If we got here through the home screen, it does not hurt to check if there is
+            an active character.
+             */
+            if (characterId != null && nfcCharacter == null) {
+                selectedCharacterId = characterId
+                nfcCharacter = scanScreenController.characterToNfc(selectedCharacterId!!)
+            }
+            else if (characterId == null && nfcCharacter == null) {
+               val activeCharacter = storageRepository.getActiveCharacter()
+               if (activeCharacter != null) {
+                   selectedCharacterId = activeCharacter.id
+                   nfcCharacter = scanScreenController.characterToNfc(selectedCharacterId!!)
+               }
             }
         }
     }
@@ -120,13 +142,15 @@ fun ScanScreen(
             )
         }
 
-        if (!isDoneSendingCard) {
-            scanScreenController.onClickCheckCard(secrets!!, nfcCharacter!!) {
-                isDoneSendingCard = true
-            }
-        } else if (!isDoneWritingCharacter) {
-            scanScreenController.onClickWrite(secrets!!, nfcCharacter!!) {
-                isDoneWritingCharacter = true
+        if (secrets != null && nfcCharacter != null) {
+            if (!isDoneSendingCard) {
+                scanScreenController.onClickCheckCard(secrets!!, nfcCharacter!!) {
+                    isDoneSendingCard = true
+                }
+            } else if (!isDoneWritingCharacter) {
+                scanScreenController.onClickWrite(secrets!!, nfcCharacter!!) {
+                    isDoneWritingCharacter = true
+                }
             }
         }
 
@@ -147,7 +171,7 @@ fun ScanScreen(
         LaunchedEffect(storageRepository) {
             withContext(Dispatchers.IO) {
                 storageRepository
-                    .deleteCharacter(characterId!!)
+                    .deleteCharacter(selectedCharacterId!!)
             }
         }
     }
@@ -173,7 +197,7 @@ fun ScanScreen(
     } else {
         ChooseConnectOption(
             onClickRead = when {
-                characterId != null -> null
+                selectedCharacterId != null -> null
                 else -> {
                     {
                         if(secrets == null) {

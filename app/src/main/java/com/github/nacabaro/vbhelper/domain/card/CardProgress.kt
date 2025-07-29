@@ -15,7 +15,7 @@ import androidx.room.PrimaryKey
     ]
 )
 data class CardProgress(
-    @PrimaryKey val cardId: Int,
+    @PrimaryKey val cardId: Long,
     val currentStage: Int,
     val unlocked: Boolean
 )

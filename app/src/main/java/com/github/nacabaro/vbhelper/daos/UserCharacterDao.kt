@@ -156,4 +156,20 @@ interface UserCharacterDao {
         """
     )
     suspend fun getCharacterInfo(charId: Long): Character
+
+
+    @Query("""
+        INSERT INTO TransformationHistory(monId, stageId, transformationDate)
+        VALUES 
+            (:monId, 
+            (SELECT id FROM Character WHERE monIndex = :stage AND dimId = :dimId),
+            :transformationDate)
+    """)
+    fun insertTransformation(monId: Long, stage: Int, dimId: Long, transformationDate: Long)
+
+    @Upsert
+    fun insertVitals(vararg vitalsHistory: VitalsHistory)
+
+    @Query("""SELECT * FROM VitalsHistory WHERE charId = :charId ORDER BY id ASC""")
+    suspend fun getVitalsHistory(charId: Long): List<VitalsHistory>
 }

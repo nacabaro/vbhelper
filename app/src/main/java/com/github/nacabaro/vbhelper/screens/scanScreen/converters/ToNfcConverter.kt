@@ -1,6 +1,7 @@
 package com.github.nacabaro.vbhelper.screens.scanScreen.converters
 
 import android.icu.util.Calendar
+import android.util.Log
 import androidx.activity.ComponentActivity
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.be.FirmwareVersion
@@ -81,9 +82,7 @@ class ToNfcConverter(
             activityLevel = userCharacter.activityLevel.toByte(),
             heartRateCurrent = userCharacter.heartRateCurrent.toUByte(),
             transformationHistory = paddedTransformationArray,
-            vitalHistory = Array(7) {
-                NfcCharacter.DailyVitals(0u, 0u, 0u, 0u)
-            },
+            vitalHistory = generateVitalsHistoryArray(characterId),
             appReserved1 = ByteArray(12) {0},
             appReserved2 = Array(3) {0u},
             generation = vbData.generation.toUShort(),
@@ -116,6 +115,39 @@ class ToNfcConverter(
         }
 
         return watchSpecialMissions
+    }
+
+
+
+    private suspend fun generateVitalsHistoryArray(
+        characterId: Long
+    ): Array<NfcCharacter.DailyVitals> {
+        val vitalsHistory = database
+            .userCharacterDao()
+            .getVitalsHistory(characterId)
+
+        val nfcVitalsHistory = Array(7) {
+            NfcCharacter.DailyVitals(0u, 0u, 0u, 0u)
+        }
+
+        vitalsHistory.mapIndexed { index, historyElement ->
+            var actualYear = 0
+            if (historyElement.year != 2000) {
+                actualYear = historyElement.year
+            }
+             nfcVitalsHistory[index] = NfcCharacter.DailyVitals(
+                day = historyElement.day.toUByte(),
+                month = historyElement.month.toUByte(),
+                year = actualYear.toUShort(),
+                vitalsGained = vitalsHistory[index].vitalPoints.toUShort()
+            )
+        }
+
+        nfcVitalsHistory.map {
+            Log.d("NFC", it.toString())
+        }
+
+        return nfcVitalsHistory
     }
 
 
@@ -157,9 +189,7 @@ class ToNfcConverter(
             activityLevel = userCharacter.activityLevel.toByte(),
             heartRateCurrent = userCharacter.heartRateCurrent.toUByte(),
             transformationHistory = paddedTransformationArray,
-            vitalHistory = Array(7) {
-                NfcCharacter.DailyVitals(0u, 0u, 0u, 0u)
-            },
+            vitalHistory = generateVitalsHistoryArray(characterId),
             appReserved1 = ByteArray(12) {0},
             appReserved2 = Array(3) {0u},
             trainingHp = beData.trainingHp.toUShort(),

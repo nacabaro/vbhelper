@@ -1,5 +1,6 @@
 package com.github.nacabaro.vbhelper.screens.scanScreen.converters
 
+import android.util.Log
 import androidx.activity.ComponentActivity
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
@@ -11,6 +12,7 @@ import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import java.util.GregorianCalendar
 
@@ -57,8 +59,6 @@ class FromNfcConverter (
             isActive = true
         )
 
-        updateCardProgress(cardData, nfcCharacter)
-
         database
             .userCharacterDao()
             .clearActiveCharacter()
@@ -85,6 +85,11 @@ class FromNfcConverter (
             dimData = cardData
         )
 
+        addVitalsHistoryToDatabase(
+            characterId = characterId,
+            nfcCharacter = nfcCharacter
+        )
+
         return "Done reading character!"
     }
 
@@ -95,7 +100,7 @@ class FromNfcConverter (
         cardData: Card
     ) {
         val currentCardProgress = CardProgress(
-            cardId = cardData.cardId,
+            cardId = cardData.id,
             currentStage = nfcCharacter.nextAdventureMissionStage.toInt(),
             unlocked = nfcCharacter.nextAdventureMissionStage.toInt() > cardData.stageCount
         )
@@ -103,23 +108,6 @@ class FromNfcConverter (
         database
             .cardProgressDao()
             .updateDimProgress(currentCardProgress)
-    }
-
-
-
-    private fun updateCardProgress(
-        cardData: Card,
-        nfcCharacter: NfcCharacter,
-    ) {
-        val cardProgress = CardProgress(
-            cardId = cardData.cardId,
-            currentStage = nfcCharacter.nextAdventureMissionStage.toInt(),
-            unlocked = nfcCharacter.nextAdventureMissionStage.toInt() > cardData.stageCount
-        )
-
-        database
-            .cardProgressDao()
-            .updateDimProgress(cardProgress)
     }
 
 
@@ -139,8 +127,6 @@ class FromNfcConverter (
             .insertVBCharacterData(extraCharacterData)
 
         addSpecialMissionsToDatabase(nfcCharacter, characterId)
-
-        addVitalsHistoryToDatabase(characterId, nfcCharacter)
     }
 
 
@@ -212,23 +198,20 @@ class FromNfcConverter (
         nfcCharacter: NfcCharacter
     ) {
         val vitalsHistoryWatch = nfcCharacter.vitalHistory
-        vitalsHistoryWatch.map { item ->
-            val date = GregorianCalendar(
-                item.year.toInt(),
-                item.month.toInt(),
-                item.day.toInt()
+        val vitalsHistory = vitalsHistoryWatch.map { historyElement ->
+            Log.d("VitalsHistory", "${historyElement.year.toInt()} ${historyElement.month.toInt()} ${historyElement.day.toInt()}")
+            VitalsHistory(
+                charId = characterId,
+                year = historyElement.year.toInt(),
+                month = historyElement.month.toInt(),
+                day = historyElement.day.toInt(),
+                vitalPoints = historyElement.vitalsGained.toInt()
             )
-                .time
-                .time
-
-            database
-                .characterDao()
-                .insertVitals(
-                    characterId,
-                    date,
-                    item.vitalsGained.toInt()
-                )
         }
+
+        database
+            .userCharacterDao()
+            .insertVitals(*vitalsHistory.toTypedArray())
     }
 
 
@@ -249,7 +232,7 @@ class FromNfcConverter (
                     .time
 
                 database
-                    .characterDao()
+                    .userCharacterDao()
                     .insertTransformation(
                         characterId,
                         item.toCharIndex.toInt(),
