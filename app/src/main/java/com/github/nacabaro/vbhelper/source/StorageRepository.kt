@@ -19,12 +19,8 @@ class StorageRepository (
         return db.userCharacterDao().getBeData(id)
     }
 
-    fun getTransformationHistory(characterId: Long): List<CharacterDtos.TransformationHistory>? {
+    suspend fun getTransformationHistory(characterId: Long): List<CharacterDtos.TransformationHistory>? {
         return db.userCharacterDao().getTransformationHistory(characterId)
-    }
-
-    suspend fun getCharacterData(id: Long): CharacterDtos.DiMInfo {
-        return db.characterDao().getCharacterInfo(id)
     }
 
     suspend fun getActiveCharacter(): CharacterDtos.CharacterWithSprites? {

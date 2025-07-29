@@ -12,40 +12,24 @@ interface CharacterDao {
     @Insert
     suspend fun insertCharacter(vararg characterData: Character)
 
-    @Query("SELECT * FROM Character")
-    suspend fun getAllCharacters(): List<Character>
-
-    @Query("SELECT * FROM Character WHERE dimId = :dimId")
-    suspend fun getCharacterByDimId(dimId: Int): List<Character>
-
     @Query("SELECT * FROM Character WHERE monIndex = :monIndex AND dimId = :dimId LIMIT 1")
     fun getCharacterByMonIndex(monIndex: Int, dimId: Long): Character
 
     @Insert
     suspend fun insertSprite(vararg sprite: Sprite)
 
-    @Query("SELECT * FROM Sprite")
-    suspend fun getAllSprites(): List<Sprite>
-
     @Query(
         """
         SELECT 
-            d.dimId as cardId,
-            c.monIndex as charId
+            d.cardId as cardId,
+            c.monIndex as charId,
+            c.stage as stage,
+            c.attribute as attribute
         FROM Character c
         JOIN UserCharacter uc ON c.id = uc.charId
         JOIN Card d ON c.dimId = d.id
-        WHERE uc.id = :charId
+        WHERE c.id = :charId
     """
     )
-    suspend fun getCharacterInfo(charId: Long): CharacterDtos.DiMInfo
-
-    @Query("""
-        INSERT INTO TransformationHistory(monId, stageId, transformationDate)
-        VALUES 
-            (:monId, 
-            (SELECT id FROM Character WHERE monIndex = :stage AND dimId = :dimId),
-            :transformationDate)
-    """)
-    fun insertTransformation(monId: Long, stage: Int, dimId: Long, transformationDate: Long)
+    suspend fun getCharacterInfo(charId: Long): CharacterDtos.CardCharacterInfo
 }

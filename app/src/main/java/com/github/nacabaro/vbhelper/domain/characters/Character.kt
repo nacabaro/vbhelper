@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import com.github.cfogrady.vbnfc.data.NfcCharacter
+import com.github.nacabaro.vbhelper.domain.card.Card
 
 @Entity(
     foreignKeys = [
@@ -23,7 +24,7 @@ import com.github.cfogrady.vbnfc.data.NfcCharacter
 )
 
 /*
- * Character represents a character on a DIM card. There should only be one of these per dimId
+ * Character represents a character on a card. There should only be one of these per dimId
  * and monIndex.
  * TODO: Customs will mean this should be unique per cardName and monIndex
  */

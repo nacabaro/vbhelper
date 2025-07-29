@@ -34,7 +34,6 @@ import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.source.isMissingSecrets
 import com.github.nacabaro.vbhelper.source.proto.Secrets
-import com.github.nacabaro.vbhelper.utils.characterToNfc
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
@@ -58,33 +57,69 @@ fun ScanScreen(
     val storageRepository = StorageRepository(application.container.db)
     var nfcCharacter by remember { mutableStateOf<NfcCharacter?>(null) }
 
+    /*
+    This is in the case there is an active character,
+    that way active characters are quicker to send.
+     */
+    var selectedCharacterId by remember { mutableStateOf<Long?>(null) }
+    selectedCharacterId = characterId
+
     val context = LocalContext.current
+
     LaunchedEffect(storageRepository) {
         withContext(Dispatchers.IO) {
-            if(characterId != null && nfcCharacter == null) {
-                nfcCharacter = characterToNfc(context, characterId)
+            /*
+            First check if there is a character sent through the navigation system
+            If there is not, that means we got here through the home screen nfc button
+            If we got here through the home screen, it does not hurt to check if there is
+            an active character.
+             */
+            if (characterId != null && nfcCharacter == null) {
+                selectedCharacterId = characterId
+                nfcCharacter = scanScreenController.characterToNfc(selectedCharacterId!!)
+            }
+            else if (characterId == null && nfcCharacter == null) {
+               val activeCharacter = storageRepository.getActiveCharacter()
+               if (activeCharacter != null) {
+                   selectedCharacterId = activeCharacter.id
+                   nfcCharacter = scanScreenController.characterToNfc(selectedCharacterId!!)
+               }
             }
         }
     }
 
-    DisposableEffect(readingScreen || writingScreen, isDoneSendingCard) {
+    DisposableEffect(readingScreen) {
         if(readingScreen) {
-            scanScreenController.registerActivityLifecycleListener(SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER, object: ActivityLifecycleListener {
-                override fun onPause() {
-                    scanScreenController.cancelRead()
-                }
+            scanScreenController.registerActivityLifecycleListener(
+                SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER,
+                object: ActivityLifecycleListener {
+                    override fun onPause() {
+                        scanScreenController.cancelRead()
+                    }
 
-                override fun onResume() {
-                    scanScreenController.onClickRead(secrets!!) {
-                        isDoneReadingCharacter = true
+                    override fun onResume() {
+                        scanScreenController.onClickRead(secrets!!) {
+                            isDoneReadingCharacter = true
+                        }
                     }
                 }
-
-            })
+            )
             scanScreenController.onClickRead(secrets!!) {
                 isDoneReadingCharacter = true
             }
-        } else if (writingScreen) {
+        }
+        onDispose {
+            if(readingScreen) {
+                scanScreenController.unregisterActivityLifecycleListener(
+                    SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER
+                )
+                scanScreenController.cancelRead()
+            }
+        }
+    }
+
+    DisposableEffect(writingScreen, isDoneSendingCard) {
+        if (writingScreen) {
             scanScreenController.registerActivityLifecycleListener(
                 SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER,
                 object : ActivityLifecycleListener {
@@ -105,6 +140,9 @@ fun ScanScreen(
                     }
                 }
             )
+        }
+
+        if (secrets != null && nfcCharacter != null) {
             if (!isDoneSendingCard) {
                 scanScreenController.onClickCheckCard(secrets!!, nfcCharacter!!) {
                     isDoneSendingCard = true
@@ -115,8 +153,9 @@ fun ScanScreen(
                 }
             }
         }
+
         onDispose {
-            if(readingScreen || writingScreen) {
+            if(writingScreen) {
                 scanScreenController.unregisterActivityLifecycleListener(SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER)
                 scanScreenController.cancelRead()
             }
@@ -132,7 +171,7 @@ fun ScanScreen(
         LaunchedEffect(storageRepository) {
             withContext(Dispatchers.IO) {
                 storageRepository
-                    .deleteCharacter(characterId!!)
+                    .deleteCharacter(selectedCharacterId!!)
             }
         }
     }
@@ -158,7 +197,7 @@ fun ScanScreen(
     } else {
         ChooseConnectOption(
             onClickRead = when {
-                characterId != null -> null
+                selectedCharacterId != null -> null
                 else -> {
                     {
                         if(secrets == null) {
@@ -268,6 +307,8 @@ fun ScanScreenPreview() {
             override fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
             override fun onClickWrite(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
             override fun cancelRead() {}
+            override fun characterFromNfc(nfcCharacter: NfcCharacter): String { return "" }
+            override suspend fun characterToNfc(characterId: Long): NfcCharacter? { return null }
         },
         characterId = null
     )

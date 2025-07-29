@@ -11,7 +11,6 @@ object CharacterDtos {
         var stage: Int,
         var attribute: NfcCharacter.Attribute,
         var ageInDays: Int,
-        var nextAdventureMissionStage: Int, // next adventure mission stage on the character's dim
         var mood: Int,
         var vitalPoints: Int,
         var transformationCountdown: Int,
@@ -35,9 +34,11 @@ object CharacterDtos {
         val isInAdventure: Boolean
     )
 
-    data class DiMInfo(
+    data class CardCharacterInfo(
         val cardId: Int,
-        val charId: Int
+        val charId: Int,
+        val stage: Int,
+        val attribute: NfcCharacter.Attribute
     )
 
     data class TransformationHistory(
@@ -63,7 +64,6 @@ object CharacterDtos {
         var stage: Int,
         var attribute: NfcCharacter.Attribute,
         var ageInDays: Int,
-        var nextAdventureMissionStage: Int, // next adventure mission stage on the character's dim
         var mood: Int,
         var vitalPoints: Int,
         var transformationCountdown: Int,

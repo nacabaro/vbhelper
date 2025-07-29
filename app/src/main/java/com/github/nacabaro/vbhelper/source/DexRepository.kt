@@ -1,7 +1,6 @@
 package com.github.nacabaro.vbhelper.source
 
 import com.github.nacabaro.vbhelper.database.AppDatabase
-import com.github.nacabaro.vbhelper.domain.characters.Card
 import com.github.nacabaro.vbhelper.dtos.CardDtos
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 

@@ -9,13 +9,16 @@ import androidx.room.PrimaryKey
         ForeignKey(
             entity = UserCharacter::class,
             parentColumns = ["id"],
-            childColumns = ["id"],
+            childColumns = ["charId"],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
-data class VBCharacterData (
-    @PrimaryKey val id: Long,
-    val generation: Int,
-    val totalTrophies: Int
+data class VitalsHistory (
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val charId: Long,
+    val year: Int,
+    val month: Int,
+    val day: Int,
+    val vitalPoints: Int
 )

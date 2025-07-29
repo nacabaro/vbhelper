@@ -8,7 +8,10 @@ import androidx.room.Upsert
 import com.github.nacabaro.vbhelper.domain.characters.Character
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
+import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 
 @Dao
@@ -19,6 +22,9 @@ interface UserCharacterDao {
     @Insert
     fun insertBECharacterData(characterData: BECharacterData)
 
+    @Insert
+    fun insertVBCharacterData(characterData: VBCharacterData)
+
     @Upsert
     fun updateCharacter(character: UserCharacter)
 
@@ -27,6 +33,9 @@ interface UserCharacterDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertTransformationHistory(vararg transformationHistory: TransformationHistory)
+
+    @Insert
+    fun insertSpecialMissions(vararg specialMissions: SpecialMissions)
 
     @Query("""
         SELECT 
@@ -41,7 +50,7 @@ interface UserCharacterDao {
         JOIN Sprite s ON s.id = c.spriteId
         WHERE monId = :monId
     """)
-    fun getTransformationHistory(monId: Long): List<CharacterDtos.TransformationHistory>?
+    suspend fun getTransformationHistory(monId: Long): List<CharacterDtos.TransformationHistory>?
 
     @Query(
         """
@@ -97,6 +106,12 @@ interface UserCharacterDao {
     @Query("SELECT * FROM BECharacterData WHERE id = :id")
     suspend fun getBeData(id: Long): BECharacterData
 
+    @Query("SELECT * FROM VBCharacterData WHERE id = :id")
+    suspend fun getVbData(id: Long): VBCharacterData
+
+    @Query("SELECT * FROM SpecialMissions WHERE characterId = :id")
+    suspend fun getSpecialMissions(id: Long): List<SpecialMissions>
+
     @Query(
         """
         SELECT
@@ -141,4 +156,20 @@ interface UserCharacterDao {
         """
     )
     suspend fun getCharacterInfo(charId: Long): Character
+
+
+    @Query("""
+        INSERT INTO TransformationHistory(monId, stageId, transformationDate)
+        VALUES 
+            (:monId, 
+            (SELECT id FROM Character WHERE monIndex = :stage AND dimId = :dimId),
+            :transformationDate)
+    """)
+    fun insertTransformation(monId: Long, stage: Int, dimId: Long, transformationDate: Long)
+
+    @Upsert
+    fun insertVitals(vararg vitalsHistory: VitalsHistory)
+
+    @Query("""SELECT * FROM VitalsHistory WHERE charId = :charId ORDER BY id ASC""")
+    suspend fun getVitalsHistory(charId: Long): List<VitalsHistory>
 }
