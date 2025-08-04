@@ -2,6 +2,7 @@ package com.github.nacabaro.vbhelper.source
 
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 
 class StorageRepository (
@@ -21,6 +22,10 @@ class StorageRepository (
 
     suspend fun getTransformationHistory(characterId: Long): List<CharacterDtos.TransformationHistory>? {
         return db.userCharacterDao().getTransformationHistory(characterId)
+    }
+
+    suspend fun getCharacterVbData(id: Long): VBCharacterData {
+        return db.userCharacterDao().getVbData(id)
     }
 
     suspend fun getActiveCharacter(): CharacterDtos.CharacterWithSprites? {

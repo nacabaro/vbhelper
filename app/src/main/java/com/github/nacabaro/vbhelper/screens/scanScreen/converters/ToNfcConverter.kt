@@ -59,7 +59,7 @@ class ToNfcConverter(
             .userCharacterDao()
             .getVbData(characterId)
 
-        val paddedTransformationArray = generateTransformationHistory(characterId)
+        val paddedTransformationArray = generateTransformationHistory(characterId, 9)
 
         val watchSpecialMissions = generateSpecialMissionsArray(characterId)
 
@@ -218,7 +218,8 @@ class ToNfcConverter(
 
 
     private suspend fun generateTransformationHistory(
-        characterId: Long
+        characterId: Long,
+        length: Int = 8
     ): Array<NfcCharacter.Transformation> {
         val transformationHistory = database
             .userCharacterDao()
@@ -242,7 +243,7 @@ class ToNfcConverter(
                 )
             }.toTypedArray()
 
-        val paddedTransformationArray = padTransformationArray(transformationHistory)
+        val paddedTransformationArray = padTransformationArray(transformationHistory, length)
 
         return paddedTransformationArray
     }
@@ -250,13 +251,14 @@ class ToNfcConverter(
 
 
     private fun padTransformationArray(
-        transformationArray: Array<NfcCharacter.Transformation>
+        transformationArray: Array<NfcCharacter.Transformation>,
+        length: Int
     ): Array<NfcCharacter.Transformation> {
         if (transformationArray.size >= 8) {
             return transformationArray
         }
 
-        val paddedArray = Array(8) {
+        val paddedArray = Array(length) {
             NfcCharacter.Transformation(
                 toCharIndex = 255u,
                 year = 65535u,
