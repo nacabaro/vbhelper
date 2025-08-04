@@ -1,5 +1,6 @@
 package com.github.nacabaro.vbhelper.screens.homeScreens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,8 +52,11 @@ fun HomeScreen(
     LaunchedEffect(storageRepository, activeMon) {
         withContext(Dispatchers.IO) {
             activeMon.value = storageRepository.getActiveCharacter()
-            if (activeMon.value != null) {
+            if (activeMon.value != null && activeMon.value!!.characterType == DeviceType.BEDevice) {
                 beData.value = storageRepository.getCharacterBeData(activeMon.value!!.id)
+                transformationHistory.value = storageRepository.getTransformationHistory(activeMon.value!!.id)
+            } else if (activeMon.value != null && activeMon.value!!.characterType == DeviceType.VBDevice) {
+                vbData.value = storageRepository.getCharacterVbData(activeMon.value!!.id)
                 transformationHistory.value = storageRepository.getTransformationHistory(activeMon.value!!.id)
             }
         }
@@ -79,6 +83,7 @@ fun HomeScreen(
         }
     ) { contentPadding ->
         if (activeMon.value == null || (beData.value == null && vbData.value == null) || transformationHistory.value == null) {
+            Log.d("TetTet", "Something is null")
             Column (
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -89,6 +94,7 @@ fun HomeScreen(
                 Text(text = "Nothing to see here")
             }
         } else {
+            Log.d("TetTet", "Something is not null")
             if (activeMon.value!!.isBemCard) {
                 BEBEmHomeScreen(
                     activeMon = activeMon.value!!,
