@@ -1,4 +1,4 @@
-package com.github.nacabaro.vbhelper.screens.homeScreens
+package com.github.nacabaro.vbhelper.screens.homeScreens.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,15 +15,17 @@ import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.ItemDisplay
 import com.github.nacabaro.vbhelper.components.TransformationHistoryCard
-import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
+import com.github.nacabaro.vbhelper.screens.itemsScreen.getIconResource
+import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import java.util.Locale
 
 @Composable
-fun VBDiMHomeScreen(
+fun BEBEmHomeScreen(
     activeMon: CharacterDtos.CharacterWithSprites,
-    vbData: VBCharacterData,
+    beData: BECharacterData,
     transformationHistory: List<CharacterDtos.TransformationHistory>,
     contentPadding: PaddingValues
 ) {
@@ -32,7 +34,7 @@ fun VBDiMHomeScreen(
             .padding(top = contentPadding.calculateTopPadding())
             .verticalScroll(state = rememberScrollState())
     ) {
-        Row(
+        Row (
             modifier = Modifier
                 .fillMaxWidth()
         ) {
@@ -48,7 +50,7 @@ fun VBDiMHomeScreen(
                     .weight(1f)
                     .aspectRatio(1f)
             )
-            Column(
+            Column (
                 modifier = Modifier
                     .weight(0.5f)
                     .aspectRatio(0.5f)
@@ -73,7 +75,7 @@ fun VBDiMHomeScreen(
                 )
             }
         }
-        Row(
+        Row (
             modifier = Modifier
                 .fillMaxWidth()
         ) {
@@ -86,6 +88,30 @@ fun VBDiMHomeScreen(
                     .aspectRatio(1f)
                     .padding(8.dp)
             )
+            val timeInHours = (beData.remainingTrainingTimeInMinutes / 60)
+            ItemDisplay(
+                icon = R.drawable.baseline_timer_24,
+                textValue = "$timeInHours h",
+                definition = "Training limit",
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+                    .padding(8.dp)
+            )
+            ItemDisplay(
+                icon = R.drawable.baseline_rank_24,
+                textValue = beData.rank.toString(),
+                definition = "Rank",
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+                    .padding(8.dp)
+            )
+        }
+        Row (
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
             val transformationCountdownInHours = activeMon.transformationCountdown / 60
             ItemDisplay(
                 icon = R.drawable.baseline_next_24,
@@ -104,13 +130,8 @@ fun VBDiMHomeScreen(
                 textValue = when {
                     activeMon.totalBattlesLost == 0 -> "0.00 %"
                     else -> {
-                        val battleWinPercentage =
-                            activeMon.totalBattlesWon.toFloat() / (activeMon.totalBattlesWon + activeMon.totalBattlesLost).toFloat()
-                        String.format(
-                            Locale.getDefault(),
-                            "%.2f",
-                            battleWinPercentage * 100
-                        ) + " %" // Specify locale
+                        val battleWinPercentage = activeMon.totalBattlesWon.toFloat() / (activeMon.totalBattlesWon + activeMon.totalBattlesLost).toFloat()
+                        String.format(Locale.getDefault(), "%.2f", battleWinPercentage * 100) + " %" // Specify locale
                     }
                 },
                 definition = "Total battle win %",
@@ -124,13 +145,8 @@ fun VBDiMHomeScreen(
                 textValue = when {
                     activeMon.totalBattlesLost == 0 -> "0.00 %"
                     else -> {
-                        val battleWinPercentage =
-                            activeMon.currentPhaseBattlesWon.toFloat() / (activeMon.currentPhaseBattlesWon + activeMon.currentPhaseBattlesLost).toFloat()
-                        String.format(
-                            Locale.getDefault(),
-                            "%.2f",
-                            battleWinPercentage * 100
-                        ) + " %" // Specify locale
+                        val battleWinPercentage = activeMon.currentPhaseBattlesWon.toFloat() / (activeMon.currentPhaseBattlesWon + activeMon.currentPhaseBattlesLost).toFloat()
+                        String.format(Locale.getDefault(), "%.2f", battleWinPercentage * 100) + " %" // Specify locale
                     }
                 },
                 definition = "Current phase win %",
@@ -139,8 +155,26 @@ fun VBDiMHomeScreen(
                     .aspectRatio(1f)
                     .padding(8.dp)
             )
+            if (beData.itemRemainingTime != 0) {
+                ItemDisplay(
+                    icon = getIconResource(beData.itemType),
+                    textValue = "${beData.itemRemainingTime} m",
+                    definition = when (beData.itemType) {
+                        ItemsScreenControllerImpl.ItemTypes.PPTraining.id -> "PP Training"
+                        ItemsScreenControllerImpl.ItemTypes.HPTraining.id -> "HP Training"
+                        ItemsScreenControllerImpl.ItemTypes.APTraining.id -> "AP Training"
+                        ItemsScreenControllerImpl.ItemTypes.BPTraining.id -> "BP Training"
+                        ItemsScreenControllerImpl.ItemTypes.AllTraining.id -> "All Training"
+                        else -> ""
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f)
+                        .padding(8.dp)
+                )
+            }
         }
-        Row(
+        Row (
             modifier = Modifier
                 .fillMaxWidth()
         ) {
@@ -148,6 +182,38 @@ fun VBDiMHomeScreen(
                 transformationHistory = transformationHistory,
                 modifier = Modifier
                     .weight(1f)
+                    .padding(8.dp)
+            )
+        }
+        Row (
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            ItemDisplay(
+                icon = R.drawable.baseline_health_24,
+                textValue = "+${beData.trainingHp}",
+                definition = "Training HP",
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+                    .padding(8.dp)
+            )
+            ItemDisplay(
+                icon = R.drawable.baseline_agility_24,
+                textValue = "+${beData.trainingBp}",
+                definition = "Training BP",
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+                    .padding(8.dp)
+            )
+            ItemDisplay(
+                icon = R.drawable.baseline_attack_24,
+                textValue = "+${beData.trainingAp}",
+                definition = "Training AP",
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
                     .padding(8.dp)
             )
         }

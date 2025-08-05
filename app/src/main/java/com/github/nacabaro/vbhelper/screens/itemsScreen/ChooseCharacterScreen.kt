@@ -19,7 +19,9 @@ import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
+import com.github.nacabaro.vbhelper.domain.items.ItemType
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import kotlinx.coroutines.launch
@@ -39,10 +41,25 @@ fun ChooseCharacterScreen(
     }
 
     var selectedCharacter by remember { mutableStateOf<Long?>(null) }
+    var selectedItem by remember { mutableStateOf<ItemDtos.ItemsWithQuantities?>(null) }
 
     LaunchedEffect(storageRepository) {
         coroutineScope.launch {
-            characterList.value = storageRepository.getAllCharacters()
+            selectedItem = storageRepository.getItem(itemId)
+            when (selectedItem?.itemType) {
+                ItemType.BEITEM -> {
+                    characterList.value = storageRepository.getBEBEmCharacters()
+                }
+                ItemType.VBITEM -> {
+                    characterList.value = storageRepository.getVBCharacters()
+                }
+                ItemType.SPECIALMISSION-> {
+                    characterList.value = storageRepository.getVBCharacters()
+                }
+                else -> {
+                    characterList.value = storageRepository.getAllCharacters()
+                }
+            }
         }
     }
 
