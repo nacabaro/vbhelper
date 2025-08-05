@@ -28,7 +28,7 @@ fun BetaWarning(
                 )
                 Spacer(modifier = Modifier.padding(8.dp))
                 Text(
-                    text = "Also, this application does not work yet with the original VB."
+                    text = "Application should work now with the original VB and the VH."
                 )
                 Spacer(modifier = Modifier.padding(8.dp))
                 Text(
