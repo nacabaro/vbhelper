@@ -48,7 +48,7 @@ fun ChooseCharacterScreen(
             selectedItem = storageRepository.getItem(itemId)
             when (selectedItem?.itemType) {
                 ItemType.BEITEM -> {
-                    characterList.value = storageRepository.getBEBEmCharacters()
+                    characterList.value = storageRepository.getBECharacters()
                 }
                 ItemType.VBITEM -> {
                     characterList.value = storageRepository.getVBCharacters()

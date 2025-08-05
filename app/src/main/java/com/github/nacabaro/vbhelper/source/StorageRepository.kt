@@ -50,8 +50,8 @@ class StorageRepository (
         return db.adventureDao().getAdventureCharacters()
     }
 
-    suspend fun getBEBEmCharacters(): List<CharacterDtos.CharacterWithSprites> {
-        return db.userCharacterDao().getBEBemCharacters()
+    suspend fun getBECharacters(): List<CharacterDtos.CharacterWithSprites> {
+        return db.userCharacterDao().getBECharacters()
     }
 
     suspend fun getVBCharacters(): List<CharacterDtos.CharacterWithSprites> {

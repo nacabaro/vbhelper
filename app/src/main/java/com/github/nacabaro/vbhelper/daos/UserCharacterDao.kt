@@ -193,10 +193,10 @@ interface UserCharacterDao {
         JOIN Card d ON  d.id = c.dimId
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
-        WHERE d.isBEm = 1
+        WHERE uc.characterType = "BEDevice"
         """
     )
-    suspend fun getBEBemCharacters(): List<CharacterDtos.CharacterWithSprites>
+    suspend fun getBECharacters(): List<CharacterDtos.CharacterWithSprites>
 
     @Query(
         """
