@@ -94,7 +94,8 @@ class AdventureScreenControllerImpl(
             itemName = randomItem.name,
             itemIcon = randomItem.itemIcon,
             itemLength = randomItem.itemLength,
-            itemDescription = randomItem.description
+            itemDescription = randomItem.description,
+            itemType = randomItem.itemType
         )
     }
 }

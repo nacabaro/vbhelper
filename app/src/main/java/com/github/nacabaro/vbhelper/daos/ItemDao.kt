@@ -31,7 +31,7 @@ interface ItemDao {
         WHERE Items.id = :itemId
     """
     )
-    fun getItem(itemId: Long): ItemDtos.ItemsWithQuantities
+    suspend fun getItem(itemId: Long): ItemDtos.ItemsWithQuantities
 
     @Query(
         """
@@ -40,7 +40,7 @@ interface ItemDao {
         WHERE id = :itemId
     """
     )
-    fun useItem(itemId: Long)
+    suspend fun useItem(itemId: Long)
 
     @Query(
         """

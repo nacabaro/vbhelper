@@ -8,6 +8,7 @@ import com.github.nacabaro.vbhelper.daos.DexDao
 import com.github.nacabaro.vbhelper.daos.CardDao
 import com.github.nacabaro.vbhelper.daos.CardProgressDao
 import com.github.nacabaro.vbhelper.daos.ItemDao
+import com.github.nacabaro.vbhelper.daos.SpecialMissionDao
 import com.github.nacabaro.vbhelper.daos.SpriteDao
 import com.github.nacabaro.vbhelper.daos.UserCharacterDao
 import com.github.nacabaro.vbhelper.domain.characters.Character
@@ -51,4 +52,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun itemDao(): ItemDao
     abstract fun adventureDao(): AdventureDao
     abstract fun spriteDao(): SpriteDao
+    abstract fun specialMissionDao(): SpecialMissionDao
 }

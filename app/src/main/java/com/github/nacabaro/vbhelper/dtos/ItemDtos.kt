@@ -1,5 +1,7 @@
 package com.github.nacabaro.vbhelper.dtos
 
+import com.github.nacabaro.vbhelper.domain.items.ItemType
+
 
 object ItemDtos {
     data class ItemsWithQuantities(
@@ -10,6 +12,7 @@ object ItemDtos {
         val itemLength: Int,
         val price: Int,
         val quantity: Int,
+        val itemType: ItemType
     )
 
     data class PurchasedItem(
@@ -18,6 +21,7 @@ object ItemDtos {
         val itemDescription: String,
         val itemIcon: Int,
         val itemLength: Int,
-        val itemAmount: Int
+        val itemAmount: Int,
+        val itemType: ItemType
     )
 }

@@ -34,7 +34,7 @@ interface UserCharacterDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertTransformationHistory(vararg transformationHistory: TransformationHistory)
 
-    @Insert
+    @Upsert
     fun insertSpecialMissions(vararg specialMissions: SpecialMissions)
 
     @Query("""
@@ -172,4 +172,54 @@ interface UserCharacterDao {
 
     @Query("""SELECT * FROM VitalsHistory WHERE charId = :charId ORDER BY id ASC""")
     suspend fun getVitalsHistory(charId: Long): List<VitalsHistory>
+
+    @Query(
+        """
+        SELECT
+            uc.*,
+            c.stage,
+            c.attribute,
+            s.spriteIdle1 AS spriteIdle,
+            s.spriteIdle2 AS spriteIdle2,
+            s.width AS spriteWidth,
+            s.height AS spriteHeight,
+            c.name as nameSprite,
+            c.nameWidth as nameSpriteWidth,
+            c.nameHeight as nameSpriteHeight,
+            d.isBEm as isBemCard,
+            a.characterId = uc.id as isInAdventure
+        FROM UserCharacter uc
+        JOIN Character c ON uc.charId = c.id
+        JOIN Card d ON  d.id = c.dimId
+        JOIN Sprite s ON s.id = c.spriteId
+        LEFT JOIN Adventure a ON a.characterId = uc.id
+        WHERE d.isBEm = 1
+        """
+    )
+    suspend fun getBEBemCharacters(): List<CharacterDtos.CharacterWithSprites>
+
+    @Query(
+        """
+        SELECT
+            uc.*,
+            c.stage,
+            c.attribute,
+            s.spriteIdle1 AS spriteIdle,
+            s.spriteIdle2 AS spriteIdle2,
+            s.width AS spriteWidth,
+            s.height AS spriteHeight,
+            c.name as nameSprite,
+            c.nameWidth as nameSpriteWidth,
+            c.nameHeight as nameSpriteHeight,
+            d.isBEm as isBemCard,
+            a.characterId = uc.id as isInAdventure
+        FROM UserCharacter uc
+        JOIN Character c ON uc.charId = c.id
+        JOIN Card d ON  d.id = c.dimId
+        JOIN Sprite s ON s.id = c.spriteId
+        LEFT JOIN Adventure a ON a.characterId = uc.id
+        WHERE uc.characterType = "VBDevice"
+        """
+    )
+    suspend fun getVBDimCharacters(): List<CharacterDtos.CharacterWithSprites>
 }

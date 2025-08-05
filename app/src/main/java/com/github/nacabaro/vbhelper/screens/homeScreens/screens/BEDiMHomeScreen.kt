@@ -1,4 +1,4 @@
-package com.github.nacabaro.vbhelper.screens.homeScreens
+package com.github.nacabaro.vbhelper.screens.homeScreens.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
