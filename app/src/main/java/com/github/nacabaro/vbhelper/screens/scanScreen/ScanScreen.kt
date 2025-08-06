@@ -30,7 +30,9 @@ import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.ActivityLifecycleListener
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
+import com.github.nacabaro.vbhelper.domain.card.Card
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
+import com.github.nacabaro.vbhelper.screens.cardScreen.ChooseCard
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.source.isMissingSecrets
 import com.github.nacabaro.vbhelper.source.proto.Secrets
@@ -53,6 +55,8 @@ fun ScanScreen(
     val storageRepository = StorageRepository(application.container.db)
     var nfcCharacter by remember { mutableStateOf<NfcCharacter?>(null) }
 
+    var cardsRead by remember { mutableStateOf<List<Card>?>(null) }
+
     val context = LocalContext.current
 
     LaunchedEffect(storageRepository) {
@@ -71,6 +75,7 @@ fun ScanScreen(
 
     var readingScreen by remember { mutableStateOf(false) }
     var writingScreen by remember { mutableStateOf(false) }
+    var cardSelectScreen by remember { mutableStateOf(false) }
     var isDoneReadingCharacter by remember { mutableStateOf(false) }
     var isDoneSendingCard by remember { mutableStateOf(false) }
     var isDoneWritingCharacter by remember { mutableStateOf(false) }
@@ -85,15 +90,33 @@ fun ScanScreen(
                     }
 
                     override fun onResume() {
-                        scanScreenController.onClickRead(secrets!!) {
-                            isDoneReadingCharacter = true
-                        }
+                        scanScreenController.onClickRead(
+                            secrets = secrets!!,
+                            onComplete = {
+                                isDoneReadingCharacter = true
+                            },
+                            onMultipleCards = { cards ->
+                                cardsRead = cards
+                                readingScreen = false
+                                cardSelectScreen = true
+                                isDoneReadingCharacter = true
+                            }
+                        )
                     }
                 }
             )
-            scanScreenController.onClickRead(secrets!!) {
-                isDoneReadingCharacter = true
-            }
+            scanScreenController.onClickRead(
+                secrets = secrets!!,
+                onComplete = {
+                    isDoneReadingCharacter = true
+                },
+                onMultipleCards = { cards ->
+                    cardsRead = cards
+                    readingScreen = false
+                    cardSelectScreen = true
+                    isDoneReadingCharacter = true
+                }
+            )
         }
         onDispose {
             if(readingScreen) {
@@ -149,7 +172,7 @@ fun ScanScreen(
         }
     }
 
-    if (isDoneReadingCharacter) {
+    if (isDoneReadingCharacter && !cardSelectScreen) {
         readingScreen = false
         navController.navigate(NavigationItems.Home.route)
     } else if (isDoneSendingCard && isDoneWritingCharacter) {
@@ -181,6 +204,14 @@ fun ScanScreen(
                 scanScreenController.cancelRead()
             }
         }
+    } else if (cardSelectScreen) {
+        ChooseCard(
+            cards = cardsRead!!,
+            onCardSelected = { card ->
+                cardSelectScreen = false
+                scanScreenController.flushCharacter(card.id)
+            }
+        )
     } else {
         ChooseConnectOption(
             onClickRead = when {
@@ -290,11 +321,12 @@ fun ScanScreenPreview() {
             ) {
 
             }
-            override fun onClickRead(secrets: Secrets, onComplete: ()->Unit) {}
+            override fun flushCharacter(cardId: Long) {}
+            override fun onClickRead(secrets: Secrets, onComplete: ()->Unit, onMultipleCards: (List<Card>) -> Unit) {}
             override fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
             override fun onClickWrite(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
             override fun cancelRead() {}
-            override fun characterFromNfc(nfcCharacter: NfcCharacter): String { return "" }
+            override fun characterFromNfc(nfcCharacter: NfcCharacter, onMultipleCards: (List<Card>, NfcCharacter) -> Unit): String { return "" }
             override suspend fun characterToNfc(characterId: Long): NfcCharacter? { return null }
         },
         characterId = null,
