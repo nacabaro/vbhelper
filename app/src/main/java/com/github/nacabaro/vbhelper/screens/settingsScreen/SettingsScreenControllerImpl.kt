@@ -129,7 +129,7 @@ class SettingsScreenControllerImpl(
 
                 val dimId = database
                     .cardDao()
-                    .insertNewDim(cardModel)
+                    .insertNewCard(cardModel)
 
                 val cardProgress = CardProgress(
                     cardId = dimId,

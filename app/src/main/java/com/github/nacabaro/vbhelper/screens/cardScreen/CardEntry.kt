@@ -1,4 +1,4 @@
-package com.github.nacabaro.vbhelper.components
+package com.github.nacabaro.vbhelper.screens.cardScreen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -6,7 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,12 +26,15 @@ import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.utils.getBitmap
 
 @Composable
-fun DexDiMEntry(
+fun CardEntry(
     name: String,
     logo: BitmapData,
     obtainedCharacters: Int,
     totalCharacters: Int,
     onClick: () -> Unit,
+    displayModify: Boolean,
+    onClickModify: () -> Unit,
+    onClickDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val bitmap = remember (logo.bitmap) { logo.getBitmap() }
@@ -37,7 +45,11 @@ fun DexDiMEntry(
     Card (
         shape = MaterialTheme.shapes.medium,
         modifier = modifier,
-        onClick = onClick
+        onClick = if (!displayModify) {
+            onClick
+        } else {
+            {  }
+        }
     ) {
         Row (
             horizontalArrangement = Arrangement.Start,
@@ -56,6 +68,7 @@ fun DexDiMEntry(
             Column(
                 modifier = Modifier
                     .padding(8.dp)
+                    .weight(1f)
             ) {
                 Text(
                     text = name,
@@ -67,6 +80,29 @@ fun DexDiMEntry(
                     fontSize = MaterialTheme.typography.labelSmall.fontSize,
                     modifier = Modifier
                 )
+            }
+            if (displayModify) {
+                Row (
+                    modifier = Modifier,
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    IconButton(
+                        onClick = onClickModify
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit"
+                        )
+                    }
+                    IconButton(
+                        onClick = onClickDelete
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete"
+                        )
+                    }
+                }
             }
         }
     }

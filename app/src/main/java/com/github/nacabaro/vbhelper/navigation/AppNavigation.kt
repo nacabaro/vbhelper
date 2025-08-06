@@ -19,8 +19,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.screens.BattlesScreen
-import com.github.nacabaro.vbhelper.screens.DexScreen
-import com.github.nacabaro.vbhelper.screens.DiMScreen
+import com.github.nacabaro.vbhelper.screens.cardScreen.CardsScreen
+import com.github.nacabaro.vbhelper.screens.cardScreen.CardViewScreen
 import com.github.nacabaro.vbhelper.screens.homeScreens.HomeScreen
 import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreen
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreen
@@ -34,6 +34,7 @@ import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImp
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreen
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.cardScreen.CardScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.CreditsScreen
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
@@ -46,7 +47,8 @@ data class AppNavigationHandlers(
     val adventureScreenController: AdventureScreenControllerImpl,
     val storageScreenController: StorageScreenControllerImpl,
     val homeScreenController: HomeScreenControllerImpl,
-    val spriteViewerController: SpriteViewerControllerImpl
+    val spriteViewerController: SpriteViewerControllerImpl,
+    val cardScreenController: CardScreenControllerImpl
 )
 
 @Composable
@@ -121,8 +123,9 @@ fun AppNavigation(
                 )
             }
             composable(NavigationItems.Dex.route) {
-                DexScreen(
-                    navController = navController
+                CardsScreen(
+                    navController = navController,
+                    cardScreenController = applicationNavigationHandlers.cardScreenController
                 )
             }
             composable(NavigationItems.Settings.route) {
@@ -140,7 +143,7 @@ fun AppNavigation(
             composable(NavigationItems.CardView.route) {
                 val cardId = it.arguments?.getString("cardId")
                 if (cardId != null) {
-                    DiMScreen(
+                    CardViewScreen(
                         navController = navController,
                         dimId = cardId.toLong()
                     )
