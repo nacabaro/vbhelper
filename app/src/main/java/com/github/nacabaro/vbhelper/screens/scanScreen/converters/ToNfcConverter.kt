@@ -84,13 +84,30 @@ class ToNfcConverter(
             transformationHistory = paddedTransformationArray,
             vitalHistory = generateVitalsHistoryArray(characterId),
             appReserved1 = ByteArray(12) {0},
-            appReserved2 = Array(3) {0u},
+            appReserved2 = generateUShortAppReserved(userCharacter),
             generation = vbData.generation.toUShort(),
             totalTrophies = vbData.totalTrophies.toUShort(),
             specialMissions = watchSpecialMissions.toTypedArray()
         )
 
         return nfcData
+    }
+
+
+    private suspend fun generateUShortAppReserved(
+        userCharacter: UserCharacter
+    ): Array<UShort> {
+        val cardData = database
+            .cardDao()
+            .getCardByCharacterId(userCharacter.id)
+
+        val appReserved = Array<UShort>(3) {
+            0u
+        }
+
+        appReserved[0] = cardData.id.toUShort()
+
+        return appReserved
     }
 
 

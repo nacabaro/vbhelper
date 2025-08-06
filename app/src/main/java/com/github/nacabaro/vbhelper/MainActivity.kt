@@ -14,6 +14,7 @@ import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImp
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.cardScreen.CardScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity() {
         val storageScreenController = StorageScreenControllerImpl(this)
         val homeScreenController = HomeScreenControllerImpl(this)
         val spriteViewerController = SpriteViewerControllerImpl(this)
+        val cardScreenController = CardScreenControllerImpl(this)
 
         super.onCreate(savedInstanceState)
 
@@ -61,7 +63,8 @@ class MainActivity : ComponentActivity() {
                     adventureScreenController = adventureScreenController,
                     homeScreenController = homeScreenController,
                     storageScreenController = storageScreenController,
-                    spriteViewerController = spriteViewerController
+                    spriteViewerController = spriteViewerController,
+                    cardScreenController = cardScreenController
                 )
             }
         }
@@ -93,8 +96,9 @@ class MainActivity : ComponentActivity() {
         adventureScreenController: AdventureScreenControllerImpl,
         storageScreenController: StorageScreenControllerImpl,
         homeScreenController: HomeScreenControllerImpl,
-        spriteViewerController: SpriteViewerControllerImpl
-        ) {
+        spriteViewerController: SpriteViewerControllerImpl,
+        cardScreenController: CardScreenControllerImpl
+    ) {
         AppNavigation(
             applicationNavigationHandlers = AppNavigationHandlers(
                 settingsScreenController,
@@ -103,7 +107,8 @@ class MainActivity : ComponentActivity() {
                 adventureScreenController,
                 storageScreenController,
                 homeScreenController,
-                spriteViewerController
+                spriteViewerController,
+                cardScreenController
             )
         )
     }

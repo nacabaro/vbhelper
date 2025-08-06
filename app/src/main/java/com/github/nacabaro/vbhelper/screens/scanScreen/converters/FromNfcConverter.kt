@@ -21,17 +21,70 @@ class FromNfcConverter (
 ) {
     private val application = componentActivity.applicationContext as VBHelper
     private val database = application.container.db
-
-
-
-    fun addCharacter(nfcCharacter: NfcCharacter): String {
+    
+    
+    fun addCharacterUsingCard(
+        nfcCharacter: NfcCharacter,
+        cardId: Long
+    ): String {
         val cardData = database
             .cardDao()
-            .getDimById(nfcCharacter.dimId.toInt())
+            .getCardById(cardId)
 
-        if (cardData == null)
+        if (cardData == null) {
             return "Card not found"
+        }
 
+        return insertCharacter(nfcCharacter, cardData)
+    }
+    
+
+    fun addCharacter(
+        nfcCharacter: NfcCharacter,
+        onMultipleCards: (List<Card>, NfcCharacter) -> Unit
+    ): String {
+        val appReservedCardId = nfcCharacter
+            .appReserved2[0].toLong()
+
+        var cardData: Card? =  null
+
+        if (appReservedCardId != 0L) {
+            val fetchedCard = database
+                .cardDao()
+                .getCardById(appReservedCardId)
+
+            if (fetchedCard == null) {
+                return "Card not found"
+            } else if (fetchedCard.cardId == nfcCharacter.dimId.toInt()) {
+                cardData = fetchedCard
+            }
+        }
+
+        if (cardData == null) {
+            val allCards = database
+                .cardDao()
+                .getCardByCardId(nfcCharacter.dimId.toInt())
+
+            if (allCards.isEmpty())
+                return "Card not found"
+
+            if (allCards.size > 1) {
+                onMultipleCards(allCards, nfcCharacter)
+                return "Multiple cards found"
+            }
+
+            cardData = allCards[0]
+        }
+
+        return insertCharacter(nfcCharacter, cardData)
+    }
+
+
+
+    private fun insertCharacter(
+        nfcCharacter: NfcCharacter,
+        cardData: Card
+    ): String {
         val cardCharData = database
             .characterDao()
             .getCharacterByMonIndex(nfcCharacter.charIndex.toInt(), cardData.id)
@@ -92,7 +145,7 @@ class FromNfcConverter (
 
         return "Done reading character!"
     }
-
+    
 
 
     private fun updateCardProgress(

@@ -24,7 +24,8 @@ fun TopBanner(
     onGearClick: (() -> Unit)? = null,
     onBackClick: (() -> Unit)? = null,
     onScanClick: (() -> Unit)? = null,
-    onAdventureClick: (() -> Unit)? = null
+    onAdventureClick: (() -> Unit)? = null,
+    onModifyClick: (() -> Unit)? = null
 ) {
     Box( // Use Box to overlay elements
         modifier = modifier
@@ -37,16 +38,16 @@ fun TopBanner(
             textAlign = TextAlign.Center,
             fontSize = 24.sp,
             modifier = Modifier
-                .align(Alignment.Center) // Center the text
+                .align(Alignment.Center)
         )
          if (onGearClick != null) {
             IconButton(
                 onClick = onGearClick,
                 modifier = Modifier
-                    .align(Alignment.CenterEnd) // Place gear icon at the end
+                    .align(Alignment.CenterEnd)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.baseline_settings_24), // Use a gear icon
+                    painter = painterResource(R.drawable.baseline_settings_24),
                     contentDescription = "Settings"
                 )
             }
@@ -54,23 +55,34 @@ fun TopBanner(
             IconButton(
                 onClick = onAdventureClick,
                 modifier = Modifier
-                    .align(Alignment.CenterEnd) // Place gear icon at the end
+                    .align(Alignment.CenterEnd)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.baseline_fort_24), // Use a gear icon
+                    painter = painterResource(R.drawable.baseline_fort_24),
                     contentDescription = "Adventure"
                 )
             }
+        } else if (onModifyClick != null) {
+             IconButton(
+                 onClick = onModifyClick,
+                 modifier = Modifier
+                     .align(Alignment.CenterEnd)
+             ) {
+                 Icon(
+                     painter = painterResource(R.drawable.baseline_edit_24),
+                     contentDescription = "Adventure"
+                 )
+             }
          }
 
         if (onScanClick != null) {
             IconButton(
                 onClick = onScanClick,
                 modifier = Modifier
-                    .align(Alignment.CenterStart) // Place gear icon at the end
+                    .align(Alignment.CenterStart)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.baseline_nfc_24), // Use a gear icon
+                    painter = painterResource(R.drawable.baseline_nfc_24),
                     contentDescription = "Scan"
                 )
             }
@@ -78,10 +90,10 @@ fun TopBanner(
             IconButton(
                 onClick = onBackClick,
                 modifier = Modifier
-                    .align(Alignment.CenterStart) // Place gear icon at the end
+                    .align(Alignment.CenterStart)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.baseline_arrow_back_24), // Use a gear icon
+                    painter = painterResource(R.drawable.baseline_arrow_back_24),
                     contentDescription = "Settings"
                 )
             }
