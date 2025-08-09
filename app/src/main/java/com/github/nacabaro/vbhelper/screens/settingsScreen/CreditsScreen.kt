@@ -35,6 +35,7 @@ fun CreditsScreen(
             SettingsEntry(title = "cfogrady", description = "Developed vb-lib-nfc and part of this application.") { }
             SettingsEntry(title = "nacabaro", description = "Developed this application.") { }
             SettingsEntry(title = "lightheel", description = "Developing the battling part for this application, including server. Still in the works.") { }
+            SettingsEntry(title = "shvstrz", description = "Designing the app icon in SVG.") { }
         }
     }
 }
