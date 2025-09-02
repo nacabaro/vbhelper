@@ -1,6 +1,7 @@
 package com.github.nacabaro.vbhelper.screens.scanScreen.converters
 
 import android.icu.util.Calendar
+import android.icu.util.TimeZone
 import android.util.Log
 import androidx.activity.ComponentActivity
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
@@ -243,16 +244,23 @@ class ToNfcConverter(
             .getTransformationHistory(characterId)!!
             .map {
                 val date = Date(it.transformationDate)
-                val calendar = android.icu.util.GregorianCalendar()
+                val calendar = android.icu.util.GregorianCalendar(TimeZone.getTimeZone("UTC"))
                 calendar.time = date
+
+                Log.d(
+                    "TransformationHistory",
+                    "Year: ${calendar.get(Calendar.YEAR)}, " +
+                            "Month: ${calendar.get(Calendar.MONTH) + 1}, " +
+                            "Day: ${calendar.get(Calendar.DAY_OF_MONTH)}"
+                )
 
                 NfcCharacter.Transformation(
                     toCharIndex = it.monIndex.toUByte(),
                     year = calendar
                         .get(Calendar.YEAR)
                         .toUShort(),
-                    month = calendar
-                        .get(Calendar.MONTH)
+                    month = (calendar
+                        .get(Calendar.MONTH) + 1)
                         .toUByte(),
                     day = calendar
                         .get(Calendar.DAY_OF_MONTH)
