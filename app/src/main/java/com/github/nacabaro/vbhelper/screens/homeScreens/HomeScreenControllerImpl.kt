@@ -2,6 +2,7 @@ package com.github.nacabaro.vbhelper.screens.homeScreens
 
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
+import com.github.cfogrady.vbnfc.vb.SpecialMission
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import kotlinx.coroutines.launch
@@ -30,37 +31,42 @@ class HomeScreenControllerImpl(
         }
     }
 
-    override fun clearSpecialMission(missionId: Long, onCleared: (ItemDtos.PurchasedItem) -> Unit) {
+    override fun clearSpecialMission(missionId: Long, missionCompletion: SpecialMission.Status, onCleared: (ItemDtos.PurchasedItem?) -> Unit) {
         componentActivity.lifecycleScope.launch {
             database
                 .specialMissionDao()
                 .clearSpecialMission(missionId)
 
-            val randomItem = database
-                .itemDao()
-                .getAllItems()
-                .random()
+            if (missionCompletion == SpecialMission.Status.COMPLETED) {
+                val randomItem = database
+                    .itemDao()
+                    .getAllItems()
+                    .random()
 
-            val randomItemAmount = (Random.nextFloat() * 5).roundToInt()
+                val randomItemAmount = (Random.nextFloat() * 5).roundToInt()
 
-            database
-                .itemDao()
-                .purchaseItem(
+                database
+                    .itemDao()
+                    .purchaseItem(
+                        itemId = randomItem.id,
+                        itemAmount = randomItemAmount
+                    )
+
+                val purchasedItem = ItemDtos.PurchasedItem(
                     itemId = randomItem.id,
-                    itemAmount = randomItemAmount
+                    itemName = randomItem.name,
+                    itemDescription = randomItem.description,
+                    itemIcon = randomItem.itemIcon,
+                    itemLength = randomItem.itemLength,
+                    itemAmount = randomItemAmount,
+                    itemType = randomItem.itemType
                 )
 
-            val purchasedItem = ItemDtos.PurchasedItem(
-                itemId = randomItem.id,
-                itemName = randomItem.name,
-                itemDescription = randomItem.description,
-                itemIcon = randomItem.itemIcon,
-                itemLength = randomItem.itemLength,
-                itemAmount = randomItemAmount,
-                itemType = randomItem.itemType
-            )
+                onCleared(purchasedItem)
+            } else {
+                onCleared(null)
+            }
 
-            onCleared(purchasedItem)
         }
     }
 }
