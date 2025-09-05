@@ -34,7 +34,7 @@ fun VBDiMHomeScreen(
     homeScreenController: HomeScreenControllerImpl,
     transformationHistory: List<CharacterDtos.TransformationHistory>,
     contentPadding: PaddingValues,
-    onClickCollect: (ItemDtos.PurchasedItem) -> Unit
+    onClickCollect: (ItemDtos.PurchasedItem?) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -181,7 +181,7 @@ fun VBDiMHomeScreen(
                         .padding(8.dp),
                 ) {
                     homeScreenController
-                        .clearSpecialMission(mission.id, onClickCollect)
+                        .clearSpecialMission(mission.id, mission.status, onClickCollect)
                 }
             }
         }
