@@ -7,39 +7,53 @@ import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 
 @Dao
 interface DexDao {
-    @Query("""
+    @Query(
+        """
         INSERT OR IGNORE INTO Dex(id, discoveredOn)
         VALUES (
-            (SELECT id FROM Character WHERE monIndex = :charIndex AND dimId = :cardId), 
+            (SELECT id FROM CharacterData WHERE charaIndex = :charIndex AND cardId = :cardId), 
             :discoveredOn
         )
-    """)
+    """
+    )
     fun insertCharacter(charIndex: Int, cardId: Long, discoveredOn: Long)
 
-    @Query("""
+    @Query(
+        """
         SELECT 
             c.id AS id,
             s.spriteIdle1 AS spriteIdle,
             s.width AS spriteWidth,
             s.height AS spriteHeight,
-            d.discoveredOn AS discoveredOn
-        FROM Character c
+            c.nameSprite AS nameSprite,
+            c.nameWidth AS nameSpriteWidth,
+            c.nameHeight AS nameSpriteHeight,
+            d.discoveredOn AS discoveredOn,
+            c.baseHp as baseHp,
+            c.baseBp as baseBp,
+            c.baseAp as baseAp,
+            c.stage as stage,
+            c.attribute as attribute
+        FROM CharacterData c
         JOIN Sprite s ON c.spriteId = s.id
         LEFT JOIN dex d ON c.id = d.id
-        WHERE c.dimId = :cardId
-    """)
-    suspend fun getSingleCardProgress(cardId: Long): List<CharacterDtos.CardProgress>
+        WHERE c.cardId = :cardId
+    """
+    )
+    suspend fun getSingleCardProgress(cardId: Long): List<CharacterDtos.CardCharaProgress>
 
-    @Query("""
+    @Query(
+        """
         SELECT 
             c.id as cardId,
             c.name as cardName,
             c.logo as cardLogo,
             c.logoWidth as logoWidth,
             c.logoHeight as logoHeight, 
-            (SELECT COUNT(*) FROM Character cc WHERE cc.dimId = c.id) AS totalCharacters,
-            (SELECT COUNT(*) FROM Dex d JOIN Character cc ON d.id = cc.id WHERE cc.dimId = c.id AND d.discoveredOn IS NOT NULL) AS obtainedCharacters
+            (SELECT COUNT(*) FROM CharacterData cc WHERE cc.cardId = c.id) AS totalCharacters,
+            (SELECT COUNT(*) FROM Dex d JOIN CharacterData cc ON d.id = cc.id WHERE cc.cardId = c.id AND d.discoveredOn IS NOT NULL) AS obtainedCharacters
         FROM Card c
-    """)
+    """
+    )
     suspend fun getCardsWithProgress(): List<CardDtos.CardProgress>
 }

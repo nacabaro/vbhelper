@@ -1,6 +1,11 @@
 package com.github.nacabaro.vbhelper.utils
 
+import android.content.Context
 import android.graphics.Bitmap
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.github.cfogrady.vb.dim.sprite.SpriteData
 
 // simple, but smooth
@@ -9,6 +14,32 @@ data class BitmapData (
     val width: Int,
     val height: Int
 )
+
+data class ImageBitmapData(
+    val imageBitmap: ImageBitmap,
+    val dpWidth: Dp,
+    val dpHeight: Dp
+)
+
+fun BitmapData.getImageBitmap(
+    context: Context,
+    multiplier: Int,
+    obscure: Boolean
+): ImageBitmapData {
+    val density: Float = context.resources.displayMetrics.density
+
+    val imageBitmap: ImageBitmap = if (obscure) {
+        this.getObscuredBitmap().asImageBitmap()
+    } else {
+        this.getBitmap().asImageBitmap()
+    }
+
+    return ImageBitmapData(
+        imageBitmap = imageBitmap,
+        dpWidth = (this.width  * multiplier / density).dp,
+        dpHeight = (this.height * multiplier / density).dp
+    )
+}
 
 fun BitmapData.getBitmap(): Bitmap {
     return Bitmap.createBitmap(createARGBIntArray(), this.width, this.height, Bitmap.Config.HARDWARE)

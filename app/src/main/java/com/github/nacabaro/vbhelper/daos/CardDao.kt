@@ -17,13 +17,15 @@ interface CardDao {
     @Query("SELECT * FROM Card WHERE id = :id")
     fun getCardById(id: Long): Card?
 
-    @Query("""
+    @Query(
+        """
         SELECT ca.* 
         FROM Card ca
-        JOIN Character ch ON ca.id = ch.dimId
+        JOIN CharacterData ch ON ca.id = ch.cardId
         JOIN UserCharacter uc ON ch.id = uc.charId
         WHERE uc.id = :id
-    """)
+    """
+    )
     suspend fun getCardByCharacterId(id: Long): Card
 
     @Query("UPDATE Card SET name = :newName WHERE id = :id")

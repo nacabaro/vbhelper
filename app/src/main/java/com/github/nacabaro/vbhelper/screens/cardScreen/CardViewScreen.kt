@@ -16,6 +16,7 @@ import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import com.github.nacabaro.vbhelper.screens.cardScreen.dialogs.DexCharaDetailsDialog
 import com.github.nacabaro.vbhelper.source.DexRepository
 import kotlinx.coroutines.launch
 
@@ -28,12 +29,18 @@ fun CardViewScreen(
     val application = LocalContext.current.applicationContext as VBHelper
     val dexRepository = DexRepository(application.container.db)
 
-    val characterList = remember { mutableStateOf<List<CharacterDtos.CardProgress>>(emptyList()) }
+    val characterList = remember { mutableStateOf<List<CharacterDtos.CardCharaProgress>>(emptyList()) }
+    val cardPossibleTransformations = remember { mutableStateOf<List<CharacterDtos.EvolutionRequirementsWithSpritesAndObtained>>(emptyList()) }
+
+    val selectedCharacter = remember { mutableStateOf<CharacterDtos.CardCharaProgress?>(null) }
 
     LaunchedEffect(dexRepository) {
         coroutineScope.launch {
-            val newCharacterList = dexRepository.getCharactersByDimId(dimId)
+            val newCharacterList = dexRepository.getCharactersByCardId(dimId)
             characterList.value = newCharacterList
+
+            val newCardPossibleTransformations = dexRepository.getCardPossibleTransformations(dimId)
+            cardPossibleTransformations.value = newCardPossibleTransformations
         }
     }
 
@@ -53,7 +60,9 @@ fun CardViewScreen(
         ) {
             items(characterList.value) { character ->
                 CharacterEntry(
-                    onClick = {  },
+                    onClick = {
+                        selectedCharacter.value = character
+                    },
                     obscure = character.discoveredOn == null,
                     icon = BitmapData(
                         bitmap = character.spriteIdle,
@@ -62,6 +71,17 @@ fun CardViewScreen(
                     ),
                 )
             }
+        }
+
+        if (selectedCharacter.value != null) {
+            DexCharaDetailsDialog(
+                currentChara = selectedCharacter.value!!,
+                possibleTransformations = cardPossibleTransformations.value,
+                obscure = selectedCharacter.value!!.discoveredOn == null,
+                onClickClose = {
+                    selectedCharacter.value = null
+                }
+            )
         }
     }
 }

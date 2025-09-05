@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
-import com.github.nacabaro.vbhelper.domain.characters.Character
+import com.github.nacabaro.vbhelper.domain.card.CharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
@@ -37,19 +37,21 @@ interface UserCharacterDao {
     @Upsert
     fun insertSpecialMissions(vararg specialMissions: SpecialMissions)
 
-    @Query("""
+    @Query(
+        """
         SELECT 
             c.id AS id,
             s.spriteIdle1 AS spriteIdle,
             s.width AS spriteWidth,
             s.height AS spriteHeight,
-            c.monIndex AS monIndex, 
+            c.charaIndex AS monIndex, 
             t.transformationDate AS transformationDate
         FROM TransformationHistory t 
-        JOIN Character c ON c.id = t.stageId
+        JOIN CharacterData c ON c.id = t.stageId
         JOIN Sprite s ON s.id = c.spriteId
         WHERE monId = :monId
-    """)
+    """
+    )
     suspend fun getTransformationHistory(monId: Long): List<CharacterDtos.TransformationHistory>?
 
     @Query(
@@ -62,14 +64,14 @@ interface UserCharacterDao {
             s.spriteIdle2 AS spriteIdle2,
             s.width AS spriteWidth,
             s.height AS spriteHeight,
-            c.name as nameSprite,
+            c.nameSprite as nameSprite,
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
             d.isBEm as isBemCard,
             a.characterId = uc.id as isInAdventure
         FROM UserCharacter uc
-        JOIN Character c ON uc.charId = c.id
-        JOIN Card d ON  d.id = c.dimId
+        JOIN CharacterData c ON uc.charId = c.id
+        JOIN Card d ON  d.id = c.cardId
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
         """
@@ -86,18 +88,19 @@ interface UserCharacterDao {
             s.spriteIdle2 AS spriteIdle2,
             s.width AS spriteWidth,
             s.height AS spriteHeight,
-            c.name as nameSprite,
+            c.nameSprite as nameSprite,
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
             d.isBEm as isBemCard,
             a.characterId = uc.id as isInAdventure
         FROM UserCharacter uc
-        JOIN Character c ON uc.charId = c.id
-        JOIN Card d ON c.dimId = d.id
+        JOIN CharacterData c ON uc.charId = c.id
+        JOIN Card d ON c.cardId = d.id
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
         WHERE uc.id = :id
-    """)
+    """
+    )
     suspend fun getCharacterWithSprites(id: Long): CharacterDtos.CharacterWithSprites
 
     @Query("SELECT * FROM UserCharacter WHERE id = :id")
@@ -122,19 +125,20 @@ interface UserCharacterDao {
             s.spriteIdle2 AS spriteIdle2,
             s.width AS spriteWidth,
             s.height AS spriteHeight,
-            c.name as nameSprite,
+            c.nameSprite as nameSprite,
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
             d.isBEm as isBemCard,
             a.characterId as isInAdventure            
         FROM UserCharacter uc
-        JOIN Character c ON uc.charId = c.id
-        JOIN Card d ON c.dimId = d.id
+        JOIN CharacterData c ON uc.charId = c.id
+        JOIN Card d ON c.cardId = d.id
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
         WHERE uc.isActive = 1
         LIMIT 1
-    """)
+    """
+    )
     suspend fun getActiveCharacter(): CharacterDtos.CharacterWithSprites?
 
     @Query("DELETE FROM UserCharacter WHERE id = :id")
@@ -149,22 +153,24 @@ interface UserCharacterDao {
     @Query(
         """
         SELECT c.*
-        FROM Character c
+        FROM CharacterData c
         join UserCharacter uc on c.id = uc.charId
         where uc.id = :charId
         LIMIT 1
         """
     )
-    suspend fun getCharacterInfo(charId: Long): Character
+    suspend fun getCharacterInfo(charId: Long): CharacterData
 
 
-    @Query("""
+    @Query(
+        """
         INSERT INTO TransformationHistory(monId, stageId, transformationDate)
         VALUES 
             (:monId, 
-            (SELECT id FROM Character WHERE monIndex = :stage AND dimId = :dimId),
+            (SELECT id FROM CharacterData WHERE charaIndex = :stage AND cardId = :dimId),
             :transformationDate)
-    """)
+    """
+    )
     fun insertTransformation(monId: Long, stage: Int, dimId: Long, transformationDate: Long)
 
     @Upsert
@@ -183,14 +189,14 @@ interface UserCharacterDao {
             s.spriteIdle2 AS spriteIdle2,
             s.width AS spriteWidth,
             s.height AS spriteHeight,
-            c.name as nameSprite,
+            c.nameSprite as nameSprite,
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
             d.isBEm as isBemCard,
             a.characterId = uc.id as isInAdventure
         FROM UserCharacter uc
-        JOIN Character c ON uc.charId = c.id
-        JOIN Card d ON  d.id = c.dimId
+        JOIN CharacterData c ON uc.charId = c.id
+        JOIN Card d ON  d.id = c.cardId
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
         WHERE uc.characterType = "BEDevice"
@@ -208,14 +214,14 @@ interface UserCharacterDao {
             s.spriteIdle2 AS spriteIdle2,
             s.width AS spriteWidth,
             s.height AS spriteHeight,
-            c.name as nameSprite,
+            c.nameSprite as nameSprite,
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
             d.isBEm as isBemCard,
             a.characterId = uc.id as isInAdventure
         FROM UserCharacter uc
-        JOIN Character c ON uc.charId = c.id
-        JOIN Card d ON  d.id = c.dimId
+        JOIN CharacterData c ON uc.charId = c.id
+        JOIN Card d ON  d.id = c.cardId
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
         WHERE uc.characterType = "VBDevice"
