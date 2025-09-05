@@ -169,7 +169,7 @@ fun SpecialMissionsEntry(
     Card(
         modifier = modifier,
         shape = androidx.compose.material.MaterialTheme.shapes.small,
-        onClick = if (specialMission.status == SpecialMission.Status.COMPLETED) {
+        onClick = if (specialMission.status == SpecialMission.Status.COMPLETED || specialMission.status == SpecialMission.Status.FAILED) {
             onClickCard
         } else {
             {  }
