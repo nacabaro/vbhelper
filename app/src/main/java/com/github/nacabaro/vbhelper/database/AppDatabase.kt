@@ -11,9 +11,11 @@ import com.github.nacabaro.vbhelper.daos.ItemDao
 import com.github.nacabaro.vbhelper.daos.SpecialMissionDao
 import com.github.nacabaro.vbhelper.daos.SpriteDao
 import com.github.nacabaro.vbhelper.daos.UserCharacterDao
-import com.github.nacabaro.vbhelper.domain.characters.Character
+import com.github.nacabaro.vbhelper.domain.card.Background
+import com.github.nacabaro.vbhelper.domain.card.CharacterData
 import com.github.nacabaro.vbhelper.domain.card.Card
 import com.github.nacabaro.vbhelper.domain.card.CardProgress
+import com.github.nacabaro.vbhelper.domain.card.PossibleTransformations
 import com.github.nacabaro.vbhelper.domain.characters.Sprite
 import com.github.nacabaro.vbhelper.domain.characters.Adventure
 import com.github.nacabaro.vbhelper.domain.characters.Dex
@@ -30,7 +32,7 @@ import com.github.nacabaro.vbhelper.domain.items.Items
     entities = [
         Card::class,
         CardProgress::class,
-        Character::class,
+        CharacterData::class,
         Sprite::class,
         UserCharacter::class,
         BECharacterData::class,
@@ -40,7 +42,9 @@ import com.github.nacabaro.vbhelper.domain.items.Items
         VitalsHistory::class,
         Dex::class,
         Items::class,
-        Adventure::class
+        Adventure::class,
+        Background::class,
+        PossibleTransformations::class
     ]
 )
 abstract class AppDatabase : RoomDatabase() {

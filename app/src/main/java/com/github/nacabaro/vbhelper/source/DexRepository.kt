@@ -11,7 +11,11 @@ class DexRepository (
         return db.dexDao().getCardsWithProgress()
     }
 
-    suspend fun getCharactersByDimId(cardId: Long): List<CharacterDtos.CardProgress> {
+    suspend fun getCharactersByCardId(cardId: Long): List<CharacterDtos.CardCharaProgress> {
         return db.dexDao().getSingleCardProgress(cardId)
+    }
+
+    suspend fun getCardPossibleTransformations(cardId: Long): List<CharacterDtos.EvolutionRequirementsWithSpritesAndObtained> {
+        return db.characterDao().getEvolutionRequirementsForCard(cardId)
     }
 }

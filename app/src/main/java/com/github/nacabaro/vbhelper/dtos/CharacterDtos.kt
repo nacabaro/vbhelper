@@ -50,12 +50,27 @@ object CharacterDtos {
         val transformationDate: Long
     )
 
+    data class CardCharaProgress(
+        val id: Long,
+        val spriteIdle: ByteArray,
+        val spriteWidth: Int,
+        val spriteHeight: Int,
+        val nameSprite: ByteArray,
+        val nameSpriteWidth: Int,
+        val nameSpriteHeight: Int,
+        val discoveredOn: Long?,
+        val baseHp: Int,
+        val baseBp: Int,
+        val baseAp: Int,
+        val stage: Int,
+        val attribute: NfcCharacter.Attribute,
+    )
+
     data class CardProgress(
         val id: Long,
         val spriteIdle: ByteArray,
         val spriteWidth: Int,
         val spriteHeight: Int,
-        val discoveredOn: Long?
     )
 
     data class AdventureCharacterWithSprites(
@@ -82,5 +97,20 @@ object CharacterDtos {
         val isBemCard: Boolean,
         val finishesAdventure: Long,
         val originalTimeInMinutes: Long
+    )
+
+    data class EvolutionRequirementsWithSpritesAndObtained(
+        val charaId: Long,
+        val fromCharaId: Long,
+        val spriteIdle: ByteArray,
+        val spriteWidth: Int,
+        val spriteHeight: Int,
+        val discoveredOn: Long?,
+        val requiredTrophies: Int,
+        val requiredVitals: Int,
+        val requiredBattles: Int,
+        val requiredWinRate: Int,
+        val changeTimerHours: Int,
+        val requiredAdventureLevelCompleted: Int
     )
 }

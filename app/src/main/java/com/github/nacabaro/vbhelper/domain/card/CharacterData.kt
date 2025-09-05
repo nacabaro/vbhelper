@@ -1,17 +1,17 @@
-package com.github.nacabaro.vbhelper.domain.characters
+package com.github.nacabaro.vbhelper.domain.card
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
 import com.github.cfogrady.vbnfc.data.NfcCharacter
-import com.github.nacabaro.vbhelper.domain.card.Card
+import com.github.nacabaro.vbhelper.domain.characters.Sprite
 
 @Entity(
     foreignKeys = [
         ForeignKey(
             entity = Card::class,
             parentColumns = ["id"],
-            childColumns = ["dimId"],
+            childColumns = ["cardId"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
@@ -28,17 +28,17 @@ import com.github.nacabaro.vbhelper.domain.card.Card
  * and monIndex.
  * TODO: Customs will mean this should be unique per cardName and monIndex
  */
-data class Character (
+data class CharacterData (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val dimId: Long,
+    val cardId: Long,
     val spriteId: Long,
-    val monIndex: Int,
-    val name: ByteArray,
+    val charaIndex: Int,
     val stage: Int, // These should be replaced with enums
     val attribute: NfcCharacter.Attribute, // This one too
     val baseHp: Int,
     val baseBp: Int,
     val baseAp: Int,
+    val nameSprite: ByteArray,
     val nameWidth: Int,
     val nameHeight: Int
 )
