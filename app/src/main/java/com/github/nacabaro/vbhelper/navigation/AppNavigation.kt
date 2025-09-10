@@ -34,6 +34,7 @@ import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImp
 import com.github.nacabaro.vbhelper.screens.settingsScreen.SettingsScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreen
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
+import com.github.nacabaro.vbhelper.screens.cardScreen.CardAdventureScreen
 import com.github.nacabaro.vbhelper.screens.cardScreen.CardScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.CreditsScreen
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
@@ -145,7 +146,7 @@ fun AppNavigation(
                 if (cardId != null) {
                     CardViewScreen(
                         navController = navController,
-                        dimId = cardId.toLong()
+                        cardId = cardId.toLong()
                     )
                 }
             }
@@ -176,6 +177,17 @@ fun AppNavigation(
                 CreditsScreen(
                     navController = navController
                 )
+            }
+            composable(NavigationItems.CardAdventure.route) {
+                val cardId = it.arguments?.getString("cardId")
+                if (cardId != null) {
+                    CardAdventureScreen(
+                        navController = navController,
+                        cardId = cardId.toLong(),
+                        cardScreenController = applicationNavigationHandlers
+                            .cardScreenController
+                    )
+                }
             }
         }
     }

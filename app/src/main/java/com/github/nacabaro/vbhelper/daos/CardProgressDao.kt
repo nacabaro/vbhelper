@@ -13,5 +13,5 @@ interface CardProgressDao {
     @Query(
         "SELECT currentStage FROM CardProgress WHERE cardId = :cardId"
     )
-    fun getCardProgress(cardId: Int): Int
+    fun getCardProgress(cardId: Long): Int
 }

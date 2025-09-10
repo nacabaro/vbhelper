@@ -11,6 +11,7 @@ sealed class NavigationItems (
     object Battles : NavigationItems("Battle", R.drawable.baseline_swords_24, "Battle")
     object Home : NavigationItems("Home", R.drawable.baseline_cottage_24, "Home")
     object Dex : NavigationItems("Dex", R.drawable.baseline_menu_book_24, "Dex")
+    object CardAdventure : NavigationItems("CardAdventure/{cardId}", R.drawable.baseline_fort_24, "Card adventure")
     object Storage : NavigationItems("Storage", R.drawable.baseline_catching_pokemon_24, "Storage")
     object Settings : NavigationItems("Settings", R.drawable.baseline_settings_24, "Settings")
     object Viewer : NavigationItems("Viewer", R.drawable.baseline_image_24, "Viewer")

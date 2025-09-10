@@ -3,17 +3,21 @@ package com.github.nacabaro.vbhelper.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.github.nacabaro.vbhelper.daos.AdventureDao
+import com.github.nacabaro.vbhelper.daos.CardAdventureDao
 import com.github.nacabaro.vbhelper.daos.CharacterDao
 import com.github.nacabaro.vbhelper.daos.DexDao
 import com.github.nacabaro.vbhelper.daos.CardDao
+import com.github.nacabaro.vbhelper.daos.CardFusionsDao
 import com.github.nacabaro.vbhelper.daos.CardProgressDao
 import com.github.nacabaro.vbhelper.daos.ItemDao
 import com.github.nacabaro.vbhelper.daos.SpecialMissionDao
 import com.github.nacabaro.vbhelper.daos.SpriteDao
 import com.github.nacabaro.vbhelper.daos.UserCharacterDao
 import com.github.nacabaro.vbhelper.domain.card.Background
-import com.github.nacabaro.vbhelper.domain.card.CharacterData
+import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.domain.card.Card
+import com.github.nacabaro.vbhelper.domain.card.CardAdventure
+import com.github.nacabaro.vbhelper.domain.card.CardFusions
 import com.github.nacabaro.vbhelper.domain.card.CardProgress
 import com.github.nacabaro.vbhelper.domain.card.PossibleTransformations
 import com.github.nacabaro.vbhelper.domain.characters.Sprite
@@ -32,7 +36,9 @@ import com.github.nacabaro.vbhelper.domain.items.Items
     entities = [
         Card::class,
         CardProgress::class,
-        CharacterData::class,
+        CardCharacter::class,
+        CardAdventure::class,
+        CardFusions::class,
         Sprite::class,
         UserCharacter::class,
         BECharacterData::class,
@@ -57,4 +63,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun adventureDao(): AdventureDao
     abstract fun spriteDao(): SpriteDao
     abstract fun specialMissionDao(): SpecialMissionDao
+    abstract fun cardAdventureDao(): CardAdventureDao
+    abstract fun cardFusionsDao(): CardFusionsDao
 }

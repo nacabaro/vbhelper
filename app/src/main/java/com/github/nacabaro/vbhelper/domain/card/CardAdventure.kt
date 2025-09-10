@@ -1,29 +1,32 @@
-package com.github.nacabaro.vbhelper.domain.device_data
+package com.github.nacabaro.vbhelper.domain.card
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 
 @Entity(
     foreignKeys = [
         ForeignKey(
-            entity = UserCharacter::class,
+            entity = CardCharacter::class,
             parentColumns = ["id"],
-            childColumns = ["monId"],
+            childColumns = ["characterId"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = CardCharacter::class,
+            entity = Card::class,
             parentColumns = ["id"],
-            childColumns = ["stageId"],
+            childColumns = ["cardId"],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
-data class TransformationHistory (
+data class CardAdventure(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val monId: Long,
-    val stageId: Long,
-    val transformationDate: Long
+    val cardId: Long,
+    val characterId: Long,
+    val steps: Int,
+    val bossHp: Int,
+    val bossAp: Int,
+    val bossDp: Int,
+    val bossBp: Int?
 )

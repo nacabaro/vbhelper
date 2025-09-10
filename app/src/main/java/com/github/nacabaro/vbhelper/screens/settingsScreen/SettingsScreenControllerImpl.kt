@@ -18,7 +18,7 @@ import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.characters.Sprite
 import com.github.nacabaro.vbhelper.domain.card.Card
 import com.github.nacabaro.vbhelper.domain.card.CardProgress
-import com.github.nacabaro.vbhelper.domain.card.CharacterData
+import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.source.ApkSecretsImporter
 import com.github.nacabaro.vbhelper.source.SecretsImporter
 import com.github.nacabaro.vbhelper.source.SecretsRepository
@@ -192,7 +192,7 @@ class SettingsScreenControllerImpl(
             false -> 10
         }
 
-        val domainCharacters = mutableListOf<CharacterData>()
+        val domainCharacters = mutableListOf<CardCharacter>()
 
         val characters = card
             .characterStats
@@ -242,7 +242,7 @@ class SettingsScreenControllerImpl(
 
 
             domainCharacters.add(
-                CharacterData(
+                CardCharacter(
                     cardId = cardId,
                     spriteId = spriteId,
                     charaIndex = index,
@@ -271,6 +271,66 @@ class SettingsScreenControllerImpl(
         database
             .characterDao()
             .insertCharacter(*domainCharacters.toTypedArray())
+    }
+
+    private suspend fun importAdventureMissions(
+        cardId: Long,
+        card: com.github.cfogrady.vb.dim.card.Card<*, *, *, *, *, *>
+    ) {
+        Log.d("importAdventureMissions", "Importing adventure missions")
+        if (card is BemCard) {
+            card.adventureLevels.levels.forEach {
+                database
+                    .cardAdventureDao()
+                    .insertNewAdventure(
+                        cardId = cardId,
+                        characterId = it.bossCharacterIndex,
+                        steps = it.steps,
+                        bossAp = it.bossAp,
+                        bossHp = it.bossHp,
+                        bossDp = it.bossDp,
+                        bossBp = it.bossBp
+                    )
+            }
+        } else if (card is DimCard) {
+            card.adventureLevels.levels.map {
+                database
+                    .cardAdventureDao()
+                    .insertNewAdventure(
+                        cardId = cardId,
+                        characterId = it.bossCharacterIndex,
+                        steps = it.steps,
+                        bossAp = it.bossAp,
+                        bossHp = it.bossHp,
+                        bossDp = it.bossDp,
+                        bossBp = null
+                    )
+            }
+        }
+    }
+
+    private suspend fun importCardFusions(
+        cardId: Long,
+        card: com.github.cfogrady.vb.dim.card.Card<*, *, *, *, *, *>
+    ) {
+        Log.d("importCardFusions", "Importing card fusions")
+        if (card is DimCard) {
+            card
+                .attributeFusions
+                .entries
+                .forEach {
+                    database
+                        .cardFusionsDao()
+                        .insertNewFusion(
+                            cardId = cardId,
+                            fromCharaId = it.characterIndex,
+                            toCharaIdAttr1 = it.attribute1Fusion,
+                            toCharaIdAttr2 = it.attribute2Fusion,
+                            toCharaIdAttr3 = it.attribute3Fusion,
+                            toCharaIdAttr4 = it.attribute4Fusion
+                        )
+                }
+        }
     }
 
     private fun updateCardProgress(
@@ -315,6 +375,10 @@ class SettingsScreenControllerImpl(
                 importCharacterData(cardId, card)
 
                 importEvoData(cardId, card)
+
+                importAdventureMissions(cardId, card)
+
+                importCardFusions(cardId, card)
             }
 
             inputStream?.close()

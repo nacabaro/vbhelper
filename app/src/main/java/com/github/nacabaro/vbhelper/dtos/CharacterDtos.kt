@@ -35,7 +35,7 @@ object CharacterDtos {
     )
 
     data class CardCharacterInfo(
-        val cardId: Int,
+        val cardId: Long,
         val charId: Int,
         val stage: Int,
         val attribute: NfcCharacter.Attribute

@@ -28,7 +28,7 @@ import com.github.nacabaro.vbhelper.domain.characters.Sprite
  * and monIndex.
  * TODO: Customs will mean this should be unique per cardName and monIndex
  */
-data class CharacterData (
+data class CardCharacter (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val cardId: Long,
     val spriteId: Long,

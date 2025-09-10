@@ -11,7 +11,7 @@ interface DexDao {
         """
         INSERT OR IGNORE INTO Dex(id, discoveredOn)
         VALUES (
-            (SELECT id FROM CharacterData WHERE charaIndex = :charIndex AND cardId = :cardId), 
+            (SELECT id FROM CardCharacter WHERE charaIndex = :charIndex AND cardId = :cardId), 
             :discoveredOn
         )
     """
@@ -34,7 +34,7 @@ interface DexDao {
             c.baseAp as baseAp,
             c.stage as stage,
             c.attribute as attribute
-        FROM CharacterData c
+        FROM CardCharacter c
         JOIN Sprite s ON c.spriteId = s.id
         LEFT JOIN dex d ON c.id = d.id
         WHERE c.cardId = :cardId
@@ -50,8 +50,8 @@ interface DexDao {
             c.logo as cardLogo,
             c.logoWidth as logoWidth,
             c.logoHeight as logoHeight, 
-            (SELECT COUNT(*) FROM CharacterData cc WHERE cc.cardId = c.id) AS totalCharacters,
-            (SELECT COUNT(*) FROM Dex d JOIN CharacterData cc ON d.id = cc.id WHERE cc.cardId = c.id AND d.discoveredOn IS NOT NULL) AS obtainedCharacters
+            (SELECT COUNT(*) FROM CardCharacter cc WHERE cc.cardId = c.id) AS totalCharacters,
+            (SELECT COUNT(*) FROM Dex d JOIN CardCharacter cc ON d.id = cc.id WHERE cc.cardId = c.id AND d.discoveredOn IS NOT NULL) AS obtainedCharacters
         FROM Card c
     """
     )

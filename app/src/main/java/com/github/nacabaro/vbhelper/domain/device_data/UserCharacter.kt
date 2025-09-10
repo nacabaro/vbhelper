@@ -5,12 +5,12 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.utils.DeviceType
-import com.github.nacabaro.vbhelper.domain.card.CharacterData
+import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 
 @Entity(
     foreignKeys = [
         ForeignKey(
-            entity = CharacterData::class,
+            entity = CardCharacter::class,
             parentColumns = ["id"],
             childColumns = ["charId"],
             onDelete = ForeignKey.CASCADE
