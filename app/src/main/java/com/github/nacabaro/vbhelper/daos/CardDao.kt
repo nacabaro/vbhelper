@@ -21,7 +21,7 @@ interface CardDao {
         """
         SELECT ca.* 
         FROM Card ca
-        JOIN CharacterData ch ON ca.id = ch.cardId
+        JOIN CardCharacter ch ON ca.id = ch.cardId
         JOIN UserCharacter uc ON ch.id = uc.charId
         WHERE uc.id = :id
     """

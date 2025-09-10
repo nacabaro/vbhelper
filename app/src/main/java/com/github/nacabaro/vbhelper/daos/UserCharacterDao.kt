@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
-import com.github.nacabaro.vbhelper.domain.card.CharacterData
+import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
@@ -47,7 +47,7 @@ interface UserCharacterDao {
             c.charaIndex AS monIndex, 
             t.transformationDate AS transformationDate
         FROM TransformationHistory t 
-        JOIN CharacterData c ON c.id = t.stageId
+        JOIN CardCharacter c ON c.id = t.stageId
         JOIN Sprite s ON s.id = c.spriteId
         WHERE monId = :monId
     """
@@ -70,7 +70,7 @@ interface UserCharacterDao {
             d.isBEm as isBemCard,
             a.characterId = uc.id as isInAdventure
         FROM UserCharacter uc
-        JOIN CharacterData c ON uc.charId = c.id
+        JOIN CardCharacter c ON uc.charId = c.id
         JOIN Card d ON  d.id = c.cardId
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
@@ -94,7 +94,7 @@ interface UserCharacterDao {
             d.isBEm as isBemCard,
             a.characterId = uc.id as isInAdventure
         FROM UserCharacter uc
-        JOIN CharacterData c ON uc.charId = c.id
+        JOIN CardCharacter c ON uc.charId = c.id
         JOIN Card d ON c.cardId = d.id
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
@@ -131,7 +131,7 @@ interface UserCharacterDao {
             d.isBEm as isBemCard,
             a.characterId as isInAdventure            
         FROM UserCharacter uc
-        JOIN CharacterData c ON uc.charId = c.id
+        JOIN CardCharacter c ON uc.charId = c.id
         JOIN Card d ON c.cardId = d.id
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
@@ -153,13 +153,13 @@ interface UserCharacterDao {
     @Query(
         """
         SELECT c.*
-        FROM CharacterData c
+        FROM CardCharacter c
         join UserCharacter uc on c.id = uc.charId
         where uc.id = :charId
         LIMIT 1
         """
     )
-    suspend fun getCharacterInfo(charId: Long): CharacterData
+    suspend fun getCharacterInfo(charId: Long): CardCharacter
 
 
     @Query(
@@ -167,7 +167,7 @@ interface UserCharacterDao {
         INSERT INTO TransformationHistory(monId, stageId, transformationDate)
         VALUES 
             (:monId, 
-            (SELECT id FROM CharacterData WHERE charaIndex = :stage AND cardId = :dimId),
+            (SELECT id FROM CardCharacter WHERE charaIndex = :stage AND cardId = :dimId),
             :transformationDate)
     """
     )
@@ -195,7 +195,7 @@ interface UserCharacterDao {
             d.isBEm as isBemCard,
             a.characterId = uc.id as isInAdventure
         FROM UserCharacter uc
-        JOIN CharacterData c ON uc.charId = c.id
+        JOIN CardCharacter c ON uc.charId = c.id
         JOIN Card d ON  d.id = c.cardId
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id
@@ -220,7 +220,7 @@ interface UserCharacterDao {
             d.isBEm as isBemCard,
             a.characterId = uc.id as isInAdventure
         FROM UserCharacter uc
-        JOIN CharacterData c ON uc.charId = c.id
+        JOIN CardCharacter c ON uc.charId = c.id
         JOIN Card d ON  d.id = c.cardId
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Adventure a ON a.characterId = uc.id

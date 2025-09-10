@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.screens.cardScreen
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.github.nacabaro.vbhelper.di.VBHelper
+import com.github.nacabaro.vbhelper.dtos.CardDtos
 import kotlinx.coroutines.launch
 
 class CardScreenControllerImpl(
@@ -10,7 +11,6 @@ class CardScreenControllerImpl(
 ) : CardScreenController {
     private val application = componentActivity.applicationContext as VBHelper
     private val database = application.container.db
-
 
     override fun renameCard(cardId: Long, newName: String, onRenamed: (String) -> Unit) {
         componentActivity.lifecycleScope.launch {
@@ -30,5 +30,17 @@ class CardScreenControllerImpl(
 
             onDeleted()
         }
+    }
+
+    override suspend fun getCardAdventureMissions(cardId: Long): List<CardDtos.CardAdventureWithSprites> {
+        return database
+            .cardAdventureDao()
+            .getAdventureForCard(cardId)
+    }
+
+    override suspend fun getCardProgress(cardId: Long): Int {
+        return database
+            .cardProgressDao()
+            .getCardProgress(cardId)
     }
 }

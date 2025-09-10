@@ -31,7 +31,7 @@ interface AdventureDao {
             a.finishesAdventure AS finishesAdventure,
             a.originalDuration AS originalTimeInMinutes
         FROM UserCharacter uc
-        JOIN CharacterData c ON uc.charId = c.id
+        JOIN CardCharacter c ON uc.charId = c.id
         JOIN Sprite s ON s.id = c.spriteId
         JOIN Card d ON c.cardId = d.id
         JOIN Adventure a ON uc.id = a.characterId

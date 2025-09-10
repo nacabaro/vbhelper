@@ -16,6 +16,7 @@ import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.screens.cardScreen.dialogs.DexCharaDetailsDialog
 import com.github.nacabaro.vbhelper.source.DexRepository
 import kotlinx.coroutines.launch
@@ -23,7 +24,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun CardViewScreen(
     navController: NavController,
-    dimId: Long
+    cardId: Long
 ) {
     val coroutineScope = rememberCoroutineScope()
     val application = LocalContext.current.applicationContext as VBHelper
@@ -36,10 +37,10 @@ fun CardViewScreen(
 
     LaunchedEffect(dexRepository) {
         coroutineScope.launch {
-            val newCharacterList = dexRepository.getCharactersByCardId(dimId)
+            val newCharacterList = dexRepository.getCharactersByCardId(cardId)
             characterList.value = newCharacterList
 
-            val newCardPossibleTransformations = dexRepository.getCardPossibleTransformations(dimId)
+            val newCardPossibleTransformations = dexRepository.getCardPossibleTransformations(cardId)
             cardPossibleTransformations.value = newCardPossibleTransformations
         }
     }
@@ -50,6 +51,17 @@ fun CardViewScreen(
                 text = "Discovered characters",
                 onBackClick = {
                     navController.popBackStack()
+                },
+                onAdventureClick = {
+                    navController
+                        .navigate(route = NavigationItems
+                            .CardAdventure
+                            .route
+                            .replace(
+                                "{cardId}",
+                                cardId.toString()
+                            )
+                        )
                 }
             )
         }
