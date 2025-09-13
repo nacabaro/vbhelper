@@ -41,8 +41,8 @@ import androidx.room.PrimaryKey
 data class CardFusions(
     @PrimaryKey(autoGenerate = true) val id: Long,
     val fromCharaId: Long,
-    val attribute1Fusion: Long?,
-    val attribute2Fusion: Long?,
-    val attribute3Fusion: Long?,
-    val attribute4Fusion: Long?
+    val toVirusFusion: Long?,
+    val toDataFusion: Long?,
+    val toVaccineFusion: Long?,
+    val toFreeFusion: Long?
 )

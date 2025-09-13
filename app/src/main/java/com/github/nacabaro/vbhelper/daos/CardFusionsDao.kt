@@ -5,28 +5,30 @@ import androidx.room.Query
 
 @Dao
 interface CardFusionsDao {
-    @Query("""
+    @Query(
+        """
         INSERT INTO
             CardFusions (
                 fromCharaId,
-                attribute1Fusion,
-                attribute2Fusion,
-                attribute3Fusion,
-                attribute4Fusion
+                toVirusFusion,
+                toDataFusion,
+                toVaccineFusion,
+                toFreeFusion
             )
         SELECT
             (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :fromCharaId),
-            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdAttr1),
-            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdAttr2),
-            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdAttr3),
-            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdAttr4)            
-    """)
+            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdVirus),
+            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdData),
+            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdVaccine),
+            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdFree)            
+    """
+    )
     suspend fun insertNewFusion(
         cardId: Long,
         fromCharaId: Int,
-        toCharaIdAttr1: Int,
-        toCharaIdAttr2: Int,
-        toCharaIdAttr3: Int,
-        toCharaIdAttr4: Int
+        toCharaIdVirus: Int,
+        toCharaIdData: Int,
+        toCharaIdVaccine: Int,
+        toCharaIdFree: Int
     )
 }
