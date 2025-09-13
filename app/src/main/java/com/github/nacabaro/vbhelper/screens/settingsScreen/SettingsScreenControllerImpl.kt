@@ -336,15 +336,15 @@ class SettingsScreenControllerImpl(
     private fun updateCardProgress(
         cardId: Long,
     ) {
-        val cardProgress = CardProgress(
-            cardId = cardId,
-            currentStage = 0,
-            unlocked = false
-        )
-
         database
             .cardProgressDao()
-            .updateDimProgress(cardProgress)
+            .insertCardProgress(
+                CardProgress(
+                    cardId = cardId,
+                    currentStage = 1,
+                    unlocked = false
+                )
+            )
     }
 
     private fun importCard(uri: Uri) {

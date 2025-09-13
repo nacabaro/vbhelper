@@ -38,7 +38,8 @@ object CharacterDtos {
         val cardId: Long,
         val charId: Int,
         val stage: Int,
-        val attribute: NfcCharacter.Attribute
+        val attribute: NfcCharacter.Attribute,
+        val currentStage: Int
     )
 
     data class TransformationHistory(

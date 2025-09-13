@@ -7,8 +7,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
@@ -23,7 +26,7 @@ fun CardAdventureScreen(
     cardId: Long
 ) {
     val cardAdventureMissions = remember { mutableStateOf(emptyList<CardDtos.CardAdventureWithSprites>()) }
-    var currentCardAdventure = remember { 0 }
+    var currentCardAdventure by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(cardId) {
         withContext(Dispatchers.IO) {
@@ -55,7 +58,7 @@ fun CardAdventureScreen(
             cardAdventureMissions.value.mapIndexed { index, it ->
                 CardAdventureEntry(
                     cardAdventureEntry = it,
-                    obscure = index > currentCardAdventure
+                    obscure = index > currentCardAdventure - 1
                 )
             }
         }

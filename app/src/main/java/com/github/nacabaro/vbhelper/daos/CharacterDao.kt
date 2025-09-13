@@ -24,10 +24,12 @@ interface CharacterDao {
             d.cardId as cardId,
             c.charaIndex as charId,
             c.stage as stage,
-            c.attribute as attribute
+            c.attribute as attribute,
+            cp.currentStage as currentStage
         FROM CardCharacter c
         JOIN UserCharacter uc ON c.id = uc.charId
         JOIN Card d ON c.cardId = d.id
+        JOIN CardProgress cp ON d.id = cp.cardId
         WHERE c.id = :charId
     """
     )

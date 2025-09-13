@@ -38,14 +38,10 @@ class ToNfcConverter(
             .characterDao()
             .getCharacterInfo(userCharacter.charId)
 
-        val currentCardStage = database
-            .cardProgressDao()
-            .getCardProgress(characterInfo.cardId)
-
         return if (userCharacter.characterType == DeviceType.BEDevice)
-            nfcToBENfc(characterId, characterInfo, currentCardStage, userCharacter)
+            nfcToBENfc(characterId, characterInfo, userCharacter)
         else
-            nfcToVBNfc(characterId, characterInfo, currentCardStage, userCharacter)
+            nfcToVBNfc(characterId, characterInfo, userCharacter)
     }
 
 
@@ -53,7 +49,6 @@ class ToNfcConverter(
     private suspend fun nfcToVBNfc(
         characterId: Long,
         characterInfo: CharacterDtos.CardCharacterInfo,
-        currentCardStage: Int,
         userCharacter: UserCharacter
     ): VBNfcCharacter {
         val vbData = database
@@ -70,7 +65,7 @@ class ToNfcConverter(
             stage = characterInfo.stage.toByte(),
             attribute = characterInfo.attribute,
             ageInDays = userCharacter.ageInDays.toByte(),
-            nextAdventureMissionStage = currentCardStage.toByte(),
+            nextAdventureMissionStage = characterInfo.currentStage.toByte(),
             mood = userCharacter.mood.toByte(),
             vitalPoints = userCharacter.vitalPoints.toUShort(),
             transformationCountdownInMinutes = userCharacter.transformationCountdown.toUShort(),
@@ -173,7 +168,6 @@ class ToNfcConverter(
     private suspend fun nfcToBENfc(
         characterId: Long,
         characterInfo: CharacterDtos.CardCharacterInfo,
-        currentCardStage: Int,
         userCharacter: UserCharacter
     ): BENfcCharacter {
         val beData = database
@@ -188,7 +182,7 @@ class ToNfcConverter(
             stage = characterInfo.stage.toByte(),
             attribute = characterInfo.attribute,
             ageInDays = userCharacter.ageInDays.toByte(),
-            nextAdventureMissionStage = currentCardStage.toByte(),
+            nextAdventureMissionStage = characterInfo.currentStage.toByte(),
             mood = userCharacter.mood.toByte(),
             vitalPoints = userCharacter.vitalPoints.toUShort(),
             itemEffectMentalStateValue = beData.itemEffectMentalStateValue.toByte(),

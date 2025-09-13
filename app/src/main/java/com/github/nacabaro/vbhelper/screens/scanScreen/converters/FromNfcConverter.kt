@@ -152,15 +152,13 @@ class FromNfcConverter (
         nfcCharacter: NfcCharacter,
         cardData: Card
     ) {
-        val currentCardProgress = CardProgress(
-            cardId = cardData.id,
-            currentStage = nfcCharacter.nextAdventureMissionStage.toInt(),
-            unlocked = nfcCharacter.nextAdventureMissionStage.toInt() > cardData.stageCount
-        )
-
         database
             .cardProgressDao()
-            .updateDimProgress(currentCardProgress)
+            .updateCardProgress(
+                currentStage = nfcCharacter.nextAdventureMissionStage.toInt(),
+                cardId = cardData.id,
+                unlocked = nfcCharacter.nextAdventureMissionStage.toInt() > cardData.stageCount,
+            )
     }
 
 
