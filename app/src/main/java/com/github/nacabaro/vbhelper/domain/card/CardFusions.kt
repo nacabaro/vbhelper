@@ -15,25 +15,25 @@ import androidx.room.PrimaryKey
         ForeignKey(
             entity = CardCharacter::class,
             parentColumns = ["id"],
-            childColumns = ["attribute1Fusion"],
+            childColumns = ["toVirusFusion"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = CardCharacter::class,
             parentColumns = ["id"],
-            childColumns = ["attribute2Fusion"],
+            childColumns = ["toDataFusion"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = CardCharacter::class,
             parentColumns = ["id"],
-            childColumns = ["attribute3Fusion"],
+            childColumns = ["toVaccineFusion"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = CardCharacter::class,
             parentColumns = ["id"],
-            childColumns = ["attribute4Fusion"],
+            childColumns = ["toFreeFusion"],
             onDelete = ForeignKey.CASCADE
         )
     ]
