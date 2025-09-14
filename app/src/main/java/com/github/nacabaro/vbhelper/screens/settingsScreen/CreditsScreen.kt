@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
+import com.github.nacabaro.vbhelper.navigation.NavigationItems
 
 @Composable
 fun CreditsScreen(
@@ -19,6 +20,9 @@ fun CreditsScreen(
                 text = "Credits",
                 onBackClick = {
                     navController.popBackStack()
+                },
+                onGearClick = {
+                    navController.navigate(NavigationItems.Viewer.route)
                 }
             )
         },

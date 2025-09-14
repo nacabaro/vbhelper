@@ -20,7 +20,7 @@ import androidx.room.PrimaryKey
         )
     ]
 )
-data class PossibleTransformations (
+data class CardTransformations (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     var charaId: Long,
     val requiredVitals: Int,

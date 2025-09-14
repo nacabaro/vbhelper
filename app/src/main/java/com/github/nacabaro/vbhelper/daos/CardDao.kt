@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.github.nacabaro.vbhelper.domain.card.Card
+import com.github.nacabaro.vbhelper.domain.card.CardSprites
 
 @Dao
 interface CardDao {
@@ -33,4 +34,11 @@ interface CardDao {
 
     @Query("DELETE FROM Card WHERE id = :id")
     suspend fun deleteCard(id: Long)
+
+    @Insert
+    suspend fun insertSprites(vararg sprites: CardSprites)
+
+    @Query("SELECT * FROM CardSprites")
+    suspend fun getSprites(): List<CardSprites>
+
 }

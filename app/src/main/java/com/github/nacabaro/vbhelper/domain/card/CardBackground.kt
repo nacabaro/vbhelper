@@ -14,8 +14,8 @@ import androidx.room.PrimaryKey
         )
     ]
 )
-data class Background (
-    @PrimaryKey(autoGenerate = true) val id: Long,
+data class CardBackground (
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val cardId: Long,
     val background: ByteArray,
     val backgroundWidth: Int,

@@ -35,7 +35,7 @@ interface CharacterDao {
 
     @Query(
         """
-        INSERT INTO PossibleTransformations (charaId, requiredVitals, requiredTrophies, requiredBattles, requiredWinRate, changeTimerHours, requiredAdventureLevelCompleted, toCharaId)
+        INSERT INTO CardTransformations (charaId, requiredVitals, requiredTrophies, requiredBattles, requiredWinRate, changeTimerHours, requiredAdventureLevelCompleted, toCharaId)
         SELECT
             (SELECT id FROM CardCharacter WHERE charaIndex = :fromChraraIndex AND cardId = :cardId),
             :requiredVitals,
@@ -75,7 +75,7 @@ interface CharacterDao {
             pt.changeTimerHours as changeTimerHours,
             pt.requiredAdventureLevelCompleted as requiredAdventureLevelCompleted
         FROM
-            PossibleTransformations pt
+            CardTransformations pt
         JOIN CardCharacter c on pt.toCharaId = c.id
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Dex d ON d.id = pt.toCharaId

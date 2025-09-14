@@ -17,8 +17,10 @@ import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.characters.Sprite
 import com.github.nacabaro.vbhelper.domain.card.Card
+import com.github.nacabaro.vbhelper.domain.card.CardBackground
 import com.github.nacabaro.vbhelper.domain.card.CardProgress
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
+import com.github.nacabaro.vbhelper.domain.card.CardSprites
 import com.github.nacabaro.vbhelper.source.ApkSecretsImporter
 import com.github.nacabaro.vbhelper.source.SecretsImporter
 import com.github.nacabaro.vbhelper.source.SecretsRepository
@@ -215,7 +217,7 @@ class SettingsScreenControllerImpl(
                     spriteHappy = card.spriteData.sprites[spriteCounter + 4].pixelData,
                     spriteSleep = card.spriteData.sprites[spriteCounter + 5].pixelData,
                     spriteAttack = card.spriteData.sprites[spriteCounter + 2].pixelData,
-                    spriteDodge = card.spriteData.sprites[spriteCounter + 3].pixelData
+                    spriteDodge = card.spriteData.sprites[spriteCounter + 3].pixelData,
                 )
             } else {
                 domainSprite = Sprite(
@@ -324,10 +326,10 @@ class SettingsScreenControllerImpl(
                         .insertNewFusion(
                             cardId = cardId,
                             fromCharaId = it.characterIndex,
-                            toCharaIdAttr1 = it.attribute1Fusion,
-                            toCharaIdAttr2 = it.attribute2Fusion,
-                            toCharaIdAttr3 = it.attribute3Fusion,
-                            toCharaIdAttr4 = it.attribute4Fusion
+                            toCharaIdVirus = it.attribute1Fusion,
+                            toCharaIdData = it.attribute2Fusion,
+                            toCharaIdVaccine = it.attribute3Fusion,
+                            toCharaIdFree = it.attribute4Fusion
                         )
                 }
         }
@@ -345,6 +347,40 @@ class SettingsScreenControllerImpl(
         database
             .cardProgressDao()
             .updateDimProgress(cardProgress)
+    }
+
+    private suspend fun importBackgrounds(
+        cardId: Long,
+        card: com.github.cfogrady.vb.dim.card.Card<*, *, *, *, *, *>
+    ) {
+        val backgrounds = mutableListOf<CardBackground>()
+
+        if (card is DimCard) {
+            backgrounds.add(
+                CardBackground(
+                    cardId = cardId,
+                    background = card.spriteData.sprites[1].pixelData,
+                    backgroundWidth = card.spriteData.sprites[1].width,
+                    backgroundHeight = card.spriteData.sprites[1].height
+                )
+            )
+        } else if (card is BemCard) {
+            val possibleBackgroundsIds = listOf(1, 10, 30, 31, 32, 33)
+            for (id in possibleBackgroundsIds) {
+                backgrounds.add(
+                    CardBackground(
+                        cardId = cardId,
+                        background = card.spriteData.sprites[id].pixelData,
+                        backgroundWidth = card.spriteData.sprites[id].width,
+                        backgroundHeight = card.spriteData.sprites[id].height
+                    )
+                )
+            }
+        }
+
+        database
+            .cardBackgroundDao()
+            .insertCardBackground(*backgrounds.toTypedArray())
     }
 
     private fun importCard(uri: Uri) {
@@ -379,6 +415,20 @@ class SettingsScreenControllerImpl(
                 importAdventureMissions(cardId, card)
 
                 importCardFusions(cardId, card)
+
+                importBackgrounds(cardId, card)
+
+                val cardSprites: List<CardSprites> = card.spriteData.sprites.map {
+                    CardSprites(
+                        sprite = it.pixelData,
+                        width = it.width,
+                        height = it.height
+                    )
+                }
+
+                database
+                    .cardDao()
+                    .insertSprites(*cardSprites.toTypedArray())
             }
 
             inputStream?.close()

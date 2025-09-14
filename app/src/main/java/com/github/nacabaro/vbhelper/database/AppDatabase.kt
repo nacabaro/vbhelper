@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.github.nacabaro.vbhelper.daos.AdventureDao
 import com.github.nacabaro.vbhelper.daos.CardAdventureDao
+import com.github.nacabaro.vbhelper.daos.CardBackgroundDao
 import com.github.nacabaro.vbhelper.daos.CharacterDao
 import com.github.nacabaro.vbhelper.daos.DexDao
 import com.github.nacabaro.vbhelper.daos.CardDao
@@ -13,13 +14,14 @@ import com.github.nacabaro.vbhelper.daos.ItemDao
 import com.github.nacabaro.vbhelper.daos.SpecialMissionDao
 import com.github.nacabaro.vbhelper.daos.SpriteDao
 import com.github.nacabaro.vbhelper.daos.UserCharacterDao
-import com.github.nacabaro.vbhelper.domain.card.Background
+import com.github.nacabaro.vbhelper.domain.card.CardBackground
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.domain.card.Card
 import com.github.nacabaro.vbhelper.domain.card.CardAdventure
 import com.github.nacabaro.vbhelper.domain.card.CardFusions
 import com.github.nacabaro.vbhelper.domain.card.CardProgress
-import com.github.nacabaro.vbhelper.domain.card.PossibleTransformations
+import com.github.nacabaro.vbhelper.domain.card.CardSprites
+import com.github.nacabaro.vbhelper.domain.card.CardTransformations
 import com.github.nacabaro.vbhelper.domain.characters.Sprite
 import com.github.nacabaro.vbhelper.domain.characters.Adventure
 import com.github.nacabaro.vbhelper.domain.characters.Dex
@@ -39,6 +41,7 @@ import com.github.nacabaro.vbhelper.domain.items.Items
         CardCharacter::class,
         CardAdventure::class,
         CardFusions::class,
+        CardSprites::class,
         Sprite::class,
         UserCharacter::class,
         BECharacterData::class,
@@ -49,8 +52,8 @@ import com.github.nacabaro.vbhelper.domain.items.Items
         Dex::class,
         Items::class,
         Adventure::class,
-        Background::class,
-        PossibleTransformations::class
+        CardBackground::class,
+        CardTransformations::class
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -65,4 +68,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun specialMissionDao(): SpecialMissionDao
     abstract fun cardAdventureDao(): CardAdventureDao
     abstract fun cardFusionsDao(): CardFusionsDao
+    abstract fun cardBackgroundDao(): CardBackgroundDao
 }
