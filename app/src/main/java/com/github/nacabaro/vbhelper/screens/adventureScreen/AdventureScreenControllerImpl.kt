@@ -6,6 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -77,6 +78,7 @@ class AdventureScreenControllerImpl(
         val randomItem = database
             .itemDao()
             .getAllItems()
+            .first()
             .random()
 
         val random = ((Random.nextFloat() * character.stage) + 3).roundToInt()

@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.daos
 import androidx.room.Dao
 import androidx.room.Query
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ItemDao {
@@ -13,7 +14,7 @@ interface ItemDao {
         ORDER BY Items.itemIcon ASC
     """
     )
-    suspend fun getAllItems(): List<ItemDtos.ItemsWithQuantities>
+    fun getAllItems(): Flow<List<ItemDtos.ItemsWithQuantities>>
 
     @Query(
         """
@@ -22,7 +23,7 @@ interface ItemDao {
         WHERE quantity > 0
     """
     )
-    suspend fun getAllUserItems(): List<ItemDtos.ItemsWithQuantities>
+    fun getAllUserItems(): Flow<List<ItemDtos.ItemsWithQuantities>>
 
     @Query(
         """

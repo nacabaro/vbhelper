@@ -5,6 +5,7 @@ import androidx.lifecycle.lifecycleScope
 import com.github.cfogrady.vbnfc.vb.SpecialMission
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Instant
 import kotlin.math.roundToInt
@@ -41,6 +42,7 @@ class HomeScreenControllerImpl(
                 val randomItem = database
                     .itemDao()
                     .getAllItems()
+                    .first()
                     .random()
 
                 val randomItemAmount = (Random.nextFloat() * 5).roundToInt()
