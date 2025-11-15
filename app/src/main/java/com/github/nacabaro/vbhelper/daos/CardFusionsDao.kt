@@ -2,6 +2,9 @@ package com.github.nacabaro.vbhelper.daos
 
 import androidx.room.Dao
 import androidx.room.Query
+import com.github.cfogrady.vbnfc.data.NfcCharacter
+import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CardFusionsDao {
@@ -9,24 +12,37 @@ interface CardFusionsDao {
         INSERT INTO
             CardFusions (
                 fromCharaId,
-                attribute1Fusion,
-                attribute2Fusion,
-                attribute3Fusion,
-                attribute4Fusion
+                attribute,
+                toCharaId
             )
         SELECT
             (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :fromCharaId),
-            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdAttr1),
-            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdAttr2),
-            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdAttr3),
-            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaIdAttr4)            
+            :attribute,
+            (SELECT id FROM CardCharacter WHERE cardId = :cardId AND charaIndex = :toCharaId)
     """)
     suspend fun insertNewFusion(
         cardId: Long,
         fromCharaId: Int,
-        toCharaIdAttr1: Int,
-        toCharaIdAttr2: Int,
-        toCharaIdAttr3: Int,
-        toCharaIdAttr4: Int
+        attribute: NfcCharacter.Attribute,
+        toCharaId: Int
     )
+
+    @Query("""
+        SELECT 
+            cf.toCharaId as charaId,
+            cf.fromCharaId as fromCharaId,
+            s.spriteIdle1 as spriteIdle,
+            cc.attribute as attribute,
+            s.width as spriteWidth,
+            s.height as spriteHeight,
+            d.discoveredOn as discoveredOn,
+            cf.attribute as fusionAttribute
+        FROM CardFusions cf
+        JOIN CardCharacter cc ON cc.id = cf.toCharaId
+        JOIN Sprite s ON s.id = cc.id
+        LEFT JOIN Dex d ON d.id = cc.id
+        WHERE cf.fromCharaId = :charaId
+        ORDER BY cc.charaIndex
+    """)
+    fun getFusionsForCharacter(charaId: Long): Flow<List<CharacterDtos.FusionsWithSpritesAndObtained>>
 }

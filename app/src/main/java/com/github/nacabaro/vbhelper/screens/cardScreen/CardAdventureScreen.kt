@@ -6,18 +6,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
-import com.github.nacabaro.vbhelper.dtos.CardDtos
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 @Composable
 fun CardAdventureScreen(
@@ -25,20 +18,12 @@ fun CardAdventureScreen(
     cardScreenController: CardScreenControllerImpl,
     cardId: Long
 ) {
-    val cardAdventureMissions = remember { mutableStateOf(emptyList<CardDtos.CardAdventureWithSprites>()) }
-    var currentCardAdventure by remember { mutableIntStateOf(0) }
-
-    LaunchedEffect(cardId) {
-        withContext(Dispatchers.IO) {
-            cardAdventureMissions.value =
-                cardScreenController
-                    .getCardAdventureMissions(cardId)
-
-            currentCardAdventure =
-                cardScreenController
-                    .getCardProgress(cardId)
-        }
-    }
+    val cardAdventureMissions by cardScreenController
+        .getCardAdventureMissions(cardId)
+        .collectAsState(emptyList())
+    val currentCardAdventure by cardScreenController
+        .getCardProgress(cardId)
+        .collectAsState(0)
 
     Scaffold (
         topBar = {
@@ -55,7 +40,7 @@ fun CardAdventureScreen(
                 .padding(top = contentPadding.calculateTopPadding())
                 .verticalScroll(state = rememberScrollState())
         ) {
-            cardAdventureMissions.value.mapIndexed { index, it ->
+            cardAdventureMissions.mapIndexed { index, it ->
                 CardAdventureEntry(
                     cardAdventureEntry = it,
                     obscure = index > currentCardAdventure - 1

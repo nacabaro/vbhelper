@@ -114,4 +114,14 @@ object CharacterDtos {
         val changeTimerHours: Int,
         val requiredAdventureLevelCompleted: Int
     )
+
+    data class FusionsWithSpritesAndObtained(
+        val charaId: Long,
+        val fromCharaId: Long,
+        val spriteIdle: ByteArray,
+        val spriteWidth: Int,
+        val spriteHeight: Int,
+        val discoveredOn: Long?,
+        val fusionAttribute: NfcCharacter.Attribute
+    )
 }

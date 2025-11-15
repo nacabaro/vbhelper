@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import com.github.nacabaro.vbhelper.dtos.CardDtos
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DexDao {
@@ -40,7 +41,7 @@ interface DexDao {
         WHERE c.cardId = :cardId
     """
     )
-    suspend fun getSingleCardProgress(cardId: Long): List<CharacterDtos.CardCharaProgress>
+    fun getSingleCardProgress(cardId: Long): Flow<List<CharacterDtos.CardCharaProgress>>
 
     @Query(
         """
@@ -55,5 +56,5 @@ interface DexDao {
         FROM Card c
     """
     )
-    suspend fun getCardsWithProgress(): List<CardDtos.CardProgress>
+    fun getCardsWithProgress(): Flow<List<CardDtos.CardProgress>>
 }

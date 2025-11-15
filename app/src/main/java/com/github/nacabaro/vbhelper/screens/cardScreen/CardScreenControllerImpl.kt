@@ -4,6 +4,8 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.dtos.CardDtos
+import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class CardScreenControllerImpl(
@@ -32,15 +34,22 @@ class CardScreenControllerImpl(
         }
     }
 
-    override suspend fun getCardAdventureMissions(cardId: Long): List<CardDtos.CardAdventureWithSprites> {
+    override fun getCardAdventureMissions(cardId: Long): Flow<List<CardDtos.CardAdventureWithSprites>> {
         return database
             .cardAdventureDao()
             .getAdventureForCard(cardId)
     }
 
-    override suspend fun getCardProgress(cardId: Long): Int {
+    override fun getCardProgress(cardId: Long): Flow<Int> {
         return database
             .cardProgressDao()
             .getCardProgress(cardId)
     }
+
+    override fun getFusionsForCharacters(characterId: Long): Flow<List<CharacterDtos.FusionsWithSpritesAndObtained>> {
+        return database
+            .cardFusionsDao()
+            .getFusionsForCharacter(characterId)
+    }
+
 }

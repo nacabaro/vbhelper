@@ -7,11 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,30 +24,21 @@ import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.screens.cardScreen.dialogs.CardDeleteDialog
 import com.github.nacabaro.vbhelper.screens.cardScreen.dialogs.CardRenameDialog
 import com.github.nacabaro.vbhelper.source.DexRepository
-import kotlinx.coroutines.launch
 
 @Composable
 fun CardsScreen(
     navController: NavController,
     cardScreenController: CardScreenControllerImpl
 ) {
-    val coroutineScope = rememberCoroutineScope()
     val application = LocalContext.current.applicationContext as VBHelper
     val dexRepository = DexRepository(application.container.db)
-    val cardList = remember { mutableStateOf<List<CardDtos.CardProgress>>(emptyList()) }
+    val cardList by dexRepository.getAllDims().collectAsState(emptyList())
 
     val selectedCard = remember { mutableStateOf<CardDtos.CardProgress?>(null) }
     var clickedDelete by remember { mutableStateOf(false) }
     var clickedRename by remember { mutableStateOf(false) }
 
     var modifyCards by remember { mutableStateOf(false) }
-
-    LaunchedEffect(dexRepository) {
-        coroutineScope.launch {
-            val newDimList = dexRepository.getAllDims()
-            cardList.value = newDimList
-        }
-    }
 
     Scaffold (
         topBar = {
@@ -64,7 +54,7 @@ fun CardsScreen(
             modifier = Modifier
                 .padding(top = contentPadding.calculateTopPadding())
         ) {
-            items(cardList.value) {
+            items(cardList) {
                 CardEntry(
                     name = it.cardName,
                     logo = BitmapData(

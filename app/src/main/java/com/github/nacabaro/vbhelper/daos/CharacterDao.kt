@@ -6,6 +6,7 @@ import androidx.room.Query
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.domain.characters.Sprite
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CharacterDao {
@@ -82,8 +83,8 @@ interface CharacterDao {
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Dex d ON d.id = pt.toCharaId
         WHERE
-            c.cardId = :cardId
+            pt.charaId = :characterId
     """
     )
-    suspend fun getEvolutionRequirementsForCard(cardId: Long): List<CharacterDtos.EvolutionRequirementsWithSpritesAndObtained>
+    fun getEvolutionRequirementsForCard(characterId: Long): Flow<List<CharacterDtos.EvolutionRequirementsWithSpritesAndObtained>>
 }
