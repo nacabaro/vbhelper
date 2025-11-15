@@ -16,11 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -28,45 +24,18 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.dtos.CharacterDtos
-import com.github.nacabaro.vbhelper.source.DexRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.utils.getImageBitmap
 
-
 @Composable
-fun DexCharaDetailsDialog(
+fun DexCharaFusionsDialog(
     currentChara: CharacterDtos.CardCharaProgress,
+    currentCharaPossibleFusions: List<CharacterDtos.FusionsWithSpritesAndObtained>,
     obscure: Boolean,
-    onClickClose: () -> Unit
+    onClickDismiss: () -> Unit,
 ) {
     val nameMultiplier = 3
     val charaMultiplier = 4
-
-    val application = LocalContext.current.applicationContext as VBHelper
-    val database = application.container.db
-    val dexRepository = DexRepository(database)
-
-    var showFusions by remember { mutableStateOf(false) }
-
-    val currentCharaPossibleTransformations by dexRepository
-        .getCharacterPossibleTransformations(currentChara.id)
-        .collectAsState(emptyList())
-
-    val currentCharaPossibleFusions by dexRepository
-        .getCharacterPossibleFusions(currentChara.id)
-        .collectAsState(emptyList())
-
-    val romanNumeralsStage = when (currentChara.stage) {
-        1 -> "II"
-        2 -> "III"
-        3 -> "IV"
-        4 -> "V"
-        5 -> "VI"
-        6 -> "VII"
-        else -> "I"
-    }
 
     val charaBitmapData = BitmapData(
         bitmap = currentChara.spriteIdle,
@@ -91,20 +60,17 @@ fun DexCharaDetailsDialog(
     )
 
     Dialog(
-        onDismissRequest = onClickClose
+        onDismissRequest = onClickDismiss,
     ) {
-        Card (
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            Column (
+            Column(
                 modifier = Modifier
                     .padding(16.dp)
             ) {
-                Row (
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                ) {
+                Row {
                     Card (
                         colors = CardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -130,10 +96,12 @@ fun DexCharaDetailsDialog(
                             filterQuality = FilterQuality.None
                         )
                     }
+
                     Spacer(
                         modifier = Modifier
                             .padding(16.dp)
                     )
+
                     if (!obscure) {
                         Column {
                             Image(
@@ -144,26 +112,17 @@ fun DexCharaDetailsDialog(
                                     .height(nameImageBitmapData.dpHeight),
                                 filterQuality = FilterQuality.None
                             )
-                            Spacer(modifier = Modifier.padding(4.dp))
-                            if (currentChara.baseHp != 65535) {
-                                Text(
-                                    text = "HP: ${currentChara.baseHp}, BP: ${currentChara.baseBp}, AP: ${currentChara.baseAp}"
-                                )
-                                Text(text = "Stg: ${romanNumeralsStage}, Atr: ${currentChara.attribute.toString().substring(0, 2)}")
-                            }
                         }
                     } else {
                         Column {
                             Text(text = "????????????????")
-                            Spacer(modifier = Modifier.padding(4.dp))
-                            Text(text = "Stg: -, Atr: -")
-                            Text(text = "HP: -, BP: -, AP: -")
                         }
                     }
                 }
+
                 Spacer(modifier = Modifier.padding(16.dp))
                 Column {
-                    currentCharaPossibleTransformations.map {
+                    currentCharaPossibleFusions.map {
                         val selectedCharaBitmap = BitmapData(
                             bitmap = it.spriteIdle,
                             width = it.spriteWidth,
@@ -214,48 +173,19 @@ fun DexCharaDetailsDialog(
                                         .padding(16.dp)
                                 )
                                 Column {
-                                    Text("Tr: ${it.requiredTrophies}; Bt: ${it.requiredBattles}; Vr: ${it.requiredVitals}; Wr: ${it.requiredWinRate}%; Ct: ${it.changeTimerHours}h")
-                                    Text("AdvLvl ${it.requiredAdventureLevelCompleted + 1}")
+                                    Text("Combine with ${it.fusionAttribute}")
                                 }
                             }
                         }
                     }
                 }
 
-                Row {
-                    if (currentCharaPossibleFusions.isNotEmpty()) {
-                        Button(
-                            onClick = {
-                                showFusions = true
-                            }
-                        ) {
-                            Text("Fusions")
-                        }
-                    }
-
-                    Spacer(
-                        modifier = Modifier
-                            .padding(4.dp)
-                    )
-
-                    Button(
-                        onClick = onClickClose
-                    ) {
-                        Text("Close")
-                    }
+                Button(
+                    onClick = onClickDismiss
+                ) {
+                    Text("Close")
                 }
             }
         }
-    }
-
-    if (showFusions) {
-        DexCharaFusionsDialog(
-            currentChara = currentChara,
-            currentCharaPossibleFusions = currentCharaPossibleFusions,
-            onClickDismiss = {
-                showFusions = false
-            },
-            obscure = obscure
-        )
     }
 }

@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.daos
 import androidx.room.Dao
 import androidx.room.Query
 import com.github.nacabaro.vbhelper.dtos.CardDtos
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CardAdventureDao {
@@ -52,7 +53,7 @@ interface CardAdventureDao {
         WHERE
             cc.cardId = :cardId
     """)
-    suspend fun getAdventureForCard(
+    fun getAdventureForCard(
         cardId: Long
-    ): List<CardDtos.CardAdventureWithSprites>
+    ): Flow<List<CardDtos.CardAdventureWithSprites>>
 }

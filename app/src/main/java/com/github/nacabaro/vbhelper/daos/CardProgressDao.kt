@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import com.github.nacabaro.vbhelper.domain.card.CardProgress
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CardProgressDao {
@@ -21,7 +22,7 @@ interface CardProgressDao {
     @Query(
         "SELECT currentStage FROM CardProgress WHERE cardId = :cardId"
     )
-    fun getCardProgress(cardId: Long): Int
+    fun getCardProgress(cardId: Long): Flow<Int>
 
     @Insert
     fun insertCardProgress(cardProgress: CardProgress)
