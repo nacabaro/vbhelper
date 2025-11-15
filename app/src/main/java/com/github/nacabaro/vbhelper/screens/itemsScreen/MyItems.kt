@@ -9,7 +9,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,11 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.ItemsRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 @Composable
 fun MyItems(
@@ -32,16 +29,11 @@ fun MyItems(
 ) {
     val application = LocalContext.current.applicationContext as VBHelper
     val itemsRepository = ItemsRepository(application.container.db)
-    val myItems = remember { mutableStateOf(emptyList<ItemDtos.ItemsWithQuantities>()) }
+    val myItems by itemsRepository.getUserItems().collectAsState(emptyList())
+
     var selectedElementIndex by remember { mutableStateOf<Int?>(null) }
 
-    LaunchedEffect(itemsRepository) {
-        withContext(Dispatchers.IO) {
-            myItems.value = itemsRepository.getUserItems()
-        }
-    }
-
-    if (myItems.value.isEmpty()) {
+    if (myItems.isEmpty()) {
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -54,14 +46,13 @@ fun MyItems(
             columns = GridCells.Fixed(3),
             modifier = Modifier
         ) {
-            items(myItems.value) { index ->
+            items(myItems) { index ->
                 ItemElement(
-                    itemIcon = getIconResource(index.itemIcon),
-                    lengthIcon = getLengthResource(index.itemLength),
+                    item = index,
                     modifier = Modifier
                         .padding(8.dp),
                     onClick = {
-                        selectedElementIndex = myItems.value.indexOf(index)
+                        selectedElementIndex = myItems.indexOf(index)
                     }
                 )
             }
@@ -69,11 +60,7 @@ fun MyItems(
 
         if (selectedElementIndex != null) {
             ItemDialog(
-                name = myItems.value[selectedElementIndex!!].name,
-                description = myItems.value[selectedElementIndex!!].description,
-                itemIcon = getIconResource(myItems.value[selectedElementIndex!!].itemIcon),
-                lengthIcon = getLengthResource(myItems.value[selectedElementIndex!!].itemLength),
-                amount = myItems.value[selectedElementIndex!!].quantity,
+                item = myItems[selectedElementIndex!!],
                 onClickUse = {
                     navController
                         .navigate(
@@ -81,7 +68,7 @@ fun MyItems(
                                 .ApplyItem.route
                                 .replace(
                                     "{itemId}",
-                                    myItems.value[selectedElementIndex!!].id.toString()
+                                    myItems[selectedElementIndex!!].id.toString()
                                 )
                         )
                     selectedElementIndex = null
