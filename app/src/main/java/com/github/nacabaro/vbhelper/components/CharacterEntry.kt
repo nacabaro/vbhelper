@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +45,9 @@ fun CharacterEntry(
     disabled: Boolean = false,
     shape: Shape = MaterialTheme.shapes.medium,
     multiplier: Int = 4,
+    cardColors: CardColors = CardDefaults.cardColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+    ),
     onClick: () -> Unit = {  }
 ) {
     val bitmap = remember (icon.bitmap) {
@@ -61,7 +65,8 @@ fun CharacterEntry(
         },
         modifier = modifier
             .aspectRatio(1f)
-            .padding(8.dp)
+            .padding(8.dp),
+        colors = cardColors
     ) {
         Box(
             contentAlignment = Alignment.BottomCenter,

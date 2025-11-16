@@ -23,6 +23,7 @@ class HomeScreenControllerImpl(
             val adventureCharacters = database
                 .adventureDao()
                 .getAdventureCharacters()
+                .first()
 
             val finishedAdventureCharacters = adventureCharacters.filter { character ->
                 character.finishesAdventure <= currentTime

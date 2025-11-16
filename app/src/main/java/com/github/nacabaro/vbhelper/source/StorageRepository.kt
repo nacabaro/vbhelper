@@ -47,7 +47,7 @@ class StorageRepository (
         return db.userCharacterDao().deleteCharacterById(id)
     }
 
-    suspend fun getAdventureCharacters(): List<CharacterDtos.AdventureCharacterWithSprites> {
+    fun getAdventureCharacters(): Flow<List<CharacterDtos.AdventureCharacterWithSprites>> {
         return db.adventureDao().getAdventureCharacters()
     }
 

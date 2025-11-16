@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.daos
 import androidx.room.Dao
 import androidx.room.Query
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import kotlinx.coroutines.flow.Flow
 
 
 @Dao
@@ -37,7 +38,7 @@ interface AdventureDao {
         JOIN Adventure a ON uc.id = a.characterId
     """
     )
-    suspend fun getAdventureCharacters(): List<CharacterDtos.AdventureCharacterWithSprites>
+    fun getAdventureCharacters(): Flow<List<CharacterDtos.AdventureCharacterWithSprites>>
 
     @Query("""
         DELETE FROM Adventure

@@ -31,7 +31,8 @@ object CharacterDtos {
         val nameSpriteWidth: Int,
         val nameSpriteHeight: Int,
         val isBemCard: Boolean,
-        val isInAdventure: Boolean
+        val isInAdventure: Boolean,
+        val active: Boolean
     )
 
     data class CardCharacterInfo(

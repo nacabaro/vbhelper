@@ -10,6 +10,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -37,13 +38,11 @@ fun AdventureScreen(
     navController: NavController,
     storageScreenController: AdventureScreenControllerImpl
 ) {
-    val coroutineScope = rememberCoroutineScope()
     val application = LocalContext.current.applicationContext as VBHelper
     val database = application.container.db
     val storageRepository = StorageRepository(database)
-    val characterList = remember {
-        mutableStateOf<List<CharacterDtos.AdventureCharacterWithSprites>>(emptyList())
-    }
+    val characterList by storageRepository.getAdventureCharacters().collectAsState(emptyList())
+
     var obtainedItem by remember {
         mutableStateOf<ItemDtos.PurchasedItem?>(null)
     }
@@ -59,13 +58,6 @@ fun AdventureScreen(
         mutableStateOf<CharacterDtos.AdventureCharacterWithSprites?>(null)
     }
 
-    LaunchedEffect(storageRepository) {
-        coroutineScope.launch {
-            characterList.value = storageRepository
-                .getAdventureCharacters()
-        }
-    }
-
     Scaffold(
         topBar = {
             TopBanner(
@@ -76,7 +68,7 @@ fun AdventureScreen(
             )
         }
     ) { contentPadding ->
-        if (characterList.value.isEmpty()) {
+        if (characterList.isEmpty()) {
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -91,7 +83,7 @@ fun AdventureScreen(
                 modifier = Modifier
                     .padding(top = contentPadding.calculateTopPadding())
             ) {
-                items(characterList.value) {
+                items(characterList) {
                     AdventureEntry(
                         icon = BitmapData(
                             bitmap = it.spriteIdle,

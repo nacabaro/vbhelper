@@ -69,7 +69,8 @@ interface UserCharacterDao {
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
             d.isBEm as isBemCard,
-            a.characterId = uc.id as isInAdventure
+            a.characterId = uc.id as isInAdventure,
+            uc.isActive as active
         FROM UserCharacter uc
         JOIN CardCharacter c ON uc.charId = c.id
         JOIN Card d ON  d.id = c.cardId
@@ -93,7 +94,8 @@ interface UserCharacterDao {
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
             d.isBEm as isBemCard,
-            a.characterId = uc.id as isInAdventure
+            a.characterId = uc.id as isInAdventure,
+            uc.isActive as active
         FROM UserCharacter uc
         JOIN CardCharacter c ON uc.charId = c.id
         JOIN Card d ON c.cardId = d.id
@@ -130,7 +132,8 @@ interface UserCharacterDao {
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
             d.isBEm as isBemCard,
-            a.characterId as isInAdventure            
+            a.characterId as isInAdventure,
+            uc.isActive as active
         FROM UserCharacter uc
         JOIN CardCharacter c ON uc.charId = c.id
         JOIN Card d ON c.cardId = d.id
@@ -194,7 +197,8 @@ interface UserCharacterDao {
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
             d.isBEm as isBemCard,
-            a.characterId = uc.id as isInAdventure
+            a.characterId = uc.id as isInAdventure,
+            uc.isActive as active
         FROM UserCharacter uc
         JOIN CardCharacter c ON uc.charId = c.id
         JOIN Card d ON  d.id = c.cardId
@@ -219,7 +223,8 @@ interface UserCharacterDao {
             c.nameWidth as nameSpriteWidth,
             c.nameHeight as nameSpriteHeight,
             d.isBEm as isBemCard,
-            a.characterId = uc.id as isInAdventure
+            a.characterId = uc.id as isInAdventure,
+            uc.isActive as active
         FROM UserCharacter uc
         JOIN CardCharacter c ON uc.charId = c.id
         JOIN Card d ON  d.id = c.cardId

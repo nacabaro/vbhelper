@@ -1,5 +1,7 @@
 package com.github.nacabaro.vbhelper.screens.settingsScreen
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +15,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,6 +28,8 @@ fun SettingsScreen(
     navController: NavController,
     settingsScreenController: SettingsScreenControllerImpl,
 ) {
+    val context = LocalContext.current
+
     Scaffold (
         topBar = {
             TopBanner(
@@ -44,19 +49,22 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             SettingsSection("NFC Communication")
-            SettingsEntry(title = "Import APK", description = "Import Secrets From Vital Arean 2.1.0 APK") {
+            SettingsEntry(title = "Import APK", description = "Import Secrets From Vital Arena 2.1.0 APK") {
                 settingsScreenController.onClickImportApk()
             }
             SettingsSection("DiM/BEm management")
             SettingsEntry(title = "Import card", description = "Import DiM/BEm card file") {
                 settingsScreenController.onClickImportCard()
             }
-            SettingsEntry(title = "Rename DiM/BEm", description = "Set card name") { }
             SettingsSection("About and credits")
             SettingsEntry(title = "Credits", description = "Credits") {
                 navController.navigate(NavigationItems.Credits.route)
             }
-            SettingsEntry(title = "About", description = "About") { }
+            SettingsEntry(title = "About", description = "About") {
+                val browserIntent = Intent(
+                    Intent.ACTION_VIEW, Uri.parse("https://github.com/nacabaro/vbhelper/"))
+                context.startActivity(browserIntent)
+            }
             SettingsSection("Data management")
             SettingsEntry(title = "Export data", description = "Export application database") {
                 settingsScreenController.onClickOpenDirectory()
