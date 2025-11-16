@@ -6,11 +6,12 @@ import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
+import kotlinx.coroutines.flow.Flow
 
 class StorageRepository (
     private val db: AppDatabase
 ) {
-    suspend fun getAllCharacters(): List<CharacterDtos.CharacterWithSprites> {
+    fun getAllCharacters(): Flow<List<CharacterDtos.CharacterWithSprites>> {
         return db.userCharacterDao().getAllCharacters()
     }
 

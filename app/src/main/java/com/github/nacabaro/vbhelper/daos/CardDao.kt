@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.github.nacabaro.vbhelper.domain.card.Card
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CardDao {
@@ -26,7 +27,7 @@ interface CardDao {
         WHERE uc.id = :id
     """
     )
-    suspend fun getCardByCharacterId(id: Long): Card
+    fun getCardByCharacterId(id: Long): Flow<Card>
 
     @Query("UPDATE Card SET name = :newName WHERE id = :id")
     suspend fun renameCard(id: Int, newName: String)

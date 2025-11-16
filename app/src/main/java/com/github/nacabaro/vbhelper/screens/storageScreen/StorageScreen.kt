@@ -1,5 +1,6 @@
 package com.github.nacabaro.vbhelper.screens.storageScreen
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -14,11 +15,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,12 +28,10 @@ import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
-import kotlinx.coroutines.launch
 
 
 @Composable
@@ -42,18 +40,11 @@ fun StorageScreen(
     storageScreenController: StorageScreenControllerImpl,
     adventureScreenController: AdventureScreenControllerImpl
 ) {
-    val coroutineScope = rememberCoroutineScope()
     val application = LocalContext.current.applicationContext as VBHelper
     val storageRepository = StorageRepository(application.container.db)
-    val monList = remember { mutableStateOf<List<CharacterDtos.CharacterWithSprites>>(emptyList()) }
-    var selectedCharacter by remember { mutableStateOf<Long?>(null) }
+    val characterList by storageRepository.getAllCharacters().collectAsState(initial = emptyList())
 
-    LaunchedEffect(storageRepository, selectedCharacter) {
-        coroutineScope.launch {
-            val characterList = storageRepository.getAllCharacters()
-            monList.value = characterList
-        }
-    }
+    var selectedCharacter by remember { mutableStateOf<Long?>(null) }
 
     Scaffold (
         topBar = {
@@ -65,7 +56,7 @@ fun StorageScreen(
             )
         }
     ) { contentPadding ->
-        if (monList.value.isEmpty()) {
+        if (characterList.isEmpty()) {
             Column (
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -86,7 +77,7 @@ fun StorageScreen(
                     .scrollable(state = rememberScrollState(), orientation = Orientation.Vertical)
                     .padding(top = contentPadding.calculateTopPadding())
             ) {
-                items(monList.value) { index ->
+                items(characterList) { index ->
                     CharacterEntry(
                         icon = BitmapData(
                             bitmap = index.spriteIdle,
@@ -136,6 +127,16 @@ fun StorageScreen(
                         .sendCharacterToAdventure(
                             characterId = selectedCharacter!!,
                             timeInMinutes = time
+                        )
+                    selectedCharacter = null
+                },
+                onClickDelete = {
+                    storageScreenController
+                        .deleteCharacter(
+                            characterId = selectedCharacter!!,
+                            onCompletion = {
+                                Log.d("StorageScreen", "Character deleted")
+                            }
                         )
                     selectedCharacter = null
                 }
