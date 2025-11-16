@@ -1,38 +1,24 @@
 package com.github.nacabaro.vbhelper.screens.scanScreen
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.ActivityLifecycleListener
-import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.card.Card
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
-import com.github.nacabaro.vbhelper.screens.cardScreen.ChooseCard
+import com.github.nacabaro.vbhelper.screens.scanScreen.screens.ReadingScreen
+import com.github.nacabaro.vbhelper.screens.scanScreen.screens.WritingScreen
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.source.isMissingSecrets
 import com.github.nacabaro.vbhelper.source.proto.Secrets
@@ -55,8 +41,6 @@ fun ScanScreen(
     val storageRepository = StorageRepository(application.container.db)
     var nfcCharacter by remember { mutableStateOf<NfcCharacter?>(null) }
 
-    var cardsRead by remember { mutableStateOf<List<Card>?>(null) }
-
     val context = LocalContext.current
 
     LaunchedEffect(storageRepository) {
@@ -73,143 +57,33 @@ fun ScanScreen(
         }
     }
 
-    var readingScreen by remember { mutableStateOf(false) }
     var writingScreen by remember { mutableStateOf(false) }
-    var cardSelectScreen by remember { mutableStateOf(false) }
-    var isDoneReadingCharacter by remember { mutableStateOf(false) }
-    var isDoneSendingCard by remember { mutableStateOf(false) }
-    var isDoneWritingCharacter by remember { mutableStateOf(false) }
+    var readingScreen by remember { mutableStateOf(false) }
 
-    DisposableEffect(readingScreen) {
-        if(readingScreen) {
-            scanScreenController.registerActivityLifecycleListener(
-                SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER,
-                object: ActivityLifecycleListener {
-                    override fun onPause() {
-                        scanScreenController.cancelRead()
-                    }
-
-                    override fun onResume() {
-                        scanScreenController.onClickRead(
-                            secrets = secrets!!,
-                            onComplete = {
-                                isDoneReadingCharacter = true
-                            },
-                            onMultipleCards = { cards ->
-                                cardsRead = cards
-                                readingScreen = false
-                                cardSelectScreen = true
-                                isDoneReadingCharacter = true
-                            }
-                        )
-                    }
-                }
-            )
-            scanScreenController.onClickRead(
-                secrets = secrets!!,
-                onComplete = {
-                    isDoneReadingCharacter = true
-                },
-                onMultipleCards = { cards ->
-                    cardsRead = cards
-                    readingScreen = false
-                    cardSelectScreen = true
-                    isDoneReadingCharacter = true
-                }
-            )
-        }
-        onDispose {
-            if(readingScreen) {
-                scanScreenController.unregisterActivityLifecycleListener(
-                    SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER
-                )
-                scanScreenController.cancelRead()
-            }
-        }
-    }
-
-    DisposableEffect(writingScreen, isDoneSendingCard) {
-        if (writingScreen) {
-            scanScreenController.registerActivityLifecycleListener(
-                SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER,
-                object : ActivityLifecycleListener {
-                    override fun onPause() {
-                        scanScreenController.cancelRead()
-                    }
-
-                    override fun onResume() {
-                        if (!isDoneSendingCard) {
-                            scanScreenController.onClickCheckCard(secrets!!, nfcCharacter!!) {
-                                isDoneSendingCard = true
-                            }
-                        } else if (!isDoneWritingCharacter) {
-                            scanScreenController.onClickWrite(secrets!!, nfcCharacter!!) {
-                                isDoneWritingCharacter = true
-                            }
-                        }
-                    }
-                }
-            )
-        }
-
-        if (secrets != null && nfcCharacter != null) {
-            if (!isDoneSendingCard) {
-                scanScreenController.onClickCheckCard(secrets!!, nfcCharacter!!) {
-                    isDoneSendingCard = true
-                }
-            } else if (!isDoneWritingCharacter) {
-                scanScreenController.onClickWrite(secrets!!, nfcCharacter!!) {
-                    isDoneWritingCharacter = true
-                }
-            }
-        }
-
-        onDispose {
-            if(writingScreen) {
-                scanScreenController.unregisterActivityLifecycleListener(SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER)
-                scanScreenController.cancelRead()
-            }
-        }
-    }
-
-    if (isDoneReadingCharacter && !cardSelectScreen) {
-        readingScreen = false
-        navController.navigate(NavigationItems.Home.route)
-    } else if (isDoneSendingCard && isDoneWritingCharacter) {
-        writingScreen = false
-        navController.navigate(NavigationItems.Home.route)
-        LaunchedEffect(storageRepository) {
-            withContext(Dispatchers.IO) {
-                storageRepository
-                    .deleteCharacter(characterId!!)
-            }
-        }
-    }
-
-    if (readingScreen) {
-        ReadingCharacterScreen("Reading character") {
-            readingScreen = false
-            scanScreenController.cancelRead()
-        }
-    } else if (writingScreen) {
-        if (!isDoneSendingCard) {
-            ReadingCharacterScreen("Sending card") {
+    if (writingScreen && nfcCharacter != null && characterId != null) {
+        WritingScreen(
+            scanScreenController = scanScreenController,
+            nfcCharacter = nfcCharacter!!,
+            characterId = characterId,
+            onComplete = {
                 writingScreen = false
-                scanScreenController.cancelRead()
-            }
-        } else if (!isDoneWritingCharacter) {
-            ReadingCharacterScreen("Writing character") {
-                isDoneSendingCard = false
+                navController.navigate(NavigationItems.Home.route)
+            },
+            onCancel = {
                 writingScreen = false
-                scanScreenController.cancelRead()
+                navController.navigate(NavigationItems.Home.route)
             }
-        }
-    } else if (cardSelectScreen) {
-        ChooseCard(
-            cards = cardsRead!!,
-            onCardSelected = { card ->
-                cardSelectScreen = false
-                scanScreenController.flushCharacter(card.id)
+        )
+    } else if (readingScreen) {
+        ReadingScreen(
+            scanScreenController = scanScreenController,
+            onCancel = {
+                readingScreen = false
+                navController.navigate(NavigationItems.Home.route)
+            },
+            onComplete = {
+                readingScreen = false
+                navController.navigate(NavigationItems.Home.route)
             }
         )
     } else {
@@ -247,65 +121,7 @@ fun ScanScreen(
     }
 }
 
-@Composable
-fun ChooseConnectOption(
-    onClickRead: (() -> Unit)? = null,
-    onClickWrite: (() -> Unit)? = null,
-    navController: NavController
-) {
-    Scaffold(
-        topBar = {
-            TopBanner(
-                text = "Scan a Vital Bracelet",
-                onBackClick = {
-                    navController.popBackStack()
-                }
-            )
-        }
-    ) { contentPadding ->
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-        ) {
-            ScanButton(
-                text = "Vital Bracelet to App",
-                disabled = onClickRead == null,
-                onClick = onClickRead?: {  },
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            ScanButton(
-                text = "App to Vital Bracelet",
-                disabled = onClickWrite == null,
-                onClick = onClickWrite?: {  },
-            )
-        }
-    }
-}
 
-
-@Composable
-fun ScanButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    disabled: Boolean = false,
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier,
-        enabled = !disabled,
-    ) {
-        Text(
-            text = text,
-            fontSize = 16.sp,
-            modifier = Modifier
-                .padding(4.dp)
-        )
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

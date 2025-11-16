@@ -13,6 +13,7 @@ import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserCharacterDao {
@@ -76,7 +77,7 @@ interface UserCharacterDao {
         LEFT JOIN Adventure a ON a.characterId = uc.id
         """
     )
-    suspend fun getAllCharacters(): List<CharacterDtos.CharacterWithSprites>
+    fun getAllCharacters(): Flow<List<CharacterDtos.CharacterWithSprites>>
 
     @Query(
         """

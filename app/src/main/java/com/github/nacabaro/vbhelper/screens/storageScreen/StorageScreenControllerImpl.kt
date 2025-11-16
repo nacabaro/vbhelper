@@ -28,4 +28,21 @@ class StorageScreenControllerImpl(
             }
         }
     }
+
+    override fun deleteCharacter(characterId: Long, onCompletion: () -> Unit) {
+        componentActivity.lifecycleScope.launch(Dispatchers.IO) {
+            database
+                .userCharacterDao()
+                .deleteCharacterById(characterId)
+
+            componentActivity.runOnUiThread {
+                Toast.makeText(
+                    componentActivity,
+                    "Character deleted!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                onCompletion()
+            }
+        }
+    }
 }

@@ -24,6 +24,7 @@ import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 
@@ -35,7 +36,7 @@ fun ChooseCharacterScreen(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val application = LocalContext.current.applicationContext as VBHelper
-    val storageRepository = StorageRepository(application.container.db)
+    val storageRepository = StorageRepository(application.container.db, )
     val characterList = remember {
         mutableStateOf<List<CharacterDtos.CharacterWithSprites>>(emptyList())
     }
@@ -57,7 +58,7 @@ fun ChooseCharacterScreen(
                     characterList.value = storageRepository.getVBCharacters()
                 }
                 else -> {
-                    characterList.value = storageRepository.getAllCharacters()
+                    characterList.value = storageRepository.getAllCharacters().first()
                 }
             }
         }

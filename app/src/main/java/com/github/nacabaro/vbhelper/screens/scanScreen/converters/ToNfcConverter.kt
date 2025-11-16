@@ -14,6 +14,7 @@ import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.utils.DeviceType
+import kotlinx.coroutines.flow.first
 import java.util.Date
 
 class ToNfcConverter(
@@ -96,6 +97,7 @@ class ToNfcConverter(
         val cardData = database
             .cardDao()
             .getCardByCharacterId(userCharacter.id)
+            .first()
 
         val appReserved = Array<UShort>(3) {
             0u

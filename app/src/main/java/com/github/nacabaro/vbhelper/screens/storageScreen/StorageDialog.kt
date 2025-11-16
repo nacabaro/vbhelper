@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 fun StorageDialog(
     characterId: Long,
     onDismissRequest: () -> Unit,
+    onClickDelete: () -> Unit,
     onSendToBracelet: () -> Unit,
     onClickSetActive: () -> Unit,
     onClickSendToAdventure: (time: Long) -> Unit
@@ -140,6 +141,13 @@ fun StorageDialog(
                         .fillMaxWidth()
                 ) {
                     Text(text = "Send on adventure")
+                }
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    onClick = onClickDelete
+                ) {
+                    Text(text = "Delete character")
                 }
                 Button(
                     modifier = Modifier
