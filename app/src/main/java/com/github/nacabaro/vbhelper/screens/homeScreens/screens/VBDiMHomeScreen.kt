@@ -34,7 +34,7 @@ fun VBDiMHomeScreen(
     homeScreenController: HomeScreenControllerImpl,
     transformationHistory: List<CharacterDtos.TransformationHistory>,
     contentPadding: PaddingValues,
-    onClickCollect: (ItemDtos.PurchasedItem?) -> Unit
+    onClickCollect: (ItemDtos.PurchasedItem?, Int?) -> Unit
 ) {
     Column(
         modifier = Modifier

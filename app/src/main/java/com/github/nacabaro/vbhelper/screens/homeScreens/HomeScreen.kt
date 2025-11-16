@@ -55,6 +55,7 @@ fun HomeScreen(
     var adventureMissionsFinished by rememberSaveable { mutableStateOf(false) }
     var betaWarning by rememberSaveable { mutableStateOf(true) }
     var collectedItem by remember { mutableStateOf<ItemDtos.PurchasedItem?>(null) }
+    var collectedCurrency by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(storageRepository, activeMon, collectedItem) {
         withContext(Dispatchers.IO) {
@@ -123,8 +124,9 @@ fun HomeScreen(
                     contentPadding = contentPadding,
                     specialMissions = vbSpecialMissions.value,
                     homeScreenController = homeScreenController,
-                    onClickCollect = { item ->
+                    onClickCollect = { item, currency ->
                         collectedItem = item
+                        collectedCurrency = currency
                     }
                 )
             }
@@ -134,8 +136,10 @@ fun HomeScreen(
     if (collectedItem != null) {
         ObtainedItemDialog(
             obtainedItem = collectedItem!!,
+            obtainedCurrency = collectedCurrency!!,
             onClickDismiss = {
                 collectedItem = null
+                collectedCurrency = null
             }
         )
     }

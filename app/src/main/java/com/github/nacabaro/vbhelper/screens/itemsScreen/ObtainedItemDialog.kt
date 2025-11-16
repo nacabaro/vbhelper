@@ -23,6 +23,7 @@ import com.github.nacabaro.vbhelper.dtos.ItemDtos
 @Composable
 fun ObtainedItemDialog(
     obtainedItem: ItemDtos.PurchasedItem,
+    obtainedCurrency: Int,
     onClickDismiss: () -> Unit
 ) {
     Dialog(
@@ -84,7 +85,16 @@ fun ObtainedItemDialog(
                         text = "You have obtained ${obtainedItem.itemAmount} of this item",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(5.dp)
+                            .padding(top = 4.dp)
+                    )
+                    Text(
+                        textAlign = TextAlign.Center,
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                        fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
+                        text = "You also got $obtainedCurrency credits",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp)
                     )
                     Button(
                         onClick = onClickDismiss,

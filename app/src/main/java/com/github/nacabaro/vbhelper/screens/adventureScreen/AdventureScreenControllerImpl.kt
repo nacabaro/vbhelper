@@ -38,17 +38,27 @@ class AdventureScreenControllerImpl(
 
     override fun getItemFromAdventure(
         characterId: Long,
-        onResult: (ItemDtos.PurchasedItem) -> Unit
+        onResult: (ItemDtos.PurchasedItem, Int) -> Unit
     ) {
         componentActivity.lifecycleScope.launch(Dispatchers.IO) {
             database
                 .adventureDao()
                 .deleteAdventure(characterId)
 
+            val generatedCurrency = generateRandomCurrency()
+
             val generatedItem = generateItem(characterId)
 
-            onResult(generatedItem)
+            onResult(generatedItem, generatedCurrency)
         }
+    }
+
+    private suspend fun generateRandomCurrency(): Int {
+        val currentValue = application.container.currencyRepository.currencyValue.first()
+        val random = (2..6).random() * 1000
+        application.container.currencyRepository.setCurrencyValue(currentValue + random)
+
+        return random
     }
 
     override fun cancelAdventure(characterId: Long, onResult: () -> Unit) {

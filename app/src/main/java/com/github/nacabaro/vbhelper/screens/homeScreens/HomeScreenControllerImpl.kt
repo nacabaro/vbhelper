@@ -33,7 +33,7 @@ class HomeScreenControllerImpl(
         }
     }
 
-    override fun clearSpecialMission(missionId: Long, missionCompletion: SpecialMission.Status, onCleared: (ItemDtos.PurchasedItem?) -> Unit) {
+    override fun clearSpecialMission(missionId: Long, missionCompletion: SpecialMission.Status, onCleared: (ItemDtos.PurchasedItem?, Int?) -> Unit) {
         componentActivity.lifecycleScope.launch {
             database
                 .specialMissionDao()
@@ -65,9 +65,13 @@ class HomeScreenControllerImpl(
                     itemType = randomItem.itemType
                 )
 
-                onCleared(purchasedItem)
+                val randomAmount = (2..6).random() * 1000
+                val currentCurrency = application.container.currencyRepository.currencyValue.first()
+                application.container.currencyRepository.setCurrencyValue(currentCurrency + randomAmount)
+
+                onCleared(purchasedItem, randomAmount)
             } else {
-                onCleared(null)
+                onCleared(null, null)
             }
 
         }

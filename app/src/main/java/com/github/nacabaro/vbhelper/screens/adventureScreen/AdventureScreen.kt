@@ -9,13 +9,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,7 +28,6 @@ import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.time.Instant
 
 @Composable
@@ -45,6 +42,9 @@ fun AdventureScreen(
 
     var obtainedItem by remember {
         mutableStateOf<ItemDtos.PurchasedItem?>(null)
+    }
+    var obtainedCurrency by remember {
+        mutableStateOf(0)
     }
 
     val currentTime by produceState(initialValue = Instant.now().epochSecond) {
@@ -94,8 +94,9 @@ fun AdventureScreen(
                         onClick = {
                             if (it.finishesAdventure < currentTime) {
                                 storageScreenController
-                                    .getItemFromAdventure(it.id) { adventureResult ->
+                                    .getItemFromAdventure(it.id) { adventureResult, generatedCurrency ->
                                         obtainedItem = adventureResult
+                                        obtainedCurrency = generatedCurrency
                                     }
                             } else {
                                 cancelAdventureDialog = it
@@ -110,6 +111,7 @@ fun AdventureScreen(
     if (obtainedItem != null) {
         ObtainedItemDialog(
             obtainedItem = obtainedItem!!,
+            obtainedCurrency = obtainedCurrency,
             onClickDismiss = {
                 obtainedItem = null
             }
