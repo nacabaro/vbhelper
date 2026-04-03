@@ -26,7 +26,7 @@ App also comes with a dex that will update every time a new character is added, 
 
     2. Once the files are extracted, look for an APK called `com.bandai.vitalbraceletarena.apk`. Copy it somewhere else, you will need it.
 
-2. Install an APK release for VB Arena. You will find the releases [here](http://github.com/nacabaro/vbhelper/releases). Download the latest release and install its APK.
+2. Install an APK release for VB Helper. You will find the releases [here](http://github.com/nacabaro/vbhelper/releases). Download the latest release and install its APK.
 
     Note, in the current stage of the project, you will have to delete the old application from your device. If the app keeps crashing after installing, clear application data and storage.
 
