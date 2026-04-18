@@ -52,6 +52,13 @@ object CharacterDtos {
         val transformationDate: Long
     )
 
+    data class TransformationHistoryExport(
+        val stageId: Long,
+        val monIndex: Int,
+        val cardName: String,
+        val transformationDate: Long
+    )
+
     data class CardCharaProgress(
         val id: Long,
         val spriteIdle: ByteArray,

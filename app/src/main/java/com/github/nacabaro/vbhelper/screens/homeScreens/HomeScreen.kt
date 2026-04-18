@@ -2,6 +2,7 @@ package com.github.nacabaro.vbhelper.screens.homeScreens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -40,6 +41,8 @@ import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.dtos.CardDtos
 import com.github.nacabaro.vbhelper.source.CardRepository
+import com.github.nacabaro.vbhelper.source.VitalWearCharacterExporter
+import android.widget.Toast
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import kotlinx.coroutines.flow.flowOf
 import kotlin.collections.emptyList
@@ -136,42 +139,66 @@ fun HomeScreen(
                 Text(text = stringResource(R.string.adventure_empty_state))
             }
         } else {
-            val cardIcon = BitmapData(
-                bitmap = cardIconData!!.cardIcon,
-                width = cardIconData!!.cardIconWidth,
-                height = cardIconData!!.cardIconHeight
-            )
+            Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
+                val cardIcon = BitmapData(
+                    bitmap = cardIconData!!.cardIcon,
+                    width = cardIconData!!.cardIconWidth,
+                    height = cardIconData!!.cardIconHeight
+                )
 
-            if (activeMon!!.isBemCard && beData != null) {
-                BEBEmHomeScreen(
-                    activeMon = activeMon!!,
-                    beData = beData!!,
-                    transformationHistory = transformationHistory,
-                    contentPadding = contentPadding,
-                    cardIcon = cardIcon
-                )
-            } else if (!activeMon!!.isBemCard && activeMon!!.characterType == DeviceType.BEDevice && beData != null) {
-                BEDiMHomeScreen(
-                    activeMon = activeMon!!,
-                    beData = beData!!,
-                    transformationHistory = transformationHistory,
-                    contentPadding = contentPadding,
-                    cardIcon = cardIcon
-                )
-            } else if (vbData != null) {
-                VBDiMHomeScreen(
-                    activeMon = activeMon!!,
-                    vbData = vbData!!,
-                    transformationHistory = transformationHistory,
-                    contentPadding = contentPadding,
-                    specialMissions = vbSpecialMissions,
-                    homeScreenController = homeScreenController,
-                    onClickCollect = { item, currency ->
-                        collectedItem = item
-                        collectedCurrency = currency
+                if (activeMon!!.isBemCard && beData != null) {
+                    BEBEmHomeScreen(
+                        activeMon = activeMon!!,
+                        beData = beData!!,
+                        transformationHistory = transformationHistory,
+                        contentPadding = PaddingValues(0.dp),
+                        cardIcon = cardIcon
+                    )
+                } else if (!activeMon!!.isBemCard && activeMon!!.characterType == DeviceType.BEDevice && beData != null) {
+                    BEDiMHomeScreen(
+                        activeMon = activeMon!!,
+                        beData = beData!!,
+                        transformationHistory = transformationHistory,
+                        contentPadding = PaddingValues(0.dp),
+                        cardIcon = cardIcon
+                    )
+                } else if (vbData != null) {
+                    VBDiMHomeScreen(
+                        activeMon = activeMon!!,
+                        vbData = vbData!!,
+                        transformationHistory = transformationHistory,
+                        contentPadding = PaddingValues(0.dp),
+                        specialMissions = vbSpecialMissions,
+                        homeScreenController = homeScreenController,
+                        onClickCollect = { item, currency ->
+                            collectedItem = item
+                            collectedCurrency = currency
+                        },
+                        cardIcon = cardIcon
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        try {
+                            val intent = VitalWearCharacterExporter(application, application.container.db)
+                                .buildShareIntent(activeMon!!.id)
+                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            application.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(
+                                application,
+                                "Could not send character to VitalWear: ${e.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     },
-                    cardIcon = cardIcon
-                )
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(text = "Send to VitalWear")
+                }
             }
         }
     }
@@ -221,5 +248,3 @@ fun HomeScreen(
         }
     }
 }
-
-

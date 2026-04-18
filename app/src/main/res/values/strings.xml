@@ -48,8 +48,8 @@
     </string>
 
     <string name="scan_title">Scan a Vital Bracelet</string>
-    <string name="scan_vb_to_app">Vital Bracelet to App</string>
-    <string name="scan_app_to_vb">App to Vital Bracelet</string>
+    <string name="scan_vb_to_app">Vital Bracelet to App (Receive Digimon from Bandai Toys: Vital Bracelet, Vital Hero, BE Bracelet)</string>
+    <string name="scan_app_to_vb">App to Vital Bracelet (Send Digimon from VBHelper to Bandai Toys: Vital Bracelet, Vital Hero, BE Bracelet)</string>
 
     <string name="scan_no_nfc_on_device">No NFC on device!</string>
     <string name="scan_tag_not_vb">Tag detected is not VB</string>
@@ -199,6 +199,7 @@
 
     <string name="storage_character_image_description">Character image</string>
     <string name="storage_send_to_watch">Send to watch</string>
+    <string name="storage_send_to_vitalwear">Send to VitalWear</string>
     <string name="storage_set_active">Set active</string>
     <string name="storage_send_on_adventure">Send on adventure</string>
     <string name="storage_delete_character">Delete character</string>

@@ -33,6 +33,7 @@ import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
 import com.github.nacabaro.vbhelper.source.StorageRepository
+import com.github.nacabaro.vbhelper.source.VitalWearCharacterExporter
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import androidx.compose.ui.res.stringResource
 import com.github.nacabaro.vbhelper.R
@@ -135,6 +136,21 @@ fun StorageScreen(
                             selectedCharacter.toString()
                         )
                     )
+                },
+                onSendToVitalWear = {
+                    try {
+                        val intent = VitalWearCharacterExporter(application, application.container.db)
+                            .buildShareIntent(selectedCharacter!!)
+                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        application.startActivity(intent)
+                        selectedCharacter = null
+                    } catch (e: Exception) {
+                        Toast.makeText(
+                            application,
+                            "Could not send character to VitalWear: ${e.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 },
                 onClickSendToAdventure = { time ->
                     adventureScreenController

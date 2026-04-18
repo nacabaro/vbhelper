@@ -43,6 +43,7 @@ fun StorageDialog(
     onDismissRequest: () -> Unit,
     onClickDelete: () -> Unit,
     onSendToBracelet: () -> Unit,
+    onSendToVitalWear: () -> Unit,
     onClickSetActive: () -> Unit,
     onClickSendToAdventure: (time: Long) -> Unit
 ) {
@@ -135,6 +136,13 @@ fun StorageDialog(
                     ) {
                         Text(text = stringResource(R.string.storage_set_active))
                     }
+                }
+                Button(
+                    onClick = onSendToVitalWear,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Text(text = stringResource(R.string.storage_send_to_vitalwear))
                 }
                 Button(
                     onClick = {

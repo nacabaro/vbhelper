@@ -1,11 +1,16 @@
 package com.github.nacabaro.vbhelper
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.lifecycleScope
+import com.github.cfogrady.vitalwear.protos.Character
 import com.github.nacabaro.vbhelper.navigation.AppNavigation
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.navigation.AppNavigationHandlers
@@ -17,7 +22,10 @@ import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenContr
 import com.github.nacabaro.vbhelper.screens.cardScreen.CardScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
+import com.github.nacabaro.vbhelper.source.VitalWearCharacterImporter
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -70,6 +78,7 @@ class MainActivity : ComponentActivity() {
         }
 
         Log.i("MainActivity", "Activity onCreated")
+        handleImportIntent(intent)
     }
 
     override fun onPause() {
@@ -85,6 +94,58 @@ class MainActivity : ComponentActivity() {
         Log.i("MainActivity", "Resume")
         for(activityListener in onActivityLifecycleListeners) {
             activityListener.value.onResume()
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleImportIntent(intent)
+    }
+
+    private fun handleImportIntent(intent: Intent?) {
+        val importUri = extractVitalWearImportUri(intent) ?: return
+        val application = applicationContext as VBHelper
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val result = runCatching {
+                contentResolver.openInputStream(importUri)?.use { inputStream ->
+                    val character = Character.parseFrom(inputStream)
+                    VitalWearCharacterImporter(application.container.db).importCharacter(character)
+                } ?: VitalWearCharacterImporter.ImportResult(
+                    success = false,
+                    message = "VitalWear import file could not be opened."
+                )
+            }.getOrElse {
+                VitalWearCharacterImporter.ImportResult(
+                    success = false,
+                    message = "VitalWear import failed: ${it.message ?: "Unknown error"}"
+                )
+            }
+
+            runOnUiThread {
+                Toast.makeText(this@MainActivity, result.message, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun extractVitalWearImportUri(intent: Intent?): Uri? {
+        if (intent == null) {
+            return null
+        }
+
+        val isVitalWearImport = intent.type == VITALWEAR_CHARACTER_MIME
+        if (!isVitalWearImport) {
+            return null
+        }
+
+        return when (intent.action) {
+            Intent.ACTION_SEND -> {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_STREAM)
+            }
+            Intent.ACTION_VIEW -> intent.data
+            else -> null
         }
     }
 
@@ -111,5 +172,9 @@ class MainActivity : ComponentActivity() {
                 cardScreenController
             )
         )
+    }
+
+    companion object {
+        private const val VITALWEAR_CHARACTER_MIME = "application/x-vitalwear-character"
     }
 }
