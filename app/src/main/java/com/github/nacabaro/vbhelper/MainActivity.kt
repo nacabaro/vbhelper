@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val onActivityLifecycleListeners = HashMap<String, ActivityLifecycleListener>()
+    private var initialRoute: String? = null
 
     private fun registerActivityLifecycleListener(key: String, activityLifecycleListener: ActivityLifecycleListener) {
         if( onActivityLifecycleListeners[key] != null) {
@@ -62,6 +63,8 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
+        initialRoute = getInitialRouteFromIntent(intent)
+
         setContent {
             VBHelperTheme {
                 MainApplication(
@@ -72,7 +75,8 @@ class MainActivity : ComponentActivity() {
                     homeScreenController = homeScreenController,
                     storageScreenController = storageScreenController,
                     spriteViewerController = spriteViewerController,
-                    cardScreenController = cardScreenController
+                    cardScreenController = cardScreenController,
+                    initialRoute = initialRoute
                 )
             }
         }
@@ -100,6 +104,8 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        initialRoute = getInitialRouteFromIntent(intent)
+        // Optionally, you may want to trigger navigation here if needed
         handleImportIntent(intent)
     }
 
@@ -149,6 +155,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun getInitialRouteFromIntent(intent: Intent?): String? {
+        if (intent == null) return null
+        val data = intent.data
+        if (intent.action == Intent.ACTION_VIEW && data != null) {
+            if (data.scheme == "vbhelper" && data.host == "auth") {
+                return "Battle"
+            }
+        }
+        return null
+    }
+
     @Composable
     private fun MainApplication(
         scanScreenController: ScanScreenControllerImpl,
@@ -158,7 +175,8 @@ class MainActivity : ComponentActivity() {
         storageScreenController: StorageScreenControllerImpl,
         homeScreenController: HomeScreenControllerImpl,
         spriteViewerController: SpriteViewerControllerImpl,
-        cardScreenController: CardScreenControllerImpl
+        cardScreenController: CardScreenControllerImpl,
+        initialRoute: String? = null
     ) {
         AppNavigation(
             applicationNavigationHandlers = AppNavigationHandlers(
@@ -170,7 +188,8 @@ class MainActivity : ComponentActivity() {
                 homeScreenController,
                 spriteViewerController,
                 cardScreenController
-            )
+            ),
+            initialRoute = initialRoute
         )
     }
 

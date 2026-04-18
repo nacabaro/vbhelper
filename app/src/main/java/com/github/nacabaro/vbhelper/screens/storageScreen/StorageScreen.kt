@@ -137,21 +137,6 @@ fun StorageScreen(
                         )
                     )
                 },
-                onSendToVitalWear = {
-                    try {
-                        val intent = VitalWearCharacterExporter(application, application.container.db)
-                            .buildShareIntent(selectedCharacter!!)
-                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                        application.startActivity(intent)
-                        selectedCharacter = null
-                    } catch (e: Exception) {
-                        Toast.makeText(
-                            application,
-                            "Could not send character to VitalWear: ${e.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                },
                 onClickSendToAdventure = { time ->
                     adventureScreenController
                         .sendCharacterToAdventure(
