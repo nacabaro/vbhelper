@@ -61,6 +61,7 @@ class ScanScreenControllerImpl(
 
     companion object {
         private const val TAG_DEBOUNCE_MS = 1500L
+        private const val TAG_IGNORE_AFTER_HANDLED_MS = 2000
         private val VITALWEAR_AID = byteArrayOf(
             0xF0.toByte(), 0x56, 0x49, 0x54, 0x41, 0x4C, 0x57, 0x45, 0x41, 0x52
         )
@@ -266,6 +267,7 @@ class ScanScreenControllerImpl(
         options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 250)
         val flags = NfcAdapter.FLAG_READER_NFC_A or
                 NfcAdapter.FLAG_READER_NFC_B or
+                NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS or
                 NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK
         val sessionId = readerSessionCounter.incrementAndGet()
         activeReaderSessionId = sessionId
@@ -312,8 +314,8 @@ class ScanScreenControllerImpl(
                 try {
                     // Prefer ISO-DEP whenever present so HCE sessions do not accidentally fall through to NFC-A.
                     if (hasIsoDepRoute) {
-                        val isoDepTarget = isoDep!!
-                        val isoDepAction = isoDepHandler!!
+                        val isoDepTarget = isoDep
+                        val isoDepAction = isoDepHandler
                         val confirmedVitalWear = runCatching { isVitalWearHceTarget(isoDepTarget) }.getOrDefault(false)
                         if (!confirmedVitalWear) {
                             Log.w("NFC_HCE", "IsoDep tag did not confirm VitalWear AID; attempting ISO-DEP handler without NFC-A fallback")
@@ -346,14 +348,30 @@ class ScanScreenControllerImpl(
                         }
                     }
                     } finally {
-                        if (activeReaderSessionId == sessionId) {
-                            disableReaderModeSafely()
-                            isHandlingTag.set(false)
-                        }
+                        finishHandledTagSession(tag, sessionId)
                     }
                 }
             }
         }
+    }
+
+    private fun finishHandledTagSession(tag: Tag, sessionId: Long) {
+        if (activeReaderSessionId != sessionId) return
+
+        // Keep Android from redispatching this same tag to other NFC apps while still in range.
+        runCatching {
+            nfcAdapter.ignore(
+                tag,
+                TAG_IGNORE_AFTER_HANDLED_MS,
+                NfcAdapter.OnTagRemovedListener { },
+                null
+            )
+        }.onFailure {
+            Log.w("NFC", "Failed to ignore handled tag", it)
+        }
+
+        disableReaderModeSafely()
+        isHandlingTag.set(false)
     }
 
     private fun handleNfcATag(
