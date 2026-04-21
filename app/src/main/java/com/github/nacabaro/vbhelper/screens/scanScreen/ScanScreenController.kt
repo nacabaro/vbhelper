@@ -5,12 +5,21 @@ import com.github.nacabaro.vbhelper.ActivityLifecycleListener
 import com.github.nacabaro.vbhelper.domain.card.Card
 import com.github.nacabaro.vbhelper.source.proto.Secrets
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface ScanScreenController {
     val secretsFlow: Flow<Secrets>
+    val detectedTransportFlow: StateFlow<DetectedTransport>
+
+    enum class WriteResult {
+        MOVE_CONFIRMED,
+        COPIED,
+        BLOCKED_DEVICE_FULL,
+    }
+
     fun onClickRead(secrets: Secrets, onComplete: ()->Unit, onMultipleCards: (List<Card>) -> Unit)
     fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit)
-    fun onClickWrite(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit)
+    fun onClickWrite(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: (WriteResult) -> Unit)
 
     fun cancelRead()
 

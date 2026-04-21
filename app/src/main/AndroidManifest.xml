@@ -54,11 +54,6 @@
                 <data android:scheme="http" android:host="localhost" android:port="8080" android:pathPrefix="/authenticate" />
                 <data android:scheme="http" android:host="127.0.0.1" android:port="8080" android:pathPrefix="/authenticate" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="application/x-vitalwear-character" />
-            </intent-filter>
         </activity>
     </application>
 

@@ -2,6 +2,8 @@ package com.github.nacabaro.vbhelper.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.github.nacabaro.vbhelper.daos.AdventureDao
 import com.github.nacabaro.vbhelper.daos.CardAdventureDao
 import com.github.nacabaro.vbhelper.daos.CharacterDao
@@ -13,6 +15,7 @@ import com.github.nacabaro.vbhelper.daos.ItemDao
 import com.github.nacabaro.vbhelper.daos.SpecialMissionDao
 import com.github.nacabaro.vbhelper.daos.SpriteDao
 import com.github.nacabaro.vbhelper.daos.UserCharacterDao
+import com.github.nacabaro.vbhelper.daos.VitalWearSettingsDao
 import com.github.nacabaro.vbhelper.domain.card.Background
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.domain.card.Card
@@ -29,10 +32,11 @@ import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
+import com.github.nacabaro.vbhelper.domain.device_data.VitalWearCharacterSettings
 import com.github.nacabaro.vbhelper.domain.items.Items
 
 @Database(
-    version = 1,
+    version = 2,
     entities = [
         Card::class,
         CardProgress::class,
@@ -50,7 +54,8 @@ import com.github.nacabaro.vbhelper.domain.items.Items
         Items::class,
         Adventure::class,
         Background::class,
-        PossibleTransformations::class
+        PossibleTransformations::class,
+        VitalWearCharacterSettings::class,
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -65,4 +70,39 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun specialMissionDao(): SpecialMissionDao
     abstract fun cardAdventureDao(): CardAdventureDao
     abstract fun cardFusionsDao(): CardFusionsDao
+    abstract fun vitalWearSettingsDao(): VitalWearSettingsDao
+
+    companion object {
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `VitalWearCharacterSettings` (
+                        `characterId` INTEGER NOT NULL,
+                        `trainingInBackground` INTEGER NOT NULL,
+                        `allowedBattles` INTEGER NOT NULL,
+                        `accumulatedDailyInjuries` INTEGER NOT NULL,
+                        PRIMARY KEY(`characterId`)
+                    )
+                    """.trimIndent()
+                )
+
+                // Clean existing duplicates before adding the unique index.
+                db.execSQL(
+                    """
+                    DELETE FROM `CardCharacter`
+                    WHERE `id` NOT IN (
+                        SELECT MIN(`id`) FROM `CardCharacter` GROUP BY `cardId`, `charaIndex`
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS `index_CardCharacter_cardId_charaIndex`
+                    ON `CardCharacter` (`cardId`, `charaIndex`)
+                    """.trimIndent()
+                )
+            }
+        }
+    }
 }

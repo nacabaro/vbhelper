@@ -3,9 +3,13 @@ package com.github.nacabaro.vbhelper.source
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.cfogrady.vitalwear.protos.Character
 import com.github.nacabaro.vbhelper.database.AppDatabase
+import com.github.nacabaro.vbhelper.domain.card.Card
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
+import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.VitalWearCharacterSettings
 import com.github.nacabaro.vbhelper.utils.DeviceType
+import kotlinx.coroutines.runBlocking
 import kotlin.math.max
 
 class VitalWearCharacterImporter(
@@ -37,6 +41,7 @@ class VitalWearCharacterImporter(
         val totalWins = character.characterStats.totalWins.coerceAtMost(totalBattles)
         val currentPhaseBattles = character.characterStats.currentPhaseBattles
         val currentPhaseWins = character.characterStats.currentPhaseWins.coerceAtMost(currentPhaseBattles)
+        val deviceType = if (importedCard.isBEm) DeviceType.BEDevice else DeviceType.VBDevice
 
         val userCharacterId = database.userCharacterDao().insertCharacterData(
             UserCharacter(
@@ -53,44 +58,70 @@ class VitalWearCharacterImporter(
                 totalBattlesLost = (totalBattles - totalWins).coerceAtLeast(0),
                 activityLevel = 0,
                 heartRateCurrent = 0,
-                characterType = DeviceType.BEDevice,
+                characterType = deviceType,
                 isActive = true
             )
         )
 
-        database.userCharacterDao().insertBECharacterData(
-            BECharacterData(
-                id = userCharacterId,
-                trainingHp = character.characterStats.trainedHp,
-                trainingAp = character.characterStats.trainedAp,
-                trainingBp = character.characterStats.trainedBp,
-                remainingTrainingTimeInMinutes = secondsToMinutes(character.characterStats.trainingTimeRemainingInSeconds),
-                itemEffectMentalStateValue = 0,
-                itemEffectMentalStateMinutesRemaining = 0,
-                itemEffectActivityLevelValue = 0,
-                itemEffectActivityLevelMinutesRemaining = 0,
-                itemEffectVitalPointsChangeValue = 0,
-                itemEffectVitalPointsChangeMinutesRemaining = 0,
-                abilityRarity = resolveDefaultAbilityRarity(),
-                abilityType = 0,
-                abilityBranch = 0,
-                abilityReset = 0,
-                rank = 0,
-                itemType = 0,
-                itemMultiplier = 0,
-                itemRemainingTime = 0,
-                otp0 = "",
-                otp1 = "",
-                minorVersion = 0,
-                majorVersion = 0
+        runBlocking {
+            database.vitalWearSettingsDao().upsert(
+                VitalWearCharacterSettings(
+                    characterId = userCharacterId,
+                    trainingInBackground = character.settings.trainingInBackground,
+                    allowedBattles = character.settings.allowedBattles.number,
+                    accumulatedDailyInjuries = character.characterStats.accumulatedDailyInjuries,
+                )
             )
-        )
+        }
+
+        if (importedCard.isBEm) {
+            database.userCharacterDao().insertBECharacterData(
+                BECharacterData(
+                    id = userCharacterId,
+                    trainingHp = character.characterStats.trainedHp,
+                    trainingAp = character.characterStats.trainedAp,
+                    trainingBp = character.characterStats.trainedBp,
+                    remainingTrainingTimeInMinutes = secondsToMinutes(character.characterStats.trainingTimeRemainingInSeconds),
+                    itemEffectMentalStateValue = 0,
+                    itemEffectMentalStateMinutesRemaining = 0,
+                    itemEffectActivityLevelValue = 0,
+                    itemEffectActivityLevelMinutesRemaining = 0,
+                    itemEffectVitalPointsChangeValue = 0,
+                    itemEffectVitalPointsChangeMinutesRemaining = 0,
+                    abilityRarity = resolveDefaultAbilityRarity(),
+                    abilityType = 0,
+                    abilityBranch = 0,
+                    abilityReset = 0,
+                    rank = 0,
+                    itemType = 0,
+                    itemMultiplier = 0,
+                    itemRemainingTime = 0,
+                    otp0 = "",
+                    otp1 = "",
+                    minorVersion = 0,
+                    majorVersion = 0
+                )
+            )
+        } else {
+            database.userCharacterDao().insertVBCharacterData(
+                VBCharacterData(
+                    id = userCharacterId,
+                    generation = max(character.transformationHistoryCount - 1, 0),
+                    totalTrophies = character.characterStats.trainedPp.coerceAtLeast(0)
+                )
+            )
+        }
 
         val now = System.currentTimeMillis()
         database.dexDao().insertCharacter(slotId, importedCard.id, now)
 
         for (transformation in character.transformationHistoryList) {
-            val transformationCard = resolveCard(transformation.cardName, character.cardId)
+            val transformationCard = resolveRelatedCard(
+                incomingCardName = transformation.cardName,
+                incomingCardId = character.cardId,
+                matchedRootCard = importedCard,
+                incomingRootCardName = character.cardName,
+            )
             if (transformationCard != null) {
                 database.userCharacterDao().insertTransformation(
                     userCharacterId,
@@ -103,7 +134,12 @@ class VitalWearCharacterImporter(
         }
 
         for ((cardName, maxAdventureCompleted) in character.maxAdventureCompletedByCardMap) {
-            val adventureCard = resolveCard(cardName, null) ?: continue
+            val adventureCard = resolveRelatedCard(
+                incomingCardName = cardName,
+                incomingCardId = null,
+                matchedRootCard = importedCard,
+                incomingRootCardName = character.cardName,
+            ) ?: continue
             val currentStage = (maxAdventureCompleted + 1).coerceAtLeast(0)
             database.cardProgressDao().updateCardProgress(
                 currentStage = currentStage,
@@ -120,19 +156,33 @@ class VitalWearCharacterImporter(
 
     private fun resolveCard(character: Character) = resolveCard(character.cardName, character.cardId)
 
-    private fun resolveCard(cardName: String?, cardId: Int?): com.github.nacabaro.vbhelper.domain.card.Card? {
-        if (!cardName.isNullOrBlank()) {
-            database.cardDao().getCardByName(cardName)?.let { return it }
-        }
+    private fun resolveCard(cardName: String?, cardId: Int?): Card? {
+        return selectImportedCard(
+            candidates = database.cardDao().getAllCards(),
+            incomingCardName = cardName,
+            incomingCardId = cardId,
+        )
+    }
 
-        if (cardId != null) {
-            val matches = database.cardDao().getCardByCardId(cardId)
-            if (matches.size == 1) {
-                return matches.first()
+    private fun resolveRelatedCard(
+        incomingCardName: String?,
+        incomingCardId: Int?,
+        matchedRootCard: Card,
+        incomingRootCardName: String,
+    ): Card? {
+        if (incomingCardName.isNullOrBlank()) {
+            return if (incomingCardId != null && incomingCardId > 0 && matchedRootCard.cardId == incomingCardId) {
+                matchedRootCard
+            } else {
+                null
             }
         }
 
-        return null
+        if (cardNamesMatch(incomingCardName, incomingRootCardName)) {
+            return matchedRootCard
+        }
+
+        return resolveCard(incomingCardName, incomingCardId)
     }
 
     private fun secondsToMinutes(seconds: Long): Int {
@@ -161,3 +211,55 @@ class VitalWearCharacterImporter(
         return enumValues<NfcCharacter.AbilityRarity>().first()
     }
 }
+
+internal fun selectImportedCard(
+    candidates: List<Card>,
+    incomingCardName: String?,
+    incomingCardId: Int?,
+): Card? {
+    val requestedName = incomingCardName?.takeIf { it.isNotBlank() }
+    val idMatches = if (incomingCardId != null && incomingCardId > 0) {
+        candidates.filter { it.cardId == incomingCardId }
+    } else {
+        emptyList()
+    }
+
+    requestedName?.let { requestedNameValue ->
+        candidates.firstOrNull {
+            it.name == requestedNameValue && (incomingCardId == null || incomingCardId <= 0 || it.cardId == incomingCardId)
+        }?.let { return it }
+
+        val ignoreCaseMatches = candidates.filter {
+            it.name.equals(requestedNameValue, ignoreCase = true) &&
+                (incomingCardId == null || incomingCardId <= 0 || it.cardId == incomingCardId)
+        }
+        if (ignoreCaseMatches.size == 1) {
+            return ignoreCaseMatches.single()
+        }
+    }
+
+    if (idMatches.size == 1) {
+        return idMatches.single()
+    }
+
+    requestedName?.let { requestedNameValue ->
+        val normalizedMatches = candidates.filter {
+            cardNamesMatch(it.name, requestedNameValue) &&
+                (incomingCardId == null || incomingCardId <= 0 || it.cardId == incomingCardId)
+        }
+        if (normalizedMatches.size == 1) {
+            return normalizedMatches.single()
+        }
+    }
+
+    return null
+}
+
+internal fun cardNamesMatch(left: String, right: String): Boolean {
+    return left.equals(right, ignoreCase = true) || left.toNormalizedCardLookupKey() == right.toNormalizedCardLookupKey()
+}
+
+private fun String.toNormalizedCardLookupKey(): String {
+    return lowercase().filter { it.isLetterOrDigit() }
+}
+

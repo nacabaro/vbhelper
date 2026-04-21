@@ -56,6 +56,8 @@
     <string name="scan_error_generic">Ops!</string>
     <string name="scan_sent_dim_success">DIM enviado com sucesso!</string>
     <string name="scan_nfc_must_be_enabled">O NFC precisa estar ativado.</string>
+    <string name="scan_target_device_full">O dispositivo de destino está cheio (ativo + backup). Remova um personagem antes de enviar.</string>
+    <string name="scan_transfer_skipped_storage_state">Transferência ignorada. O envio só é permitido quando o brinquedo tem um personagem ativo e o slot de backup está vazio.</string>
 
     <string name="settings_title">Configurações</string>
 

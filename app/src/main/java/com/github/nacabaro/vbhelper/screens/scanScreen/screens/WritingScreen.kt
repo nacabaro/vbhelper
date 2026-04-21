@@ -14,6 +14,7 @@ import com.github.nacabaro.vbhelper.ActivityLifecycleListener
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.screens.scanScreen.SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenController
+import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenController.WriteResult
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -38,6 +39,7 @@ fun WritingScreen(
     var writingConfirmScreen by remember { mutableStateOf(false) }
     var isDoneSendingCard by remember { mutableStateOf(false) }
     var isDoneWritingCharacter by remember { mutableStateOf(false) }
+    var writeResult by remember { mutableStateOf<WriteResult?>(null) }
 
     DisposableEffect(writing) {
         if (writing) {
@@ -54,7 +56,8 @@ fun WritingScreen(
                                 isDoneSendingCard = true
                             }
                         } else if (!isDoneWritingCharacter) {
-                            scanScreenController.onClickWrite(secrets!!, nfcCharacter) {
+                            scanScreenController.onClickWrite(secrets!!, nfcCharacter) { result ->
+                                writeResult = result
                                 isDoneWritingCharacter = true
                             }
                         }
@@ -68,7 +71,8 @@ fun WritingScreen(
                         isDoneSendingCard = true
                     }
                 } else if (!isDoneWritingCharacter) {
-                    scanScreenController.onClickWrite(secrets!!, nfcCharacter) {
+                    scanScreenController.onClickWrite(secrets!!, nfcCharacter) { result ->
+                        writeResult = result
                         isDoneWritingCharacter = true
                     }
                 }
@@ -129,8 +133,9 @@ fun WritingScreen(
     LaunchedEffect(isDoneSendingCard, isDoneWritingCharacter) {
         withContext(Dispatchers.IO) {
             if (isDoneSendingCard && isDoneWritingCharacter) {
-                storageRepository
-                    .deleteCharacter(characterId)
+                if (writeResult == WriteResult.MOVE_CONFIRMED) {
+                    storageRepository.deleteCharacter(characterId)
+                }
                 completedWriting = true
             }
         }

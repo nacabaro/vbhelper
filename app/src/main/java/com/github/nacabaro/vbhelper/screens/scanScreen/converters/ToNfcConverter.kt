@@ -12,9 +12,11 @@ import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
+import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import java.util.Date
 
 class ToNfcConverter(
@@ -39,7 +41,10 @@ class ToNfcConverter(
             .characterDao()
             .getCharacterInfo(userCharacter.charId)
 
-        return if (userCharacter.characterType == DeviceType.BEDevice)
+        val card = database.cardDao().getCardByCharacterIdSync(characterId)
+        val shouldEncodeAsBem = card?.isBEm ?: (userCharacter.characterType == DeviceType.BEDevice)
+
+        return if (shouldEncodeAsBem)
             nfcToBENfc(characterId, characterInfo, userCharacter)
         else
             nfcToVBNfc(characterId, characterInfo, userCharacter)
@@ -55,7 +60,12 @@ class ToNfcConverter(
         val vbData = database
             .userCharacterDao()
             .getVbData(characterId)
-            .first()
+            .firstOrNull()
+            ?: VBCharacterData(
+                id = characterId,
+                generation = 0,
+                totalTrophies = userCharacter.trophies
+            )
 
         val paddedTransformationArray = generateTransformationHistory(characterId, 9)
 

@@ -60,6 +60,8 @@
     <string name="scan_error_generic">Whoops</string>
     <string name="scan_sent_dim_success">Sent DIM successfully!</string>
     <string name="scan_nfc_must_be_enabled">NFC must be enabled</string>
+    <string name="scan_target_device_full">Target device is full (active + backup). Remove one character before sending.</string>
+    <string name="scan_transfer_skipped_storage_state">Transfer skipped. Send is allowed only when the toy has an active character and an empty backup slot.</string>
 
 
     <string name="settings_title">Settings</string>

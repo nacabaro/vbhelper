@@ -41,8 +41,6 @@ import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.dtos.CardDtos
 import com.github.nacabaro.vbhelper.source.CardRepository
-import com.github.nacabaro.vbhelper.source.VitalWearCharacterExporter
-import android.widget.Toast
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import kotlinx.coroutines.flow.flowOf
 import kotlin.collections.emptyList
@@ -178,27 +176,6 @@ fun HomeScreen(
                     )
                 }
 
-                Button(
-                    onClick = {
-                        try {
-                            val intent = VitalWearCharacterExporter(application, application.container.db)
-                                .buildShareIntent(activeMon!!.id)
-                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                            application.startActivity(intent)
-                        } catch (e: Exception) {
-                            Toast.makeText(
-                                application,
-                                "Could not send character to VitalWear: ${e.message}",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(text = "Send to VitalWear")
-                }
             }
         }
     }

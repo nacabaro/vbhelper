@@ -1,5 +1,6 @@
 package com.github.nacabaro.vbhelper.screens.scanScreen.screens
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -15,6 +16,7 @@ import com.github.nacabaro.vbhelper.screens.scanScreen.SCAN_SCREEN_ACTIVITY_LIFE
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenController
 import com.github.nacabaro.vbhelper.R
 
+private const val TAG = "ReadingScreen"
 
 @Composable
 fun ReadingScreen(
@@ -30,55 +32,72 @@ fun ReadingScreen(
     var isDoneReadingCharacter by remember { mutableStateOf(false) }
     var cardSelectScreen by remember { mutableStateOf(false) }
 
+    fun startReadIfNeeded() {
+        val availableSecrets = secrets
+        if (availableSecrets == null) {
+            Log.d(TAG, "startReadIfNeeded: skipped (no secrets)")
+            return
+        }
+        if (!readingScreen || isDoneReadingCharacter || cardSelectScreen) {
+            Log.d(
+                TAG,
+                "startReadIfNeeded: skipped (readingScreen=$readingScreen, done=$isDoneReadingCharacter, cardSelect=$cardSelectScreen)"
+            )
+            return
+        }
+
+        Log.d(TAG, "startReadIfNeeded: arming onClickRead")
+        scanScreenController.onClickRead(
+            secrets = availableSecrets,
+            onComplete = {
+                Log.d(TAG, "onClickRead.onComplete: marking read complete")
+                readingScreen = false
+                isDoneReadingCharacter = true
+            },
+            onMultipleCards = { cards ->
+                Log.d(TAG, "onClickRead.onMultipleCards: showing card select (count=${cards.size})")
+                cardsRead = cards
+                readingScreen = false
+                cardSelectScreen = true
+                isDoneReadingCharacter = true
+            }
+        )
+    }
+
     DisposableEffect(readingScreen) {
         if(readingScreen) {
+            Log.d(TAG, "DisposableEffect: readingScreen=true, registering lifecycle listener")
             scanScreenController.registerActivityLifecycleListener(
                 SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER,
                 object: ActivityLifecycleListener {
                     override fun onPause() {
+                        Log.d(TAG, "lifecycle.onPause: cancelRead")
                         scanScreenController.cancelRead()
                     }
 
                     override fun onResume() {
-                        scanScreenController.onClickRead(
-                            secrets = secrets!!,
-                            onComplete = {
-                                isDoneReadingCharacter = true
-                            },
-                            onMultipleCards = { cards ->
-                                cardsRead = cards
-                                readingScreen = false
-                                cardSelectScreen = true
-                                isDoneReadingCharacter = true
-                            }
-                        )
+                        Log.d(TAG, "lifecycle.onResume: attempting startReadIfNeeded")
+                        startReadIfNeeded()
                     }
                 }
             )
-            scanScreenController.onClickRead(
-                secrets = secrets!!,
-                onComplete = {
-                    isDoneReadingCharacter = true
-                },
-                onMultipleCards = { cards ->
-                    cardsRead = cards
-                    readingScreen = false
-                    cardSelectScreen = true
-                    isDoneReadingCharacter = true
-                }
-            )
+            startReadIfNeeded()
         }
         onDispose {
             if(readingScreen) {
+                Log.d(TAG, "DisposableEffect.onDispose: unregister listener + cancelRead")
                 scanScreenController.unregisterActivityLifecycleListener(
                     SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER
                 )
                 scanScreenController.cancelRead()
+            } else {
+                Log.d(TAG, "DisposableEffect.onDispose: readingScreen=false, nothing to cancel")
             }
         }
     }
 
     if (isDoneReadingCharacter && !cardSelectScreen) {
+        Log.d(TAG, "state gate: done read without cardSelect, calling onComplete")
         readingScreen = false
         onComplete()
     }
@@ -86,9 +105,11 @@ fun ReadingScreen(
     if (!readingScreen) {
         ReadCharacterScreen(
             onClickConfirm = {
+                Log.d(TAG, "ReadCharacterScreen.onClickConfirm: entering reading screen")
                 readingScreen = true
             },
             onClickCancel = {
+                Log.d(TAG, "ReadCharacterScreen.onClickCancel: user cancelled")
                 onCancel()
             }
         )
@@ -96,6 +117,7 @@ fun ReadingScreen(
 
     if (readingScreen) {
         ActionScreen(topBannerText = stringResource(R.string.reading_character_title),) {
+            Log.d(TAG, "ActionScreen.onCancel: cancelRead + onCancel")
             readingScreen = false
             scanScreenController.cancelRead()
             onCancel()
@@ -104,6 +126,7 @@ fun ReadingScreen(
         ChooseCard(
             cards = cardsRead!!,
             onCardSelected = { card ->
+                Log.d(TAG, "ChooseCard.onCardSelected: selected cardId=${card.id}")
                 cardSelectScreen = false
                 scanScreenController.flushCharacter(card.id)
             }
