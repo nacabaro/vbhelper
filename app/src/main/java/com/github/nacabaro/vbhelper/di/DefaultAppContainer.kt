@@ -4,8 +4,10 @@ import androidx.datastore.dataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
-import com.github.nacabaro.vbhelper.database.AppDatabase
+import com.github.cfogrady.vitalwear.common.data.SharedDatabaseFactory
+import com.github.cfogrady.vitalwear.common.data.SharedTransferSeenDao
 import com.github.nacabaro.vbhelper.di.AppContainer
+import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.source.CurrencyRepository
 import com.github.nacabaro.vbhelper.source.DataStoreSecretsRepository
 import com.github.nacabaro.vbhelper.source.SecretsSerializer
@@ -32,7 +34,14 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
         )
             .createFromAsset("items.db")
             .addMigrations(AppDatabase.MIGRATION_1_2)
+            .addMigrations(AppDatabase.MIGRATION_2_3)
+            .addMigrations(AppDatabase.MIGRATION_3_5)
+            .addMigrations(AppDatabase.MIGRATION_4_5)
             .build()
+    }
+
+    override val transferSeenDao: SharedTransferSeenDao by lazy {
+        SharedDatabaseFactory.getDatabase(context).transferSeenDao()
     }
 
     override val dataStoreSecretsRepository = DataStoreSecretsRepository(context.secretsStore)

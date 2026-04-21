@@ -1,6 +1,7 @@
 package com.github.nacabaro.vbhelper.source
 
 import com.github.cfogrady.vbnfc.data.NfcCharacter
+import com.github.cfogrady.vitalwear.common.data.SharedTransferSeenDao
 import com.github.cfogrady.vitalwear.protos.Character
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.domain.card.Card
@@ -13,7 +14,8 @@ import kotlinx.coroutines.runBlocking
 import kotlin.math.max
 
 class VitalWearCharacterImporter(
-    private val database: AppDatabase
+    private val database: AppDatabase,
+    private val transferSeenDao: SharedTransferSeenDao,
 ) {
     data class ImportResult(
         val success: Boolean,
@@ -113,8 +115,9 @@ class VitalWearCharacterImporter(
         }
 
         val now = System.currentTimeMillis()
-        database.dexDao().insertCharacter(slotId, importedCard.id, now)
+        markSeen(importedCard.name, slotId, importedCard.id, now)
 
+        var insertedTransformationCount = 0
         for (transformation in character.transformationHistoryList) {
             val transformationCard = resolveRelatedCard(
                 incomingCardName = transformation.cardName,
@@ -129,8 +132,19 @@ class VitalWearCharacterImporter(
                     transformationCard.id,
                     now
                 )
-                database.dexDao().insertCharacter(transformation.slotId, transformationCard.id, now)
+                insertedTransformationCount++
+                markSeen(transformationCard.name, transformation.slotId, transformationCard.id, now)
             }
+        }
+
+        if (insertedTransformationCount == 0) {
+            // Keep HomeScreen renderable for freshly imported characters with empty history.
+            database.userCharacterDao().insertTransformation(
+                userCharacterId,
+                slotId,
+                importedCard.id,
+                now
+            )
         }
 
         for ((cardName, maxAdventureCompleted) in character.maxAdventureCompletedByCardMap) {
@@ -209,6 +223,11 @@ class VitalWearCharacterImporter(
 
     private fun resolveDefaultAbilityRarity(): NfcCharacter.AbilityRarity {
         return enumValues<NfcCharacter.AbilityRarity>().first()
+    }
+
+    private fun markSeen(cardName: String, slotId: Int, cardId: Long, timestamp: Long) {
+        database.dexDao().insertCharacter(slotId, cardId, timestamp)
+        transferSeenDao.markSeen(cardName, slotId, timestamp)
     }
 }
 

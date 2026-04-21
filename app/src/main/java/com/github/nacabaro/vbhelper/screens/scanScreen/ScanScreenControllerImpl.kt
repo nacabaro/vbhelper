@@ -66,6 +66,9 @@ class ScanScreenControllerImpl(
             0xF0.toByte(), 0x56, 0x49, 0x54, 0x41, 0x4C, 0x57, 0x45, 0x41, 0x52
         )
         private const val SW_OK = 0x9000
+        // Lifecycle key for the always-on NFC suppressor that prevents Android from launching
+        // com.android.apps.tag/.TagViewer whenever the watch's HCE comes into range.
+        private const val LIFECYCLE_KEY_NFC_SUPPRESSOR = "nfc_suppressor"
     }
 
     init {
@@ -75,6 +78,57 @@ class ScanScreenControllerImpl(
         }
         nfcAdapter = maybeNfcAdapter
         checkSecrets()
+        registerNfcSuppressor()
+    }
+
+    /**
+     * Registers a lifecycle listener that keeps reader mode active (with a no-op callback)
+     * whenever this Activity is in the foreground. This prevents Android's default NFC dispatch
+     * system from launching com.android.apps.tag/.TagViewer when the watch's HCE service is
+     * detected while the user hasn't explicitly pressed a transfer button yet.
+     *
+     * When the user presses Read/Write/CheckCard, [handleTag] replaces this suppressor with
+     * the real transfer callback via [NfcAdapter.enableReaderMode]. After the transfer
+     * completes, [enableNfcSuppressor] is called again to restore the passive suppressor.
+     */
+    private fun registerNfcSuppressor() {
+        registerActivityLifecycleListener(
+            LIFECYCLE_KEY_NFC_SUPPRESSOR,
+            object : ActivityLifecycleListener {
+                override fun onResume() {
+                    enableNfcSuppressor()
+                }
+                override fun onPause() {
+                    disableReaderModeSafely()
+                }
+            }
+        )
+    }
+
+    /**
+     * Enables reader mode with a silent no-op callback. Calling [NfcAdapter.enableReaderMode]
+     * suppresses Android's default tag-dispatch system (and therefore the "new tag scanned"
+     * TagViewer screen) for as long as this Activity is in the foreground. The actual transfer
+     * logic is wired up separately via [handleTag] when the user presses a button.
+     */
+    private fun enableNfcSuppressor() {
+        if (!nfcAdapter.isEnabled) return
+        val options = Bundle()
+        options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 250)
+        val flags = NfcAdapter.FLAG_READER_NFC_A or
+                NfcAdapter.FLAG_READER_NFC_B or
+                NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS or
+                NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK
+        runCatching {
+            nfcAdapter.enableReaderMode(
+                componentActivity,
+                { /* suppress default dispatch — user must tap a transfer button */ },
+                flags,
+                options
+            )
+        }.onFailure {
+            Log.w("NFC", "Failed to enable NFC suppressor reader mode", it)
+        }
     }
 
     // ---- Read (phone receives character FROM watch or bracelet) --------------------
@@ -103,7 +157,7 @@ class ScanScreenControllerImpl(
             },
             isoDepHandler = { isoDep ->
                 val application = componentActivity.applicationContext as VBHelper
-                val importer = VitalWearCharacterImporter(application.container.db)
+                val importer = VitalWearCharacterImporter(application.container.db, application.container.transferSeenDao)
                 try {
                     var importResult: VitalWearCharacterImporter.ImportResult? = null
                     val moved = VitalWearHceReaderClient(isoDep).moveCharacterFromWatch { character ->
@@ -176,7 +230,7 @@ class ScanScreenControllerImpl(
                     runCatching {
                         var importResult: VitalWearCharacterImporter.ImportResult? = null
                         val moved = hceClient.moveCharacterFromWatch { character ->
-                            val result = VitalWearCharacterImporter(application.container.db).importCharacter(character)
+                            val result = VitalWearCharacterImporter(application.container.db, application.container.transferSeenDao).importCharacter(character)
                             importResult = result
                             result.success
                         }
@@ -236,7 +290,9 @@ class ScanScreenControllerImpl(
             lastTagId = null
             lastTagHandledAtMs = 0L
         }
-        disableReaderModeSafely()
+        // Re-arm the suppressor so the TagViewer doesn't appear while the user is still
+        // on the scan screen but hasn't pressed a transfer button yet.
+        enableNfcSuppressor()
     }
 
     override fun registerActivityLifecycleListener(key: String, activityLifecycleListener: ActivityLifecycleListener) {
@@ -370,7 +426,9 @@ class ScanScreenControllerImpl(
             Log.w("NFC", "Failed to ignore handled tag", it)
         }
 
-        disableReaderModeSafely()
+        // Restore the passive suppressor so devices can remain close without Android
+        // launching the TagViewer between transfers or while waiting for the next button press.
+        enableNfcSuppressor()
         isHandlingTag.set(false)
     }
 

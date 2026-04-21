@@ -19,7 +19,8 @@ class FromNfcConverter (
 ) {
     private val application = componentActivity.applicationContext as VBHelper
     private val database = application.container.db
-    
+    private val transferSeenDao = application.container.transferSeenDao
+
     
     fun addCharacterUsingCard(
         nfcCharacter: NfcCharacter,
@@ -117,6 +118,9 @@ class FromNfcConverter (
         val characterId: Long = database
             .userCharacterDao()
             .insertCharacterData(characterData)
+
+        val seenTimestamp = System.currentTimeMillis()
+        markSeen(cardData, nfcCharacter.charIndex.toInt(), seenTimestamp)
 
         if (nfcCharacter is BENfcCharacter) {
             addBeCharacterToDatabase(
@@ -292,12 +296,14 @@ class FromNfcConverter (
 
                 database
                     .dexDao()
-                    .insertCharacter(
-                        item.toCharIndex.toInt(),
-                        dimData.id,
-                        date
-                    )
+                    .insertCharacter(item.toCharIndex.toInt(), dimData.id, date)
+                transferSeenDao.markSeen(dimData.name, item.toCharIndex.toInt(), date)
             }
         }
+    }
+
+    private fun markSeen(cardData: Card, slotId: Int, timestamp: Long) {
+        database.dexDao().insertCharacter(slotId, cardData.id, timestamp)
+        transferSeenDao.markSeen(cardData.name, slotId, timestamp)
     }
 }

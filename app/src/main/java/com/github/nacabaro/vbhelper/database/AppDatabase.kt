@@ -36,7 +36,7 @@ import com.github.nacabaro.vbhelper.domain.device_data.VitalWearCharacterSetting
 import com.github.nacabaro.vbhelper.domain.items.Items
 
 @Database(
-    version = 2,
+    version = 5,
     entities = [
         Card::class,
         CardProgress::class,
@@ -104,5 +104,40 @@ abstract class AppDatabase : RoomDatabase() {
                 )
             }
         }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val backfillTimestamp = System.currentTimeMillis()
+                db.execSQL(
+                    """
+                    INSERT INTO `TransformationHistory`(`monId`, `stageId`, `transformationDate`)
+                    SELECT uc.`id`, uc.`charId`, $backfillTimestamp
+                    FROM `UserCharacter` uc
+                    WHERE NOT EXISTS (
+                        SELECT 1
+                        FROM `TransformationHistory` th
+                        WHERE th.`monId` = uc.`id`
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
+        val MIGRATION_3_5 = object : Migration(3, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // TransferSeen moved to shared_transfer.db
+                db.execSQL("DROP TABLE IF EXISTS `TransferSeen`")
+                db.execSQL("DROP INDEX IF EXISTS `index_TransferSeen_cardLookupKey_slotId`")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // TransferSeen moved to shared_transfer.db
+                db.execSQL("DROP TABLE IF EXISTS `TransferSeen`")
+                db.execSQL("DROP INDEX IF EXISTS `index_TransferSeen_cardLookupKey_slotId`")
+            }
+        }
+
     }
 }
