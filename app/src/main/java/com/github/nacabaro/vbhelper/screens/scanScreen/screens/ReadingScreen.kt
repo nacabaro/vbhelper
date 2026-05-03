@@ -25,6 +25,7 @@ fun ReadingScreen(
     onComplete: () -> Unit
 ) {
     val secrets by scanScreenController.secretsFlow.collectAsState(null)
+    val transferStatus by scanScreenController.transferStatusFlow.collectAsState(null)
 
     var cardsRead by remember { mutableStateOf<List<Card>?>(null) }
 
@@ -116,7 +117,10 @@ fun ReadingScreen(
     }
 
     if (readingScreen) {
-        ActionScreen(topBannerText = stringResource(R.string.reading_character_title),) {
+        ActionScreen(
+            topBannerText = stringResource(R.string.reading_character_title),
+            transferStatusMessage = transferStatus,
+        ) {
             Log.d(TAG, "ActionScreen.onCancel: cancelRead + onCancel")
             readingScreen = false
             scanScreenController.cancelRead()

@@ -58,6 +58,12 @@
     <string name="scan_nfc_must_be_enabled">O NFC precisa estar ativado.</string>
     <string name="scan_target_device_full">O dispositivo de destino está cheio (ativo + backup). Remova um personagem antes de enviar.</string>
     <string name="scan_transfer_skipped_storage_state">Transferência ignorada. O envio só é permitido quando o brinquedo tem um personagem ativo e o slot de backup está vazio.</string>
+    <string name="scan_transfer_waiting_tap">Pronto. Encoste e mantenha o celular e o relógio juntos até concluir.</string>
+    <string name="scan_transfer_detected_keep_tap">Conexão detectada. Mantenha os dispositivos juntos...</string>
+    <string name="scan_transfer_in_progress">Transferindo agora. Não afaste o celular ainda.</string>
+    <string name="scan_transfer_complete_remove">Transferência concluída. Agora você pode afastar o celular.</string>
+    <string name="scan_transfer_failed_try_again">Falha na transferência. Reposicione os dispositivos e tente novamente.</string>
+    <string name="scan_transfer_cancelled">Transferência cancelada.</string>
 
     <string name="settings_title">Configurações</string>
 

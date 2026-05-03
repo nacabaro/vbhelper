@@ -30,6 +30,7 @@ fun WritingScreen(
     onCancel: () -> Unit,
 ) {
     val secrets by scanScreenController.secretsFlow.collectAsState(null)
+    val transferStatus by scanScreenController.transferStatusFlow.collectAsState(null)
 
     val application = LocalContext.current.applicationContext as VBHelper
     val storageRepository = StorageRepository(application.container.db)
@@ -103,7 +104,10 @@ fun WritingScreen(
         )
     } else if (!isDoneSendingCard) {
         writing = true
-        ActionScreen( topBannerText = stringResource(R.string.sending_card_title)) {
+        ActionScreen(
+            topBannerText = stringResource(R.string.sending_card_title),
+            transferStatusMessage = transferStatus,
+        ) {
             scanScreenController.cancelRead()
             onCancel()
         }
@@ -121,7 +125,10 @@ fun WritingScreen(
         )
     } else if (!isDoneWritingCharacter) {
         writing = true
-        ActionScreen(topBannerText = stringResource(R.string.writing_character_action_title)) {
+        ActionScreen(
+            topBannerText = stringResource(R.string.writing_character_action_title),
+            transferStatusMessage = transferStatus,
+        ) {
             isDoneSendingCard = false
             scanScreenController.cancelRead()
             onCancel()

@@ -18,6 +18,7 @@ import com.github.nacabaro.vbhelper.R
 @Composable
 fun ActionScreen(
     topBannerText: String,
+    transferStatusMessage: String?,
     onClickCancel: () -> Unit,
 ) {
     Scaffold (
@@ -36,6 +37,12 @@ fun ActionScreen(
                 .fillMaxSize()
         ) {
             Text(stringResource(R.string.action_place_near_reader))
+            if (!transferStatusMessage.isNullOrBlank()) {
+                Text(
+                    text = transferStatusMessage,
+                    modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
+                )
+            }
             Button(
                 onClick = onClickCancel,
                 modifier = Modifier.padding(16.dp)

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface ScanScreenController {
     val secretsFlow: Flow<Secrets>
     val detectedTransportFlow: StateFlow<DetectedTransport>
+    val transferStatusFlow: StateFlow<String?>
 
     enum class WriteResult {
         MOVE_CONFIRMED,

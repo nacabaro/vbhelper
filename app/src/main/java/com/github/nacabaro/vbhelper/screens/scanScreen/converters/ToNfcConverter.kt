@@ -11,6 +11,7 @@ import com.github.cfogrady.vbnfc.vb.SpecialMission
 import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
+import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
@@ -22,6 +23,11 @@ import java.util.Date
 class ToNfcConverter(
     private val componentActivity: ComponentActivity
 ) {
+    companion object {
+        private const val MIN_NFC_TRANSFORMATION_YEAR = 2021
+        private const val MAX_NFC_TRANSFORMATION_YEAR = 2035
+    }
+
     private val application: VBHelper = componentActivity.applicationContext as VBHelper
     private val database: AppDatabase = application.container.db
 
@@ -41,8 +47,12 @@ class ToNfcConverter(
             .characterDao()
             .getCharacterInfo(userCharacter.charId)
 
-        val card = database.cardDao().getCardByCharacterIdSync(characterId)
-        val shouldEncodeAsBem = card?.isBEm ?: (userCharacter.characterType == DeviceType.BEDevice)
+        // Use the character's own type as the authoritative signal for encoding.
+        // The card's isBEm flag only indicates the *card* is a BEM card, not that the
+        // stored UserCharacter has a BECharacterData row.  Mixing those two signals was
+        // the root cause of a NoSuchElementException when a VB-type character was
+        // associated with a BE-type card.
+        val shouldEncodeAsBem = userCharacter.characterType == DeviceType.BEDevice
 
         return if (shouldEncodeAsBem)
             nfcToBENfc(characterId, characterInfo, userCharacter)
@@ -186,8 +196,32 @@ class ToNfcConverter(
     ): BENfcCharacter {
         val beData = database
             .userCharacterDao()
-            .getBeData(characterId)
-            .first()
+            .getBeDataOrNull(characterId)
+            ?: BECharacterData(
+                id = characterId,
+                trainingHp = 0,
+                trainingAp = 0,
+                trainingBp = 0,
+                remainingTrainingTimeInMinutes = 0,
+                itemEffectMentalStateValue = 0,
+                itemEffectMentalStateMinutesRemaining = 0,
+                itemEffectActivityLevelValue = 0,
+                itemEffectActivityLevelMinutesRemaining = 0,
+                itemEffectVitalPointsChangeValue = 0,
+                itemEffectVitalPointsChangeMinutesRemaining = 0,
+                abilityRarity = NfcCharacter.AbilityRarity.None,
+                abilityType = 0,
+                abilityBranch = 0,
+                abilityReset = 0,
+                rank = 0,
+                itemType = 0,
+                itemMultiplier = 0,
+                itemRemainingTime = 0,
+                otp0 = "",
+                otp1 = "",
+                minorVersion = 0,
+                majorVersion = 0,
+            )
 
         val paddedTransformationArray = generateTransformationHistory(characterId)
 
@@ -264,11 +298,15 @@ class ToNfcConverter(
                             "Day: ${calendar.get(Calendar.DAY_OF_MONTH)}"
                 )
 
+                val rawYear = calendar.get(Calendar.YEAR)
+                val normalizedYear = rawYear.coerceIn(MIN_NFC_TRANSFORMATION_YEAR, MAX_NFC_TRANSFORMATION_YEAR)
+                if (normalizedYear != rawYear) {
+                    Log.w("TransformationHistory", "Normalizing out-of-range transformation year $rawYear to $normalizedYear")
+                }
+
                 NfcCharacter.Transformation(
                     toCharIndex = it.monIndex.toUByte(),
-                    year = calendar
-                        .get(Calendar.YEAR)
-                        .toUShort(),
+                    year = normalizedYear.toUShort(),
                     month = (calendar
                         .get(Calendar.MONTH) + 1)
                         .toUByte(),

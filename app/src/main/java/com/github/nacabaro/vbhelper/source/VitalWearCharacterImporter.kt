@@ -10,6 +10,7 @@ import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.VitalWearCharacterSettings
 import com.github.nacabaro.vbhelper.utils.DeviceType
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import kotlin.math.max
 
@@ -43,23 +44,37 @@ class VitalWearCharacterImporter(
         val totalWins = character.characterStats.totalWins.coerceAtMost(totalBattles)
         val currentPhaseBattles = character.characterStats.currentPhaseBattles
         val currentPhaseWins = character.characterStats.currentPhaseWins.coerceAtMost(currentPhaseBattles)
-        val deviceType = if (importedCard.isBEm) DeviceType.BEDevice else DeviceType.VBDevice
+        val normalizedTransformationCountdown = normalizeTransformationCountdownMinutes(
+            transformationCountdownMinutes = secondsToMinutes(character.characterStats.timeUntilNextTransformation),
+            hasPossibleTransformations = hasPossibleTransformations(cardCharacter.id),
+        )
+        val hasBePayloadStats = character.characterStats.trainedHp > 0 ||
+            character.characterStats.trainedAp > 0 ||
+            character.characterStats.trainedBp > 0 ||
+            character.characterStats.trainingTimeRemainingInSeconds > 0L
+        val fallbackIsBeCharacter = importedCard.isBEm || hasBePayloadStats
+        val deviceType = resolveDeviceType(
+            transferDeviceType = character.characterStats.deviceType,
+            fallbackIsBeCharacter = fallbackIsBeCharacter,
+        )
+        val isBeCharacter = deviceType == DeviceType.BEDevice
 
         val userCharacterId = database.userCharacterDao().insertCharacterData(
             UserCharacter(
                 charId = cardCharacter.id,
-                ageInDays = max(character.transformationHistoryCount - 1, 0),
+                ageInDays = character.characterStats.ageInDays.takeIf { it > 0 }
+                    ?: max(character.transformationHistoryCount - 1, 0),
                 mood = character.characterStats.mood,
                 vitalPoints = character.characterStats.vitals,
-                transformationCountdown = secondsToMinutes(character.characterStats.timeUntilNextTransformation),
+                transformationCountdown = normalizedTransformationCountdown,
                 injuryStatus = resolveInjuryStatus(character.characterStats.injured),
                 trophies = character.characterStats.trainedPp,
                 currentPhaseBattlesWon = currentPhaseWins,
                 currentPhaseBattlesLost = (currentPhaseBattles - currentPhaseWins).coerceAtLeast(0),
                 totalBattlesWon = totalWins,
                 totalBattlesLost = (totalBattles - totalWins).coerceAtLeast(0),
-                activityLevel = 0,
-                heartRateCurrent = 0,
+                activityLevel = character.characterStats.activityLevel.coerceAtLeast(0),
+                heartRateCurrent = character.characterStats.heartRateCurrent.coerceAtLeast(0),
                 characterType = deviceType,
                 isActive = true
             )
@@ -76,7 +91,8 @@ class VitalWearCharacterImporter(
             )
         }
 
-        if (importedCard.isBEm) {
+        if (isBeCharacter) {
+            val abilityRarity = resolveAbilityRarity(character.characterStats.abilityRarity)
             database.userCharacterDao().insertBECharacterData(
                 BECharacterData(
                     id = userCharacterId,
@@ -84,32 +100,40 @@ class VitalWearCharacterImporter(
                     trainingAp = character.characterStats.trainedAp,
                     trainingBp = character.characterStats.trainedBp,
                     remainingTrainingTimeInMinutes = secondsToMinutes(character.characterStats.trainingTimeRemainingInSeconds),
-                    itemEffectMentalStateValue = 0,
-                    itemEffectMentalStateMinutesRemaining = 0,
-                    itemEffectActivityLevelValue = 0,
-                    itemEffectActivityLevelMinutesRemaining = 0,
-                    itemEffectVitalPointsChangeValue = 0,
-                    itemEffectVitalPointsChangeMinutesRemaining = 0,
-                    abilityRarity = resolveDefaultAbilityRarity(),
-                    abilityType = 0,
-                    abilityBranch = 0,
-                    abilityReset = 0,
-                    rank = 0,
-                    itemType = 0,
-                    itemMultiplier = 0,
-                    itemRemainingTime = 0,
+                    itemEffectMentalStateValue = character.characterStats.itemEffectMentalStateValue,
+                    itemEffectMentalStateMinutesRemaining = character.characterStats.itemEffectMentalStateMinutesRemaining,
+                    itemEffectActivityLevelValue = character.characterStats.itemEffectActivityLevelValue,
+                    itemEffectActivityLevelMinutesRemaining = character.characterStats.itemEffectActivityLevelMinutesRemaining,
+                    itemEffectVitalPointsChangeValue = character.characterStats.itemEffectVitalPointsChangeValue,
+                    itemEffectVitalPointsChangeMinutesRemaining = character.characterStats.itemEffectVitalPointsChangeMinutesRemaining,
+                    abilityRarity = abilityRarity,
+                    abilityType = character.characterStats.abilityType,
+                    abilityBranch = character.characterStats.abilityBranch,
+                    abilityReset = character.characterStats.abilityReset,
+                    rank = character.characterStats.rank,
+                    itemType = character.characterStats.itemType,
+                    itemMultiplier = character.characterStats.itemMultiplier,
+                    itemRemainingTime = character.characterStats.itemRemainingTime,
                     otp0 = "",
                     otp1 = "",
-                    minorVersion = 0,
-                    majorVersion = 0
+                    minorVersion = character.characterStats.firmwareMinorVersion,
+                    majorVersion = character.characterStats.firmwareMajorVersion
                 )
             )
         } else {
             database.userCharacterDao().insertVBCharacterData(
                 VBCharacterData(
                     id = userCharacterId,
-                    generation = max(character.transformationHistoryCount - 1, 0),
-                    totalTrophies = character.characterStats.trainedPp.coerceAtLeast(0)
+                    generation = if (character.characterStats.generation > 0) {
+                        character.characterStats.generation
+                    } else {
+                        max(character.transformationHistoryCount - 1, 0)
+                    },
+                    totalTrophies = if (character.characterStats.totalTrophies > 0) {
+                        character.characterStats.totalTrophies
+                    } else {
+                        character.characterStats.trainedPp.coerceAtLeast(0)
+                    }
                 )
             )
         }
@@ -162,6 +186,15 @@ class VitalWearCharacterImporter(
             )
         }
 
+        val nextAdventureMissionStage = character.characterStats.nextAdventureMissionStage.coerceAtLeast(0)
+        if (nextAdventureMissionStage > 0) {
+            database.cardProgressDao().updateCardProgress(
+                currentStage = nextAdventureMissionStage,
+                cardId = importedCard.id,
+                unlocked = nextAdventureMissionStage > importedCard.stageCount,
+            )
+        }
+
         return ImportResult(
             success = true,
             message = "Imported ${importedCard.name} slot $slotId from VitalWear."
@@ -203,7 +236,14 @@ class VitalWearCharacterImporter(
         if (seconds <= 0L) {
             return 0
         }
-        return (seconds / 60L).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        // Preserve non-zero timers from HCE payloads instead of flooring 1..59s to 0.
+        return ((seconds + 59L) / 60L).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+    }
+
+    private fun hasPossibleTransformations(cardCharacterId: Long): Boolean {
+        return runBlocking {
+            database.characterDao().getEvolutionRequirementsForCard(cardCharacterId).firstOrNull()?.isNotEmpty() == true
+        }
     }
 
     private fun resolveInjuryStatus(injured: Boolean): NfcCharacter.InjuryStatus {
@@ -223,6 +263,11 @@ class VitalWearCharacterImporter(
 
     private fun resolveDefaultAbilityRarity(): NfcCharacter.AbilityRarity {
         return enumValues<NfcCharacter.AbilityRarity>().first()
+    }
+
+    private fun resolveAbilityRarity(rawValue: Int): NfcCharacter.AbilityRarity {
+        val rarities = enumValues<NfcCharacter.AbilityRarity>()
+        return rarities.getOrElse(rawValue) { resolveDefaultAbilityRarity() }
     }
 
     private fun markSeen(cardName: String, slotId: Int, cardId: Long, timestamp: Long) {

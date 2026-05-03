@@ -16,7 +16,7 @@ protobufGradlePlugin = "0.9.6"
 protobufJavalite = "4.33.4"
 roomRuntime = "2.8.4"
 vbNfcReader = "0.2.0-SNAPSHOT"
-dimReader = "2.1.0"
+dimReader = "2.0.0"
 
 [libraries]
 androidx-compose-material = { module = "androidx.compose.material:material" }

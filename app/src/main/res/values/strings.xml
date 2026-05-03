@@ -62,6 +62,12 @@
     <string name="scan_nfc_must_be_enabled">NFC must be enabled</string>
     <string name="scan_target_device_full">Target device is full (active + backup). Remove one character before sending.</string>
     <string name="scan_transfer_skipped_storage_state">Transfer skipped. Send is allowed only when the toy has an active character and an empty backup slot.</string>
+    <string name="scan_transfer_waiting_tap">Ready. Tap and hold phone/watch together until complete.</string>
+    <string name="scan_transfer_detected_keep_tap">Connection detected. Keep devices together...</string>
+    <string name="scan_transfer_in_progress">Transferring now. Do not remove phone yet.</string>
+    <string name="scan_transfer_complete_remove">Transfer complete. You can remove the phone now.</string>
+    <string name="scan_transfer_failed_try_again">Transfer failed. Reposition devices and try again.</string>
+    <string name="scan_transfer_cancelled">Transfer cancelled.</string>
 
 
     <string name="settings_title">Settings</string>

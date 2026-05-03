@@ -133,6 +133,7 @@ fun ScanScreenPreview() {
         scanScreenController = object: ScanScreenController {
             override val secretsFlow = MutableStateFlow<Secrets>(Secrets.getDefaultInstance())
             override val detectedTransportFlow: StateFlow<DetectedTransport> = MutableStateFlow(DetectedTransport.UNKNOWN)
+            override val transferStatusFlow: StateFlow<String?> = MutableStateFlow(null)
             override fun unregisterActivityLifecycleListener(key: String) { }
             override fun registerActivityLifecycleListener(
                 key: String,

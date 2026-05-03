@@ -47,8 +47,11 @@ class ScanScreenControllerImpl(
 
     override val detectedTransportFlow: StateFlow<DetectedTransport>
         get() = _detectedTransportFlow
+    override val transferStatusFlow: StateFlow<String?>
+        get() = _transferStatusFlow
 
     private val _detectedTransportFlow = MutableStateFlow(DetectedTransport.UNKNOWN)
+    private val _transferStatusFlow = MutableStateFlow<String?>(null)
     private var lastScannedCharacter: NfcCharacter? = null
     private var lastRequestedCharacterId: Long? = null
     private val nfcAdapter: NfcAdapter
@@ -135,6 +138,7 @@ class ScanScreenControllerImpl(
 
     override fun onClickRead(secrets: Secrets, onComplete: () -> Unit, onMultipleCards: (List<Card>) -> Unit) {
         _detectedTransportFlow.value = DetectedTransport.UNKNOWN
+        setTransferStatus(R.string.scan_transfer_waiting_tap)
         handleTag(
             secrets,
             nfcAHandler = { tagCommunicator ->
@@ -185,6 +189,7 @@ class ScanScreenControllerImpl(
 
     override fun onClickWrite(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: (ScanScreenController.WriteResult) -> Unit) {
         _detectedTransportFlow.value = DetectedTransport.UNKNOWN
+        setTransferStatus(R.string.scan_transfer_waiting_tap)
         handleTag(
             secrets,
             nfcAHandler = { tagCommunicator ->
@@ -207,9 +212,17 @@ class ScanScreenControllerImpl(
                     }
                     onComplete.invoke(ScanScreenController.WriteResult.MOVE_CONFIRMED)
                     componentActivity.getString(R.string.scan_sent_character_success)
-                } catch (e: Throwable) {
-                    Log.e("TAG", e.stackTraceToString())
-                    componentActivity.getString(R.string.scan_error_generic)
+                } catch (writeError: Throwable) {
+                    Log.e("NFC_WRITE_A", "NFC-A write failed; attempting opposite direction", writeError)
+                    runCatching {
+                        val receivedCharacter = tagCommunicator.receiveCharacter()
+                        val fallbackMessage = importCharacterFromNfcAFallback(receivedCharacter)
+                        onComplete.invoke(ScanScreenController.WriteResult.COPIED)
+                        fallbackMessage
+                    }.getOrElse { readFallbackError ->
+                        Log.e("NFC_WRITE_A", "NFC-A opposite-direction fallback failed", readFallbackError)
+                        componentActivity.getString(R.string.scan_error_generic)
+                    }
                 }
             },
             isoDepHandler = { isoDep ->
@@ -251,10 +264,42 @@ class ScanScreenControllerImpl(
         )
     }
 
+    private fun importCharacterFromNfcAFallback(receivedCharacter: NfcCharacter): String {
+        val application = componentActivity.applicationContext as VBHelper
+        val fromNfcConverter = FromNfcConverter(componentActivity)
+        val candidateCards = application.container.db
+            .cardDao()
+            .getCardByCardId(receivedCharacter.dimId.toInt())
+
+        if (candidateCards.isEmpty()) {
+            return "Detected source character on bracelet, but matching card is not imported in VBHelper."
+        }
+
+        val preferredCardId = receivedCharacter.appReserved2
+            .firstOrNull()
+            ?.toLong()
+            ?.takeIf { it > 0L }
+        val preferredCard = preferredCardId?.let { id ->
+            candidateCards.firstOrNull { it.id == id }
+        }
+
+        val selectedCard = when {
+            preferredCard != null -> preferredCard
+            candidateCards.size == 1 -> candidateCards.single()
+            else -> {
+                lastScannedCharacter = receivedCharacter
+                return "Detected source character, but multiple matching cards exist. Use Read and select the card."
+            }
+        }
+
+        return fromNfcConverter.addCharacterUsingCard(receivedCharacter, selectedCard.id)
+    }
+
     // ---- Check card (NFC-A only; ISO-DEP watches don't need a DIM prep) -----------
 
     override fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {
         _detectedTransportFlow.value = DetectedTransport.UNKNOWN
+        setTransferStatus(R.string.scan_transfer_waiting_tap)
         handleTag(
             secrets,
             nfcAHandler = { tagCommunicator ->
@@ -284,6 +329,7 @@ class ScanScreenControllerImpl(
 
     override fun cancelRead() {
         _detectedTransportFlow.value = DetectedTransport.UNKNOWN
+        setTransferStatus(R.string.scan_transfer_cancelled)
         activeReaderSessionId = readerSessionCounter.incrementAndGet()
         isHandlingTag.set(false)
         synchronized(tagStateLock) {
@@ -362,6 +408,7 @@ class ScanScreenControllerImpl(
                     }
                 }
                 if (shouldHandleTag) {
+                    setTransferStatus(R.string.scan_transfer_detected_keep_tap)
 
                 // Detect transport once per tap and lock to that route for this transfer.
                 val isoDep = IsoDep.get(tag)
@@ -380,27 +427,32 @@ class ScanScreenControllerImpl(
                             _detectedTransportFlow.value = DetectedTransport.ISO_DEP
                             isoDepTarget.connect()
                             isoDepTarget.use {
+                                setTransferStatus(R.string.scan_transfer_in_progress)
                                 val successText = isoDepAction.invoke(isoDepTarget)
                                 componentActivity.runOnUiThread {
                                     Toast.makeText(componentActivity, successText, Toast.LENGTH_SHORT).show()
+                                    setTransferStatus(R.string.scan_transfer_complete_remove)
                             }
                         }
                         } catch (e: Throwable) {
                             Log.e("NFC_HCE", "IsoDep transfer failed", e)
                             componentActivity.runOnUiThread {
                                 Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_error_generic), Toast.LENGTH_SHORT).show()
+                                setTransferStatus(R.string.scan_transfer_failed_try_again)
                             }
                         }
                     } else if (hasNfcARoute) {
                         if (!handleNfcATag(tag, secrets, nfcAHandler)) {
                             componentActivity.runOnUiThread {
                                 Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_tag_not_vb), Toast.LENGTH_SHORT).show()
+                                setTransferStatus(R.string.scan_transfer_failed_try_again)
                             }
                         }
                     } else {
                         _detectedTransportFlow.value = DetectedTransport.UNKNOWN
                         componentActivity.runOnUiThread {
                             Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_tag_not_vb), Toast.LENGTH_SHORT).show()
+                            setTransferStatus(R.string.scan_transfer_failed_try_again)
                         }
                     }
                     } finally {
@@ -443,9 +495,11 @@ class ScanScreenControllerImpl(
             nfcData.connect()
             nfcData.use {
                 val tagCommunicator = TagCommunicator.getInstance(nfcData, secrets.getCryptographicTransformerMap())
+                setTransferStatus(R.string.scan_transfer_in_progress)
                 val successText = nfcAHandler(tagCommunicator)
                 componentActivity.runOnUiThread {
                     Toast.makeText(componentActivity, successText, Toast.LENGTH_SHORT).show()
+                    setTransferStatus(R.string.scan_transfer_complete_remove)
                 }
             }
             true
@@ -455,15 +509,21 @@ class ScanScreenControllerImpl(
                 Log.w("NFC_A", "Ignoring stale NFC-A tag session; waiting for a fresh tap", e)
                 componentActivity.runOnUiThread {
                     Toast.makeText(componentActivity, "Tag session expired. Please tap again.", Toast.LENGTH_SHORT).show()
+                    setTransferStatus(R.string.scan_transfer_waiting_tap)
                 }
                 return false
             }
             Log.e("NFC_A", "NfcA transfer failed", e)
             componentActivity.runOnUiThread {
                 Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_error_generic), Toast.LENGTH_SHORT).show()
+                setTransferStatus(R.string.scan_transfer_failed_try_again)
             }
             true
         }
+    }
+
+    private fun setTransferStatus(messageRes: Int) {
+        _transferStatusFlow.value = componentActivity.getString(messageRes)
     }
 
     private fun disableReaderModeSafely() {

@@ -5,6 +5,9 @@
     <permission
         android:name="com.github.nacabaro.vbhelper.permission.ACCESS_TRANSFER_SEEN"
         android:protectionLevel="signature" />
+    <permission
+        android:name="com.github.nacabaro.vbhelper.permission.ACCESS_CARD_DATA"
+        android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.NFC" />
     <uses-feature android:name="android.hardware.nfc" android:required="true" />
@@ -35,6 +38,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+        <provider
+            android:name=".transfer.CardImportProvider"
+            android:authorities="com.github.nacabaro.vbhelper.cardimport"
+            android:exported="true"
+            android:readPermission="com.github.nacabaro.vbhelper.permission.ACCESS_CARD_DATA"
+            android:writePermission="com.github.nacabaro.vbhelper.permission.ACCESS_CARD_DATA" />
         <provider
             android:name=".transfer.SharedTransferSeenProvider"
             android:authorities="com.github.nacabaro.vbhelper.transferseen"
