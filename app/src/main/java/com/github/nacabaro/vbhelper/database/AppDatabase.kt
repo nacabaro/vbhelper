@@ -7,6 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.github.nacabaro.vbhelper.daos.AdventureDao
 import com.github.nacabaro.vbhelper.daos.CardAdventureDao
 import com.github.nacabaro.vbhelper.daos.CharacterDao
+import com.github.nacabaro.vbhelper.daos.CharacterTransferPolicyDao
 import com.github.nacabaro.vbhelper.daos.DexDao
 import com.github.nacabaro.vbhelper.daos.CardDao
 import com.github.nacabaro.vbhelper.daos.CardFusionsDao
@@ -27,6 +28,7 @@ import com.github.nacabaro.vbhelper.domain.characters.Sprite
 import com.github.nacabaro.vbhelper.domain.characters.Adventure
 import com.github.nacabaro.vbhelper.domain.characters.Dex
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.CharacterTransferPolicy
 import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
@@ -36,7 +38,7 @@ import com.github.nacabaro.vbhelper.domain.device_data.VitalWearCharacterSetting
 import com.github.nacabaro.vbhelper.domain.items.Items
 
 @Database(
-    version = 5,
+    version = 6,
     entities = [
         Card::class,
         CardProgress::class,
@@ -50,6 +52,7 @@ import com.github.nacabaro.vbhelper.domain.items.Items
         SpecialMissions::class,
         TransformationHistory::class,
         VitalsHistory::class,
+        CharacterTransferPolicy::class,
         Dex::class,
         Items::class,
         Adventure::class,
@@ -71,6 +74,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun cardAdventureDao(): CardAdventureDao
     abstract fun cardFusionsDao(): CardFusionsDao
     abstract fun vitalWearSettingsDao(): VitalWearSettingsDao
+    abstract fun characterTransferPolicyDao(): CharacterTransferPolicyDao
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -136,6 +140,28 @@ abstract class AppDatabase : RoomDatabase() {
                 // TransferSeen moved to shared_transfer.db
                 db.execSQL("DROP TABLE IF EXISTS `TransferSeen`")
                 db.execSQL("DROP INDEX IF EXISTS `index_TransferSeen_cardLookupKey_slotId`")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `CharacterTransferPolicy` (
+                        `characterId` INTEGER NOT NULL,
+                        `nativeDeviceType` TEXT NOT NULL,
+                        `preferredHceExportFormat` TEXT NOT NULL,
+                        `preferredNfcaExportFormat` TEXT NOT NULL,
+                        `lastObservedImportFormat` TEXT,
+                        `lastTransferTransport` TEXT,
+                        `lastTransferTarget` TEXT,
+                        `preserveVbRoundTrip` INTEGER NOT NULL,
+                        `preserveBeRoundTrip` INTEGER NOT NULL,
+                        PRIMARY KEY(`characterId`),
+                        FOREIGN KEY(`characterId`) REFERENCES `UserCharacter`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
             }
         }
 

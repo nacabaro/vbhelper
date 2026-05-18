@@ -9,6 +9,8 @@ import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.VitalWearCharacterSettings
+import com.github.nacabaro.vbhelper.transfer.CharacterTransferPolicyResolver
+import com.github.nacabaro.vbhelper.transfer.ExportFormat
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
@@ -18,6 +20,8 @@ class VitalWearCharacterImporter(
     private val database: AppDatabase,
     private val transferSeenDao: SharedTransferSeenDao,
 ) {
+    private val transferPolicyResolver = CharacterTransferPolicyResolver(database.characterTransferPolicyDao())
+
     data class ImportResult(
         val success: Boolean,
         val message: String
@@ -58,6 +62,11 @@ class VitalWearCharacterImporter(
             fallbackIsBeCharacter = fallbackIsBeCharacter,
         )
         val isBeCharacter = deviceType == DeviceType.BEDevice
+        val observedImportFormat = resolveObservedHceImportFormat(
+            transferDeviceType = character.characterStats.deviceType,
+            importedCard = importedCard,
+            hasBePayloadStats = hasBePayloadStats,
+        )
 
         val userCharacterId = database.userCharacterDao().insertCharacterData(
             UserCharacter(
@@ -134,6 +143,17 @@ class VitalWearCharacterImporter(
                     } else {
                         character.characterStats.trainedPp.coerceAtLeast(0)
                     }
+                )
+            )
+        }
+
+        runBlocking {
+            database.characterTransferPolicyDao().upsert(
+                transferPolicyResolver.policyForHceImport(
+                    characterId = userCharacterId,
+                    importedCardIsBem = importedCard.isBEm,
+                    resolvedDeviceType = deviceType,
+                    observedFormat = observedImportFormat,
                 )
             )
         }
@@ -268,6 +288,23 @@ class VitalWearCharacterImporter(
     private fun resolveAbilityRarity(rawValue: Int): NfcCharacter.AbilityRarity {
         val rarities = enumValues<NfcCharacter.AbilityRarity>()
         return rarities.getOrElse(rawValue) { resolveDefaultAbilityRarity() }
+    }
+
+    private fun resolveObservedHceImportFormat(
+        transferDeviceType: Character.CharacterStats.TransferDeviceType,
+        importedCard: Card,
+        hasBePayloadStats: Boolean,
+    ): ExportFormat {
+        return when (transferDeviceType) {
+            Character.CharacterStats.TransferDeviceType.TRANSFER_DEVICE_TYPE_BE -> ExportFormat.BE
+            Character.CharacterStats.TransferDeviceType.TRANSFER_DEVICE_TYPE_VB -> ExportFormat.VB
+            Character.CharacterStats.TransferDeviceType.UNRECOGNIZED,
+            Character.CharacterStats.TransferDeviceType.TRANSFER_DEVICE_TYPE_UNSPECIFIED -> if (importedCard.isBEm || hasBePayloadStats) {
+                ExportFormat.BE
+            } else {
+                ExportFormat.VB
+            }
+        }
     }
 
     private fun markSeen(cardName: String, slotId: Int, cardId: Long, timestamp: Long) {

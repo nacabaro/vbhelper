@@ -19,11 +19,14 @@ import com.github.nacabaro.vbhelper.screens.cardScreen.CardScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 
 class MainActivity : ComponentActivity() {
     private val onActivityLifecycleListeners = HashMap<String, ActivityLifecycleListener>()
     private var initialRoute: String? = null
+    private val deepLinkNavigationEvents = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
     private fun registerActivityLifecycleListener(key: String, activityLifecycleListener: ActivityLifecycleListener) {
         if( onActivityLifecycleListeners[key] != null) {
@@ -57,6 +60,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         initialRoute = getInitialRouteFromIntent(intent)
+        initialRoute?.let { deepLinkNavigationEvents.tryEmit(it) }
 
         setContent {
             VBHelperTheme {
@@ -69,7 +73,8 @@ class MainActivity : ComponentActivity() {
                     storageScreenController = storageScreenController,
                     spriteViewerController = spriteViewerController,
                     cardScreenController = cardScreenController,
-                    initialRoute = initialRoute
+                    initialRoute = initialRoute,
+                    deepLinkNavigationEvents = deepLinkNavigationEvents.asSharedFlow(),
                 )
             }
         }
@@ -97,6 +102,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         initialRoute = getInitialRouteFromIntent(intent)
+        initialRoute?.let { deepLinkNavigationEvents.tryEmit(it) }
     }
 
     private fun getInitialRouteFromIntent(intent: Intent?): String? {
@@ -120,7 +126,8 @@ class MainActivity : ComponentActivity() {
         homeScreenController: HomeScreenControllerImpl,
         spriteViewerController: SpriteViewerControllerImpl,
         cardScreenController: CardScreenControllerImpl,
-        initialRoute: String? = null
+        initialRoute: String? = null,
+        deepLinkNavigationEvents: kotlinx.coroutines.flow.Flow<String>,
     ) {
         AppNavigation(
             applicationNavigationHandlers = AppNavigationHandlers(
@@ -133,7 +140,8 @@ class MainActivity : ComponentActivity() {
                 spriteViewerController,
                 cardScreenController
             ),
-            initialRoute = initialRoute
+            initialRoute = initialRoute,
+            navigationEvents = deepLinkNavigationEvents,
         )
     }
 }

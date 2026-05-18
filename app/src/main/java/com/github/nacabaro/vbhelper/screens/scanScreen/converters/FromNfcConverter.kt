@@ -11,6 +11,8 @@ import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
+import com.github.nacabaro.vbhelper.transfer.CharacterTransferPolicyResolver
+import com.github.nacabaro.vbhelper.transfer.ExportFormat
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import java.util.GregorianCalendar
 
@@ -20,6 +22,7 @@ class FromNfcConverter (
     private val application = componentActivity.applicationContext as VBHelper
     private val database = application.container.db
     private val transferSeenDao = application.container.transferSeenDao
+    private val transferPolicyResolver = CharacterTransferPolicyResolver(database.characterTransferPolicyDao())
 
     
     fun addCharacterUsingCard(
@@ -133,6 +136,18 @@ class FromNfcConverter (
                 nfcCharacter = nfcCharacter
             )
         }
+
+        database
+            .characterTransferPolicyDao()
+            .upsert(
+                transferPolicyResolver.policyForNfcaImport(
+                    characterId = characterId,
+                    observedFormat = when (nfcCharacter) {
+                        is BENfcCharacter -> ExportFormat.BE
+                        else -> ExportFormat.VB
+                    }
+                )
+            )
 
         addTransformationHistoryToDatabase(
             characterId = characterId,

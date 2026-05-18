@@ -3,6 +3,10 @@ package com.github.nacabaro.vbhelper.source
 import com.github.cfogrady.vitalwear.protos.Character
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
+import com.github.nacabaro.vbhelper.transfer.CharacterTransferPolicyResolver
+import com.github.nacabaro.vbhelper.transfer.TransferTarget
+import com.github.nacabaro.vbhelper.transfer.TransferTransport
+import com.github.nacabaro.vbhelper.transfer.toTransferDeviceType
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.flow.firstOrNull
 
@@ -30,6 +34,8 @@ internal fun resolveTrainingSeconds(
 class VitalWearCharacterExporter(
     private val database: AppDatabase
 ) {
+    private val transferPolicyResolver = CharacterTransferPolicyResolver(database.characterTransferPolicyDao())
+
     /**
      * Builds a Character proto from the stored character data.
      * Used by the HCE ISO-DEP transfer path.
@@ -44,6 +50,13 @@ class VitalWearCharacterExporter(
         val cardProgress = database.cardProgressDao().getCardProgressSync(card.id) ?: 0
         val beData = database.userCharacterDao().getBeDataOrNull(characterId)
         val vbData = database.userCharacterDao().getVbDataOrNull(characterId)
+        val exportFormat = transferPolicyResolver.resolveExportFormat(
+            characterId = characterId,
+            characterType = userCharacter.characterType,
+            transport = TransferTransport.HCE,
+            target = TransferTarget.VITAL_WEAR,
+            isBemCard = card.isBEm,
+        )
         val normalizedTransformationCountdownMinutes = normalizeTransformationCountdownMinutes(
             transformationCountdownMinutes = userCharacter.transformationCountdown,
             hasPossibleTransformations = hasPossibleTransformations(userCharacter.charId),
@@ -68,7 +81,7 @@ class VitalWearCharacterExporter(
                     .setTotalWins(characterWithSprites.totalBattlesWon)
                     .setCurrentPhaseWins(characterWithSprites.currentPhaseBattlesWon)
                     .setMood(characterWithSprites.mood)
-                    .setDeviceType(userCharacter.characterType.toTransferDeviceType())
+                    .setDeviceType(exportFormat.toTransferDeviceType())
                     .setAgeInDays(userCharacter.ageInDays.coerceAtLeast(0))
                     .setActivityLevel(userCharacter.activityLevel.coerceAtLeast(0))
                     .setHeartRateCurrent(userCharacter.heartRateCurrent.coerceAtLeast(0))

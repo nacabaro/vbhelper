@@ -22,9 +22,12 @@ import com.github.nacabaro.vbhelper.screens.scanScreen.converters.FromNfcConvert
 import com.github.nacabaro.vbhelper.screens.scanScreen.converters.ToNfcConverter
 import com.github.nacabaro.vbhelper.source.VitalWearCharacterExporter
 import com.github.nacabaro.vbhelper.source.VitalWearCharacterImporter
+import com.github.nacabaro.vbhelper.transfer.ExportFormat
 import com.github.nacabaro.vbhelper.source.getCryptographicTransformerMap
 import com.github.nacabaro.vbhelper.source.isMissingSecrets
 import com.github.nacabaro.vbhelper.source.proto.Secrets
+import com.github.nacabaro.vbhelper.transfer.TransferTarget
+import com.github.nacabaro.vbhelper.transfer.TransferTransport
 import com.github.nacabaro.vbhelper.transfer.hce.VitalWearHceReaderClient
 import com.github.nacabaro.vbhelper.R
 import kotlinx.coroutines.Dispatchers
@@ -213,15 +216,51 @@ class ScanScreenControllerImpl(
                     onComplete.invoke(ScanScreenController.WriteResult.MOVE_CONFIRMED)
                     componentActivity.getString(R.string.scan_sent_character_success)
                 } catch (writeError: Throwable) {
-                    Log.e("NFC_WRITE_A", "NFC-A write failed; attempting opposite direction", writeError)
-                    runCatching {
-                        val receivedCharacter = tagCommunicator.receiveCharacter()
-                        val fallbackMessage = importCharacterFromNfcAFallback(receivedCharacter)
-                        onComplete.invoke(ScanScreenController.WriteResult.COPIED)
-                        fallbackMessage
-                    }.getOrElse { readFallbackError ->
-                        Log.e("NFC_WRITE_A", "NFC-A opposite-direction fallback failed", readFallbackError)
-                        componentActivity.getString(R.string.scan_error_generic)
+                    Log.e("NFC_WRITE_A", "NFC-A write failed; trying alternate payload format", writeError)
+                    val characterId = lastRequestedCharacterId
+                    val alternateFormat = when (nfcCharacter) {
+                        is BENfcCharacter -> ExportFormat.VB
+                        is VBNfcCharacter -> ExportFormat.BE
+                        else -> null
+                    }
+
+                    val alternateSent = if (characterId != null && alternateFormat != null) {
+                        runCatching {
+                            val alternateCharacter = runBlocking {
+                                ToNfcConverter(componentActivity = componentActivity).characterToNfc(
+                                    characterId = characterId,
+                                    target = TransferTarget.REAL_BRACELET,
+                                    transport = TransferTransport.NFCA,
+                                    forcedFormat = alternateFormat,
+                                )
+                            }
+                            when (alternateCharacter) {
+                                is VBNfcCharacter -> tagCommunicator.sendCharacter(alternateCharacter)
+                                is BENfcCharacter -> tagCommunicator.sendCharacter(alternateCharacter)
+                            }
+                            true
+                        }.getOrElse { alternateError ->
+                            Log.e("NFC_WRITE_A", "Alternate payload write failed", alternateError)
+                            false
+                        }
+                    } else {
+                        false
+                    }
+
+                    if (alternateSent) {
+                        onComplete.invoke(ScanScreenController.WriteResult.MOVE_CONFIRMED)
+                        "Sent character after converting payload for the tapped bracelet."
+                    } else {
+                        Log.e("NFC_WRITE_A", "NFC-A write failed; attempting opposite direction fallback", writeError)
+                        runCatching {
+                            val receivedCharacter = tagCommunicator.receiveCharacter()
+                            val fallbackMessage = importCharacterFromNfcAFallback(receivedCharacter)
+                            onComplete.invoke(ScanScreenController.WriteResult.COPIED)
+                            fallbackMessage
+                        }.getOrElse { readFallbackError ->
+                            Log.e("NFC_WRITE_A", "NFC-A opposite-direction fallback failed", readFallbackError)
+                            componentActivity.getString(R.string.scan_error_generic)
+                        }
                     }
                 }
             },
@@ -707,7 +746,11 @@ class ScanScreenControllerImpl(
 
     override suspend fun characterToNfc(characterId: Long): NfcCharacter {
         lastRequestedCharacterId = characterId
-        val character = ToNfcConverter(componentActivity = componentActivity).characterToNfc(characterId)
+        val character = ToNfcConverter(componentActivity = componentActivity).characterToNfc(
+            characterId = characterId,
+            target = TransferTarget.REAL_BRACELET,
+            transport = TransferTransport.NFCA,
+        )
         Log.d("CharacterType", character.toString())
         return character
     }

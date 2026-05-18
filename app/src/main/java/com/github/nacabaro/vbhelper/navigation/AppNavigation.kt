@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +40,7 @@ import com.github.nacabaro.vbhelper.screens.settingsScreen.CreditsScreen
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 import com.github.nacabaro.vbhelper.source.StorageRepository
+import kotlinx.coroutines.flow.Flow
 
 data class AppNavigationHandlers(
     val settingsScreenController: SettingsScreenControllerImpl,
@@ -54,9 +56,22 @@ data class AppNavigationHandlers(
 @Composable
 fun AppNavigation(
     applicationNavigationHandlers: AppNavigationHandlers,
-    initialRoute: String? = null
+    initialRoute: String? = null,
+    navigationEvents: Flow<String>? = null,
 ) {
     val navController = rememberNavController()
+
+    LaunchedEffect(navController, navigationEvents) {
+        navigationEvents?.collect { route ->
+            navController.navigate(route) {
+                launchSingleTop = true
+                restoreState = true
+                popUpTo(navController.graph.startDestinationId) {
+                    saveState = true
+                }
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = {

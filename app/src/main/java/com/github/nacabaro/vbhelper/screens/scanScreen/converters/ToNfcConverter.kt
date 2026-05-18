@@ -15,6 +15,10 @@ import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import com.github.nacabaro.vbhelper.transfer.CharacterTransferPolicyResolver
+import com.github.nacabaro.vbhelper.transfer.ExportFormat
+import com.github.nacabaro.vbhelper.transfer.TransferTarget
+import com.github.nacabaro.vbhelper.transfer.TransferTransport
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -30,11 +34,15 @@ class ToNfcConverter(
 
     private val application: VBHelper = componentActivity.applicationContext as VBHelper
     private val database: AppDatabase = application.container.db
+    private val transferPolicyResolver = CharacterTransferPolicyResolver(database.characterTransferPolicyDao())
 
 
 
     suspend fun characterToNfc(
-        characterId: Long
+        characterId: Long,
+        target: TransferTarget = TransferTarget.REAL_BRACELET,
+        transport: TransferTransport = TransferTransport.NFCA,
+        forcedFormat: ExportFormat? = null,
     ): NfcCharacter {
         val app = componentActivity.applicationContext as VBHelper
         val database = app.container.db
@@ -46,15 +54,20 @@ class ToNfcConverter(
         val characterInfo = database
             .characterDao()
             .getCharacterInfo(userCharacter.charId)
+        val card = database
+            .cardDao()
+            .getCardByCharacterIdSync(characterId)
+            ?: error("Card not found for character $characterId")
 
-        // Use the character's own type as the authoritative signal for encoding.
-        // The card's isBEm flag only indicates the *card* is a BEM card, not that the
-        // stored UserCharacter has a BECharacterData row.  Mixing those two signals was
-        // the root cause of a NoSuchElementException when a VB-type character was
-        // associated with a BE-type card.
-        val shouldEncodeAsBem = userCharacter.characterType == DeviceType.BEDevice
+        val exportFormat = forcedFormat ?: transferPolicyResolver.resolveExportFormat(
+            characterId = characterId,
+            characterType = userCharacter.characterType,
+            transport = transport,
+            target = target,
+            isBemCard = card.isBEm,
+        )
 
-        return if (shouldEncodeAsBem)
+        return if (exportFormat == ExportFormat.BE)
             nfcToBENfc(characterId, characterInfo, userCharacter)
         else
             nfcToVBNfc(characterId, characterInfo, userCharacter)
