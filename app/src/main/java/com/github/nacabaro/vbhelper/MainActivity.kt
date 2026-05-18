@@ -23,9 +23,6 @@ import com.github.nacabaro.vbhelper.screens.cardScreen.CardScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
 
 
 class MainActivity : ComponentActivity() {
@@ -119,19 +116,9 @@ class MainActivity : ComponentActivity() {
             val hasAuthToken = !token.isNullOrEmpty()
 
             if (isAppAuthCallback || isLocalhostAuthCallback || hasAuthToken) {
-                if (!token.isNullOrEmpty()) {
-                    val application = applicationContext as VBHelper
-                    val authRepository = com.github.nacabaro.vbhelper.battle.BattleAuthContainer(this).authRepository
-                    val userId = data.getQueryParameter("userId")?.toLongOrNull()
-                    
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        authRepository.setAuthenticated(
-                            isAuthenticated = true,
-                            nacatechToken = token,
-                            userId = userId
-                        )
-                    }
-                }
+                // BattlesScreen consumes the callback intent and exchanges the single-use token
+                // for a durable session token. Writing partial auth state here can clear an
+                // already-valid session token and cause the browser login loop to restart.
                 return NavigationItems.Battles.route
             }
         }
