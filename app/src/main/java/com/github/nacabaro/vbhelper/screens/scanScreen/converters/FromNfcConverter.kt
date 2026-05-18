@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.screens.scanScreen.converters
 import androidx.activity.ComponentActivity
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
+import com.github.cfogrady.vbnfc.vb.SpecialMission
 import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.card.Card
@@ -268,8 +269,8 @@ class FromNfcConverter (
             SpecialMissions(
                 characterId = characterId,
                 watchId = watchId,
-                missionType = com.github.cfogrady.vbnfc.data.MissionType.NONE,
-                status = com.github.cfogrady.vbnfc.data.MissionStatus.UNAVAILABLE,
+                missionType = SpecialMission.Type.NONE,
+                status = SpecialMission.Status.UNAVAILABLE,
                 goal = 0,
                 progress = 0,
                 timeElapsedInMinutes = 0,
