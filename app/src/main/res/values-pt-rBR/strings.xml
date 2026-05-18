@@ -178,7 +178,7 @@
     <string name="dex_chara_name_icon_description">Nome do personagem</string>
     <string name="dex_chara_stats">HP: %1$d, BP: %2$d, AP: %3$d</string>
     <string name="dex_chara_stage_attribute">Stg: %1$s, Atr: %2$s</string>
-    <string name="dex_chara_unknown_name">\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?</string>
+    <string name="dex_chara_unknown_name">________________</string>
     <string name="dex_chara_stage_attribute_unknown">Stg: -, Atr: -</string>
     <string name="dex_chara_stats_unknown">HP: -, BP: -, AP: -</string>
     <string name="dex_chara_requirements">

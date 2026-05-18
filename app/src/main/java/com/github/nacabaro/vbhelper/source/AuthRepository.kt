@@ -44,12 +44,18 @@ class AuthRepository(
             preferences[IS_AUTHENTICATED] = isAuthenticated
             if (nacatechToken != null) {
                 preferences[AUTH_TOKEN] = nacatechToken
+            } else {
+                preferences.remove(AUTH_TOKEN)
             }
             if (sessionToken != null) {
                 preferences[SESSION_TOKEN] = sessionToken
+            } else {
+                preferences.remove(SESSION_TOKEN)
             }
             if (userId != null) {
                 preferences[USER_ID] = userId
+            } else {
+                preferences.remove(USER_ID)
             }
         }
     }

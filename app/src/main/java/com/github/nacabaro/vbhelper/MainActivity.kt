@@ -7,9 +7,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.github.nacabaro.vbhelper.navigation.AppNavigation
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.navigation.AppNavigationHandlers
+import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.screens.homeScreens.HomeScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
@@ -19,14 +23,14 @@ import com.github.nacabaro.vbhelper.screens.cardScreen.CardScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 
 
 class MainActivity : ComponentActivity() {
     private val onActivityLifecycleListeners = HashMap<String, ActivityLifecycleListener>()
-    private var initialRoute: String? = null
-    private val deepLinkNavigationEvents = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    private var initialRoute: String? by mutableStateOf(null)
 
     private fun registerActivityLifecycleListener(key: String, activityLifecycleListener: ActivityLifecycleListener) {
         if( onActivityLifecycleListeners[key] != null) {
@@ -60,7 +64,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         initialRoute = getInitialRouteFromIntent(intent)
-        initialRoute?.let { deepLinkNavigationEvents.tryEmit(it) }
 
         setContent {
             VBHelperTheme {
@@ -73,8 +76,7 @@ class MainActivity : ComponentActivity() {
                     storageScreenController = storageScreenController,
                     spriteViewerController = spriteViewerController,
                     cardScreenController = cardScreenController,
-                    initialRoute = initialRoute,
-                    deepLinkNavigationEvents = deepLinkNavigationEvents.asSharedFlow(),
+                    initialRoute = initialRoute
                 )
             }
         }
@@ -102,15 +104,35 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         initialRoute = getInitialRouteFromIntent(intent)
-        initialRoute?.let { deepLinkNavigationEvents.tryEmit(it) }
     }
 
     private fun getInitialRouteFromIntent(intent: Intent?): String? {
         if (intent == null) return null
         val data = intent.data
         if (intent.action == Intent.ACTION_VIEW && data != null) {
-            if (data.scheme == "vbhelper" && data.host == "auth") {
-                return "Battle"
+            val isAppAuthCallback = data.scheme == "vbhelper" && data.host == "auth"
+            val isLocalhostAuthCallback =
+                (data.scheme == "http" || data.scheme == "https") &&
+                    (data.host == "localhost" || data.host == "127.0.0.1") &&
+                    data.path?.startsWith("/authenticate") == true
+            val token = data.getQueryParameter("c") ?: data.getQueryParameter("token")
+            val hasAuthToken = !token.isNullOrEmpty()
+
+            if (isAppAuthCallback || isLocalhostAuthCallback || hasAuthToken) {
+                if (!token.isNullOrEmpty()) {
+                    val application = applicationContext as VBHelper
+                    val authRepository = com.github.nacabaro.vbhelper.battle.BattleAuthContainer(this).authRepository
+                    val userId = data.getQueryParameter("userId")?.toLongOrNull()
+                    
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        authRepository.setAuthenticated(
+                            isAuthenticated = true,
+                            nacatechToken = token,
+                            userId = userId
+                        )
+                    }
+                }
+                return NavigationItems.Battles.route
             }
         }
         return null
@@ -126,8 +148,7 @@ class MainActivity : ComponentActivity() {
         homeScreenController: HomeScreenControllerImpl,
         spriteViewerController: SpriteViewerControllerImpl,
         cardScreenController: CardScreenControllerImpl,
-        initialRoute: String? = null,
-        deepLinkNavigationEvents: kotlinx.coroutines.flow.Flow<String>,
+        initialRoute: String? = null
     ) {
         AppNavigation(
             applicationNavigationHandlers = AppNavigationHandlers(
@@ -140,8 +161,7 @@ class MainActivity : ComponentActivity() {
                 spriteViewerController,
                 cardScreenController
             ),
-            initialRoute = initialRoute,
-            navigationEvents = deepLinkNavigationEvents,
+            initialRoute = initialRoute
         )
     }
 }

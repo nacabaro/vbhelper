@@ -33,8 +33,6 @@ import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
-import com.github.nacabaro.vbhelper.screens.homeScreens.screens.BEBEmHomeScreen
-import com.github.nacabaro.vbhelper.screens.homeScreens.screens.BEDiMHomeScreen
 import com.github.nacabaro.vbhelper.screens.homeScreens.screens.VBDiMHomeScreen
 import com.github.nacabaro.vbhelper.screens.itemsScreen.ObtainedItemDialog
 import com.github.nacabaro.vbhelper.source.StorageRepository
@@ -74,9 +72,8 @@ fun HomeScreen(
             ?: flowOf(emptyList())
     ).collectAsState(initial = emptyList())
 
-    val vbSpecialMissions by (
+    val specialMissions by (
         activeMon
-            ?.takeIf { it.characterType == DeviceType.VBDevice }
             ?.let { chara ->
                 storageRepository.getSpecialMissions(chara.id)
             }
@@ -144,29 +141,20 @@ fun HomeScreen(
                     height = cardIconData!!.cardIconHeight
                 )
 
-                if (activeMon!!.isBemCard && beData != null) {
-                    BEBEmHomeScreen(
-                        activeMon = activeMon!!,
-                        beData = beData!!,
-                        transformationHistory = transformationHistory,
-                        contentPadding = PaddingValues(0.dp),
-                        cardIcon = cardIcon
-                    )
-                } else if (!activeMon!!.isBemCard && activeMon!!.characterType == DeviceType.BEDevice && beData != null) {
-                    BEDiMHomeScreen(
-                        activeMon = activeMon!!,
-                        beData = beData!!,
-                        transformationHistory = transformationHistory,
-                        contentPadding = PaddingValues(0.dp),
-                        cardIcon = cardIcon
-                    )
-                } else if (vbData != null) {
+                val activeCharacter = activeMon!!
+                val displaySpecialMissions = specialMissions
+
+                if (activeCharacter.characterType == DeviceType.BEDevice || vbData != null) {
                     VBDiMHomeScreen(
-                        activeMon = activeMon!!,
-                        vbData = vbData!!,
+                        activeMon = activeCharacter,
+                        vbData = vbData ?: VBCharacterData(
+                            id = activeCharacter.id,
+                            generation = 0,
+                            totalTrophies = activeCharacter.trophies,
+                        ),
                         transformationHistory = transformationHistory,
                         contentPadding = PaddingValues(0.dp),
-                        specialMissions = vbSpecialMissions,
+                        specialMissions = displaySpecialMissions,
                         homeScreenController = homeScreenController,
                         onClickCollect = { item, currency ->
                             collectedItem = item
@@ -225,3 +213,5 @@ fun HomeScreen(
         }
     }
 }
+
+

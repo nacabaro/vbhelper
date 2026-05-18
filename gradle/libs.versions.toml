@@ -17,6 +17,12 @@ protobufJavalite = "4.33.4"
 roomRuntime = "2.8.4"
 vbNfcReader = "0.2.0-SNAPSHOT"
 dimReader = "2.0.0"
+playServicesWearable = "19.0.0"
+kotlinxCoroutinesPlayServices = "1.4.3-native-mt"
+timber = "5.0.1"
+tinyLog = "2.4.1"
+slf4jTimber = "1.0.0"
+slf4jApi = "2.0.16"
 
 [libraries]
 androidx-compose-material = { module = "androidx.compose.material:material" }
@@ -46,6 +52,13 @@ protobuf-gradle-plugin = { module = "com.google.protobuf:protobuf-gradle-plugin"
 protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufJavalite" }
 vb-nfc-reader = { module = "com.github.cfogrady:vb-nfc-reader", version.ref = "vbNfcReader" }
 dim-reader = { module = "com.github.cfogrady:vb-dim-reader", version.ref = "dimReader" }
+play-services-wearable = { module = "com.google.android.gms:play-services-wearable", version.ref = "playServicesWearable" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+tiny-log = { module = "org.tinylog:tinylog-api", version.ref = "tinyLog" }
+tiny-log-impl = { module = "org.tinylog:tinylog-impl", version.ref = "tinyLog" }
+slf4j-timber = { module = "at.favre.lib:slf4j-timber", version.ref = "slf4jTimber" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4jApi" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,18 +1,11 @@
 package com.github.nacabaro.vbhelper.battle
 
-import android.util.Log
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.State
 
 class ArenaBattleSystem {
-    companion object {
-        private const val TAG = "ArenaBattleSystem"
-    }
-
-    // Attack phases: 0=Idle, 1=Player attack on player screen, 2=Player attack on opponent screen, 
+    // Attack phases: 0=Idle, 1=Player attack on player screen, 2=Player attack on opponent screen,
     // 3=Opponent attack on opponent screen, 4=Opponent attack on player screen
     private var _attackPhase by mutableStateOf(0)
     val attackPhase: Int get() = _attackPhase
@@ -43,19 +36,6 @@ class ArenaBattleSystem {
 
     private var _critBarProgress by mutableStateOf(0)
     val critBarProgress: Int get() = _critBarProgress
-
-    // Dodge animation states
-    private var _isDodging by mutableStateOf(false)
-    val isDodging: Boolean get() = _isDodging
-
-    private var _dodgeProgress by mutableStateOf(0f)
-    val dodgeProgress: Float get() = _dodgeProgress
-
-    private var _dodgeDirection by mutableStateOf(1f) // 1f = up, -1f = down
-    val dodgeDirection: Float get() = _dodgeDirection
-
-    private var _isHit by mutableStateOf(false)
-    val isHit: Boolean get() = _isHit
 
     private var _hitProgress by mutableStateOf(0f)
     val hitProgress: Float get() = _hitProgress
@@ -180,10 +160,6 @@ class ArenaBattleSystem {
         _isPlayerAttacking = false
         _attackIsHit = false
         _currentView = 0
-        _isDodging = false
-        _dodgeProgress = 0f
-        _dodgeDirection = 1f
-        _isHit = false
         _hitProgress = 0f
         _isPlayerDodging = false
         _isOpponentDodging = false
@@ -215,39 +191,8 @@ class ArenaBattleSystem {
         //Log.d(TAG, "Updated crit bar progress: $progress")
     }
 
-    // Dodge animation methods
-    fun startDodge() {
-        _isDodging = true
-        _dodgeProgress = 0f
-        _dodgeDirection = 1f // Start moving up
-    }
-
-    fun setDodgeProgress(progress: Float) {
-        _dodgeProgress = progress
-    }
-
-    fun setDodgeDirection(direction: Float) {
-        _dodgeDirection = direction
-    }
-
-    fun endDodge() {
-        _isDodging = false
-        _dodgeProgress = 0f
-    }
-
-    // Hit animation methods
-    fun startHit() {
-        _isHit = true
-        _hitProgress = 0f
-    }
-
     fun setHitProgress(progress: Float) {
         _hitProgress = progress
-    }
-
-    fun endHit() {
-        _isHit = false
-        _hitProgress = 0f
     }
 
     // Player-specific dodge methods
@@ -345,17 +290,6 @@ class ArenaBattleSystem {
         _isOpponentShakeDelayed = false
     }
 
-    // Combined method to handle attack result
-    fun handleAttackResult(isHit: Boolean) {
-        _attackIsHit = isHit
-        if (isHit) {
-            // Player attack hit - opponent gets hit
-            startOpponentHit()
-        } else {
-            // Player attack missed - opponent dodges
-            startOpponentDodge()
-        }
-    }
 
     // Method to handle opponent attack result
     fun handleOpponentAttackResult(isHit: Boolean) {

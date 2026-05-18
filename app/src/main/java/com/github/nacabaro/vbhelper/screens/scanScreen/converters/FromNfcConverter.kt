@@ -11,8 +11,6 @@ import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
-import com.github.nacabaro.vbhelper.transfer.CharacterTransferPolicyResolver
-import com.github.nacabaro.vbhelper.transfer.ExportFormat
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import java.util.GregorianCalendar
 
@@ -22,7 +20,6 @@ class FromNfcConverter (
     private val application = componentActivity.applicationContext as VBHelper
     private val database = application.container.db
     private val transferSeenDao = application.container.transferSeenDao
-    private val transferPolicyResolver = CharacterTransferPolicyResolver(database.characterTransferPolicyDao())
 
     
     fun addCharacterUsingCard(
@@ -130,24 +127,14 @@ class FromNfcConverter (
                 characterId = characterId,
                 nfcCharacter = nfcCharacter
             )
+            // Keep a VB profile alongside BE stats for later VB-target exports.
+            addVbCharacterProfileFromBe(characterId, nfcCharacter)
         } else if (nfcCharacter is VBNfcCharacter) {
             addVbCharacterToDatabase(
                 characterId = characterId,
                 nfcCharacter = nfcCharacter
             )
         }
-
-        database
-            .characterTransferPolicyDao()
-            .upsert(
-                transferPolicyResolver.policyForNfcaImport(
-                    characterId = characterId,
-                    observedFormat = when (nfcCharacter) {
-                        is BENfcCharacter -> ExportFormat.BE
-                        else -> ExportFormat.VB
-                    }
-                )
-            )
 
         addTransformationHistoryToDatabase(
             characterId = characterId,
@@ -248,8 +235,8 @@ class FromNfcConverter (
             itemType = nfcCharacter.itemType.toInt(),
             itemMultiplier = nfcCharacter.itemMultiplier.toInt(),
             itemRemainingTime = nfcCharacter.itemRemainingTime.toInt(),
-            otp0 = "", //nfcCharacter.value!!.otp0.toString(),
-            otp1 = "", //nfcCharacter.value!!.otp1.toString(),
+            otp0 = nfcCharacter.getOtp0().joinToString("") { "%02x".format(it) },
+            otp1 = nfcCharacter.getOtp1().joinToString("") { "%02x".format(it) },
             minorVersion = nfcCharacter.characterCreationFirmwareVersion.minorVersion.toInt(),
             majorVersion = nfcCharacter.characterCreationFirmwareVersion.majorVersion.toInt(),
         )
@@ -257,6 +244,42 @@ class FromNfcConverter (
         database
             .userCharacterDao()
             .insertBECharacterData(extraCharacterData)
+    }
+
+    private fun addVbCharacterProfileFromBe(
+        characterId: Long,
+        nfcCharacter: BENfcCharacter,
+    ) {
+        val historyCount = nfcCharacter.transformationHistory.count { it.toCharIndex.toInt() != 255 }
+        val vbData = VBCharacterData(
+            id = characterId,
+            generation = (historyCount - 1).coerceAtLeast(0),
+            totalTrophies = nfcCharacter.trophies.toInt(),
+        )
+        database.userCharacterDao().insertVBCharacterData(vbData)
+
+        // Populate empty mission slots for BE characters for UI consistency
+        addEmptyMissionSlotsForBe(characterId)
+    }
+
+    private fun addEmptyMissionSlotsForBe(characterId: Long) {
+        // Create 4 empty mission slots (one for each watch position 0-3)
+        val emptyMissions = (0..3).map { watchId ->
+            SpecialMissions(
+                characterId = characterId,
+                watchId = watchId,
+                missionType = com.github.cfogrady.vbnfc.data.MissionType.NONE,
+                status = com.github.cfogrady.vbnfc.data.MissionStatus.UNAVAILABLE,
+                goal = 0,
+                progress = 0,
+                timeElapsedInMinutes = 0,
+                timeLimitInMinutes = 0,
+            )
+        }
+
+        database
+            .userCharacterDao()
+            .insertSpecialMissions(*emptyMissions.toTypedArray())
     }
 
 

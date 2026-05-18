@@ -7,6 +7,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.ui.res.stringResource
 
@@ -30,40 +31,14 @@ fun BottomNavigationBar(navController: NavController) {
                 label = { Text(text = stringResource(item.label)) },
                 selected = currentRoute == item.route,
                 onClick = {
-                    if (item == NavigationItems.Home) {
-                        // Home should always show the Home root, not a restored nested route
-                        // like Settings that was opened from Home previously.
-                        val poppedToHome = navController.popBackStack(
-                            NavigationItems.Home.route,
-                            inclusive = false,
-                        )
-                        if (!poppedToHome) {
-                            navController.navigate(NavigationItems.Home.route) {
-                                popUpTo(navController.graph.startDestinationId) { inclusive = false }
-                                launchSingleTop = true
-                                restoreState = false
-                            }
+                    navController.navigate(item.route) {
+                        // Always route tab clicks to each tab's root screen.
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = false
+                            saveState = false
                         }
-                    } else if (item == NavigationItems.Storage) {
-                        // Adventure is launched from Storage; tapping Storage again should always
-                        // bring the user back to the Storage root instead of appearing stuck.
-                        val poppedToStorage = navController.popBackStack(
-                            NavigationItems.Storage.route,
-                            inclusive = false,
-                        )
-                        if (!poppedToStorage) {
-                            navController.navigate(NavigationItems.Storage.route) {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    } else {
-                        navController.navigate(item.route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        launchSingleTop = true
+                        restoreState = false
                     }
                 }
             )

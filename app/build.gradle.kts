@@ -73,8 +73,12 @@ protobuf {
 dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.vb.nfc.reader)
-    implementation(libs.dim.reader)
-    implementation(libs.androidx.core.ktx)
+    // Temporarily commented out due to Lombok compilation issues in VB-DIM-Reader
+    // implementation(libs.dim.reader)
+    implementation(files("../../VB-DIM-Reader-2.0.0/build/libs/VB-DIM-Reader.jar"))
+    //VB-DIM-Reader runtime dependency required by the local JAR
+    implementation("at.favre.lib:bytes:1.5.0")
+
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.navigation.compose)
@@ -90,6 +94,13 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.play.services.wearable)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.timber)
+    implementation(libs.tiny.log)
+    implementation(libs.tiny.log.impl)
+    implementation(libs.slf4j.api)
+    runtimeOnly(libs.slf4j.timber)
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
@@ -118,4 +129,7 @@ dependencies {
 
     // HTTP request logging
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+    // In-app browser for OAuth login
+    implementation("androidx.browser:browser:1.8.0")
 }

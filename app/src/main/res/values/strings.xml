@@ -68,14 +68,17 @@
     <string name="scan_transfer_complete_remove">Transfer complete. You can remove the phone now.</string>
     <string name="scan_transfer_failed_try_again">Transfer failed. Reposition devices and try again.</string>
     <string name="scan_transfer_cancelled">Transfer cancelled.</string>
+    <string name="scan_transport_bandai_bracelet">Detected target: Bandai Vital Bracelet (NFC-A)</string>
+    <string name="scan_transport_vitalwear_hce">Detected target: VitalWear (HCE)</string>
 
 
     <string name="settings_title">Settings</string>
 
     <string name="settings_section_nfc">NFC Communication</string>
-    <string name="settings_section_dim_bem">DiM/BEm management</string>
+    <string name="settings_section_dim_bem">VBH-VW card management</string>
     <string name="settings_section_about">About and credits</string>
     <string name="settings_section_data">Data management</string>
+    <string name="settings_section_companion_tools">VitalWear companion tools</string>
 
     <string name="settings_import_apk_title">Import APK</string>
     <string name="settings_import_apk_desc">
@@ -84,7 +87,12 @@
 
     <string name="settings_import_card_title">Import card</string>
     <string name="settings_import_card_desc">
-        Import DiM/BEm
+        Import DIM/BEM cards into VBHelper\'s Dex.
+    </string>
+
+    <string name="settings_enable_dim_to_bem_title">Scale DIM cards to BEM stats</string>
+    <string name="settings_enable_dim_to_bem_desc">
+        Automatically upscale DIM card stats to BEM level when importing
     </string>
 
     <string name="settings_credits_title">Credits</string>
@@ -102,6 +110,27 @@
     <string name="settings_import_data_desc">
         Import application database
     </string>
+
+    <string name="settings_companion_import_card_image_title">Import card to VitalWear</string>
+    <string name="settings_companion_import_card_image_desc">Import Dim/Bem to Vitalwear</string>
+    <string name="settings_companion_import_firmware_title">Import firmware to VitalWear</string>
+    <string name="settings_companion_import_firmware_desc">Import firmware to Watch (10b for now)</string>
+    <string name="settings_companion_send_watch_logs_title">Send watch logs</string>
+    <string name="settings_companion_send_watch_logs_desc">Request logs from a connected VitalWear watch and share them</string>
+    <string name="settings_companion_send_phone_logs_title">Send phone logs</string>
+    <string name="settings_companion_send_phone_logs_desc">Share the latest VBHelper phone log file</string>
+    <string name="companion_logs_warning">WARNING: Logs have personal health information such as heart rate measurements and steps per day.</string>
+    <string name="companion_logs_no_files">No log files found</string>
+    <string name="companion_logs_failed_request">Failed to send log request to watch</string>
+    <string name="companion_logs_receive_failed">Error receiving log file</string>
+    <string name="companion_firmware_no_watch">No connected watch found</string>
+    <string name="companion_firmware_sent_success">Firmware sent successfully</string>
+    <string name="companion_card_import_success">Imported Successfully</string>
+    <string name="companion_validation_connect_vb">Connect to VB</string>
+    <string name="companion_validation_insert_card">Insert Card in VB and Reconnect</string>
+    <string name="companion_validation_success">Card Validated Successfully</string>
+    <string name="companion_loading_select_firmware">Select firmware file</string>
+    <string name="companion_transfer_disabled_message">Character transfer is disabled in companion. Use watch Transfer instead.</string>
 
     <string name="credits_title">Credits</string>
     <string name="credits_section_reverse_engineering">Reverse engineering</string>
@@ -187,7 +216,7 @@
     <string name="dex_chara_name_icon_description">Character name</string>
     <string name="dex_chara_stats">HP: %1$d, BP: %2$d, AP: %3$d</string>
     <string name="dex_chara_stage_attribute">Stg: %1$s, Atr: %2$s</string>
-    <string name="dex_chara_unknown_name">\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?</string>
+    <string name="dex_chara_unknown_name">________________</string>
     <string name="dex_chara_stage_attribute_unknown">Stg: -, Atr: -</string>
     <string name="dex_chara_stats_unknown">HP: -, BP: -, AP: -</string>
     <string name="dex_chara_requirements">

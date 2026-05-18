@@ -10,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -25,10 +24,9 @@ fun HitEffectOverlay(
 ) {
     if (!isVisible) return
     
-    val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val isLandscapeMode = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-    val hitEffectManager = remember { HitEffectSpriteManager(context) }
+    val hitEffectManager = remember { HitEffectSpriteManager() }
     val coroutineScope = rememberCoroutineScope()
     
     var currentFrame by remember { mutableStateOf(0) }

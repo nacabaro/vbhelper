@@ -17,17 +17,13 @@ dependencyResolutionManagement {
         mavenLocal()
         google()
         mavenCentral()
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
 rootProject.name = "VBHelper"
 include(":app")
 
-includeBuild("../VB-DIM-Reader-2.0.0") {
-    dependencySubstitution {
-        substitute(module("com.github.cfogrady:vb-dim-reader")).using(project(":"))
-    }
-}
 
 includeBuild("../vb-nfc-reader") {
     dependencySubstitution {

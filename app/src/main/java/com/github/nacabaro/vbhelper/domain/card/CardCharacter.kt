@@ -9,7 +9,8 @@ import com.github.nacabaro.vbhelper.domain.characters.Sprite
 
 @Entity(
     indices = [
-        Index(value = ["cardId", "charaIndex"], unique = true)
+        Index(value = ["cardId", "charaIndex"], unique = true),
+        Index(value = ["spriteId"])
     ],
     foreignKeys = [
         ForeignKey(

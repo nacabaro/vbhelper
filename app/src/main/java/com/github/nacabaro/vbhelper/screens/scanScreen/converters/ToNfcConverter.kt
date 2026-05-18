@@ -15,10 +15,6 @@ import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
-import com.github.nacabaro.vbhelper.transfer.CharacterTransferPolicyResolver
-import com.github.nacabaro.vbhelper.transfer.ExportFormat
-import com.github.nacabaro.vbhelper.transfer.TransferTarget
-import com.github.nacabaro.vbhelper.transfer.TransferTransport
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -30,19 +26,27 @@ class ToNfcConverter(
     companion object {
         private const val MIN_NFC_TRANSFORMATION_YEAR = 2021
         private const val MAX_NFC_TRANSFORMATION_YEAR = 2035
+
+        internal fun shouldEncodeAsBem(
+            forcedProfile: DeviceType?,
+            storedDeviceType: DeviceType,
+        ): Boolean {
+            return when (forcedProfile) {
+                DeviceType.BEDevice -> true
+                DeviceType.VBDevice -> false
+                else -> storedDeviceType == DeviceType.BEDevice
+            }
+        }
     }
 
     private val application: VBHelper = componentActivity.applicationContext as VBHelper
     private val database: AppDatabase = application.container.db
-    private val transferPolicyResolver = CharacterTransferPolicyResolver(database.characterTransferPolicyDao())
 
 
 
     suspend fun characterToNfc(
         characterId: Long,
-        target: TransferTarget = TransferTarget.REAL_BRACELET,
-        transport: TransferTransport = TransferTransport.NFCA,
-        forcedFormat: ExportFormat? = null,
+        forcedProfile: DeviceType? = null,
     ): NfcCharacter {
         val app = componentActivity.applicationContext as VBHelper
         val database = app.container.db
@@ -54,20 +58,14 @@ class ToNfcConverter(
         val characterInfo = database
             .characterDao()
             .getCharacterInfo(userCharacter.charId)
-        val card = database
-            .cardDao()
-            .getCardByCharacterIdSync(characterId)
-            ?: error("Card not found for character $characterId")
 
-        val exportFormat = forcedFormat ?: transferPolicyResolver.resolveExportFormat(
-            characterId = characterId,
-            characterType = userCharacter.characterType,
-            transport = transport,
-            target = target,
-            isBemCard = card.isBEm,
-        )
+        // Forced profile overrides stored device type for transfer semantics:
+        // - NFC-A route forces VBDevice (real bracelets only understand VB)
+        // - HCE route forces BEDevice (VitalWear only sends/accepts BE)
+        // Otherwise, use the character's own stored type.
+        val shouldEncodeAsBem = shouldEncodeAsBem(forcedProfile, userCharacter.characterType)
 
-        return if (exportFormat == ExportFormat.BE)
+        return if (shouldEncodeAsBem)
             nfcToBENfc(characterId, characterInfo, userCharacter)
         else
             nfcToVBNfc(characterId, characterInfo, userCharacter)
@@ -238,6 +236,18 @@ class ToNfcConverter(
 
         val paddedTransformationArray = generateTransformationHistory(characterId)
 
+        // Convert hex-encoded OTP strings back to ByteArrays; use empty arrays if not stored
+        val otp0ByteArray = if (beData.otp0.isNotEmpty()) {
+            beData.otp0.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        } else {
+            ByteArray(8) // Default to 8-byte zero array if not available
+        }
+        val otp1ByteArray = if (beData.otp1.isNotEmpty()) {
+            beData.otp1.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        } else {
+            ByteArray(8) // Default to 8-byte zero array if not available
+        }
+
         val nfcData = BENfcCharacter(
             dimId = characterInfo.cardId.toUShort(),
             charIndex = characterInfo.charId.toUShort(),
@@ -278,8 +288,8 @@ class ToNfcConverter(
             itemType = beData.itemType.toByte(),
             itemMultiplier = beData.itemMultiplier.toByte(),
             itemRemainingTime = beData.itemRemainingTime.toByte(),
-            otp0 = byteArrayOf(8),
-            otp1 = byteArrayOf(8),
+            otp0 = otp0ByteArray,
+            otp1 = otp1ByteArray,
             characterCreationFirmwareVersion = FirmwareVersion(
                 minorVersion = beData.minorVersion.toByte(),
                 majorVersion = beData.majorVersion.toByte()

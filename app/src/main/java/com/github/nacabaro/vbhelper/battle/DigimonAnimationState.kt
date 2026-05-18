@@ -4,22 +4,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
-import android.content.Context
-import java.io.File
 
 enum class DigimonAnimationType {
     IDLE,
     IDLE2,
     WALK,
-    WALK2,
-    RUN,
-    RUN2,
-    WORKOUT,
-    WORKOUT2,
-    HAPPY,
     SLEEP,
-    ATTACK,
-    FLEE
+    ATTACK
 }
 
 data class AnimationState(
@@ -31,7 +22,6 @@ data class AnimationState(
 
 class DigimonAnimationStateMachine(
     private val characterId: String,
-    private val context: Context,
     private val initialFrameOffset: Int = 0, // New parameter for offsetting the starting frame
     private val timingOffset: Long = 0L // New parameter for offsetting the timing
 ) {
@@ -44,21 +34,13 @@ class DigimonAnimationStateMachine(
     var isPlaying by mutableStateOf(false)
         private set
     
-    // Direct mapping of frame numbers (1-12) to animation types
-    // This is based on the standard Digimon sprite frame order
+    // Direct mapping of frame numbers used by current battle animations.
     private val frameToAnimationType = mapOf(
         1 to DigimonAnimationType.IDLE,
         2 to DigimonAnimationType.IDLE2,
         3 to DigimonAnimationType.WALK,
-        4 to DigimonAnimationType.WALK2,
-        5 to DigimonAnimationType.RUN,
-        6 to DigimonAnimationType.RUN2,
-        7 to DigimonAnimationType.WORKOUT,
-        8 to DigimonAnimationType.WORKOUT2,
-        9 to DigimonAnimationType.HAPPY,
         10 to DigimonAnimationType.SLEEP,
-        11 to DigimonAnimationType.ATTACK,
-        12 to DigimonAnimationType.FLEE
+        11 to DigimonAnimationType.ATTACK
     )
     
     // Reverse mapping for getting frame numbers for each animation type
@@ -69,15 +51,8 @@ class DigimonAnimationStateMachine(
         DigimonAnimationType.IDLE to 750L,
         DigimonAnimationType.IDLE2 to 750L,
         DigimonAnimationType.WALK to 200L,
-        DigimonAnimationType.WALK2 to 200L,
-        DigimonAnimationType.RUN to 150L,
-        DigimonAnimationType.RUN2 to 150L,
-        DigimonAnimationType.WORKOUT to 300L,
-        DigimonAnimationType.WORKOUT2 to 300L,
-        DigimonAnimationType.HAPPY to 400L,
         DigimonAnimationType.SLEEP to 1500L,
-        DigimonAnimationType.ATTACK to 650L,
-        DigimonAnimationType.FLEE to 150L
+        DigimonAnimationType.ATTACK to 650L
     )
 
     /*
@@ -155,13 +130,4 @@ class DigimonAnimationStateMachine(
         return currentFrameNumber
     }
     
-    fun getCurrentCharacterId(): String {
-        return characterId
-    }
-    
-    // Method to reload mappings (useful for testing)
-    fun reloadMappings() {
-        println("Reloading mappings for character: $characterId")
-        // No need to reload since we use direct frame mapping
-    }
-} 
+}

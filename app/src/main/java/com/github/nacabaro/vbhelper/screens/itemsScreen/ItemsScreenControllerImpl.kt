@@ -7,7 +7,6 @@ import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
-import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.Dispatchers
@@ -51,18 +50,11 @@ class ItemsScreenControllerImpl (
                 val item = getItem(itemId)
                 val characterData = database.userCharacterDao().getCharacter(characterId)
                 var beCharacterData: BECharacterData? = null
-                var vbCharacterData: VBCharacterData? = null
 
                 if (characterData.characterType == DeviceType.BEDevice) {
                     beCharacterData = database
                         .userCharacterDao()
                         .getBeData(characterId)
-                        .firstOrNull()
-
-                } else if (characterData.characterType == DeviceType.VBDevice) {
-                    vbCharacterData = database
-                        .userCharacterDao()
-                        .getVbData(characterId)
                         .firstOrNull()
                 }
 
@@ -122,8 +114,7 @@ class ItemsScreenControllerImpl (
                         .updateCharacter(characterData)
 
                 } else if (item.itemIcon in ItemTypes.Step8k.id  .. ItemTypes.Win4.id &&
-                    characterData.characterType == DeviceType.VBDevice &&
-                    vbCharacterData != null
+                    (characterData.characterType == DeviceType.VBDevice || characterData.characterType == DeviceType.BEDevice)
                 ) {
                     applySpecialMission(item.itemIcon, item.itemLength, characterId)
                 }
@@ -180,12 +171,12 @@ class ItemsScreenControllerImpl (
             .getSpecialMissions(characterId)
             .first()
 
-        var newSpecialMission = availableSpecialMissions[specialMissionSlot]
-        newSpecialMission = SpecialMissions(
-            id = newSpecialMission.id,
-            characterId = newSpecialMission.characterId,
+        val existingMission = availableSpecialMissions.firstOrNull { it.watchId == specialMissionSlot }
+        val newSpecialMission = SpecialMissions(
+            id = existingMission?.id ?: 0,
+            characterId = characterId,
             goal = specialMissionGoal,
-            watchId = newSpecialMission.watchId,
+            watchId = specialMissionSlot,
             progress = 0,
             status = SpecialMission.Status.AVAILABLE,
             timeElapsedInMinutes = 0,

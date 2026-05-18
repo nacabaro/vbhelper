@@ -7,6 +7,41 @@ message Character {
   string card_name = 1;
   int32 card_id = 2;
 
+  message TransferCard {
+    int32 card_id = 1;
+    string card_name = 2;
+    bool is_bem = 3;
+    int32 stage_count = 4;
+    int32 franchise = 5;
+  }
+
+  message TransferSpecies {
+    int32 slot_id = 1;
+    int32 stage = 2;
+    int32 attribute = 3;
+    int32 base_hp = 4;
+    int32 base_bp = 5;
+    int32 base_ap = 6;
+    bytes name_sprite = 7;
+    int32 name_sprite_width = 8;
+    int32 name_sprite_height = 9;
+    bytes idle1 = 10;
+    bytes idle2 = 11;
+    bytes walk1 = 12;
+    bytes walk2 = 13;
+    bytes run1 = 14;
+    bytes run2 = 15;
+    bytes train1 = 16;
+    bytes train2 = 17;
+    bytes win = 18;
+    bytes down = 19;
+    bytes attack = 20;
+    bytes dodge = 21;
+    bytes splash = 22;
+    int32 sprite_width = 23;
+    int32 sprite_height = 24;
+  }
+
   message CharacterStats {
     enum TransferDeviceType {
       TRANSFER_DEVICE_TYPE_UNSPECIFIED = 0;
@@ -77,4 +112,8 @@ message Character {
   repeated TransformationEvent transformation_history = 5;
 
   map<string, int32> max_adventure_completed_by_card = 6;
+
+  optional TransferCard transfer_card = 7;
+
+  optional TransferSpecies transfer_species = 8;
 }

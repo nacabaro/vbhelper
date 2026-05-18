@@ -2,10 +2,15 @@ package com.github.nacabaro.vbhelper.domain.device_data
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 
 @Entity(
+    indices = [
+        Index(value = ["monId"]),
+        Index(value = ["stageId"])
+    ],
     foreignKeys = [
         ForeignKey(
             entity = UserCharacter::class,

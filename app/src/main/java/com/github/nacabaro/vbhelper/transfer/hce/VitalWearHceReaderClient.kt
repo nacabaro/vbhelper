@@ -2,6 +2,8 @@
 import android.nfc.tech.IsoDep
 import android.util.Log
 import com.github.cfogrady.vitalwear.protos.Character
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 /**
  * Phone-side ISO-DEP client that drives the VitalWear HCE session.
  * Mirrors the APDU protocol defined in VitalWearHceProtocol on the watch.
@@ -20,10 +22,17 @@ class VitalWearHceReaderClient(private val isoDep: IsoDep) {
     private val INS_READ_CHUNK: Byte = 0x20
     private val INS_WRITE_CHUNK: Byte = 0x30
     private val INS_COMMIT: Byte = 0x40
+    private val INS_STATUS: Byte = 0x50
+    private val INS_SYNC_UI: Byte = 0x60
+    private val INS_VIBRATE: Byte = 0x70
     private val MODE_WATCH_TO_PHONE: Byte = 0x01
     private val MODE_PHONE_TO_WATCH: Byte = 0x02
     private val VERSION: Byte = 0x01
     private val SW_OK = 0x9000
+    private val STATUS_SUCCESS: Byte = 0x04
+    private val STATUS_FAILURE: Byte = 0x05
+    private val STATUS_SYNCING: Byte = 0x03
+    
     /** MOVE READ: read character bytes first, let caller import/validate, then COMMIT only on success.
      * If [onCharacterRead] returns false, COMMIT is skipped so source can remain on the watch.
      */
@@ -67,8 +76,16 @@ class VitalWearHceReaderClient(private val isoDep: IsoDep) {
     }
 
     /** WRITE: watch has called armReceive() — phone pushes a character to the watch. */
-    fun sendCharacterToWatch(character: Character) {
+    fun sendCharacterToWatch(character: Character, closeSyncUiAfterCommit: Boolean = true) {
         selectAid()
+        
+        // --- True to Toy Ceremony ---
+        // 1. Haptic Lock-on
+        sendApdu(INS_VIBRATE, byteArrayOf())
+        
+        // 2. Visual Sync (Start Beam)
+        sendApdu(INS_SYNC_UI, byteArrayOf(0x01)) 
+        
         val payload = character.toByteArray()
         val negResponse = sendApdu(INS_NEGOTIATE, byteArrayOf(MODE_PHONE_TO_WATCH, VERSION))
         requireOk(negResponse, "NEGOTIATE")
@@ -82,6 +99,40 @@ class VitalWearHceReaderClient(private val isoDep: IsoDep) {
             offset = chunkEnd
         }
         requireOk(sendApdu(INS_COMMIT, byteArrayOf()), "COMMIT")
+        
+        // 3. Visual Sync (End Beam)
+        if (closeSyncUiAfterCommit) {
+            sendApdu(INS_SYNC_UI, byteArrayOf(0x00))
+        }
+    }
+
+    /**
+     * WRITE + confirmation polling.
+     * Returns true only when the watch reports import success.
+     */
+    fun sendCharacterToWatchAndConfirm(character: Character): Boolean {
+        sendCharacterToWatch(character, closeSyncUiAfterCommit = false)
+        val confirmed = runBlocking {
+            repeat(12) {
+                val statusResponse = sendApdu(INS_STATUS, byteArrayOf())
+                requireOk(statusResponse, "STATUS")
+                val statusByte = statusResponse.dropLast(2).firstOrNull()
+                Log.d("HCE_CLIENT", "STATUS poll[$it]: statusByte=${statusByte?.toInt()?.and(0xFF)}")
+                if (statusByte == STATUS_SUCCESS) {
+                    return@runBlocking true
+                }
+                if (statusByte == STATUS_FAILURE) {
+                    return@runBlocking false
+                }
+                delay(250)
+            }
+            false
+        }
+        // End the sync UI after we have consumed terminal status.
+        runCatching {
+            sendApdu(INS_SYNC_UI, byteArrayOf(0x00))
+        }
+        return confirmed
     }
 
     /**

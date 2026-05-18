@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.github.nacabaro.vbhelper.di.VBHelper
@@ -40,7 +41,6 @@ import com.github.nacabaro.vbhelper.screens.settingsScreen.CreditsScreen
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 import com.github.nacabaro.vbhelper.source.StorageRepository
-import kotlinx.coroutines.flow.Flow
 
 data class AppNavigationHandlers(
     val settingsScreenController: SettingsScreenControllerImpl,
@@ -56,20 +56,22 @@ data class AppNavigationHandlers(
 @Composable
 fun AppNavigation(
     applicationNavigationHandlers: AppNavigationHandlers,
-    initialRoute: String? = null,
-    navigationEvents: Flow<String>? = null,
+    initialRoute: String? = null
 ) {
     val navController = rememberNavController()
 
-    LaunchedEffect(navController, navigationEvents) {
-        navigationEvents?.collect { route ->
-            navController.navigate(route) {
-                launchSingleTop = true
-                restoreState = true
-                popUpTo(navController.graph.startDestinationId) {
-                    saveState = true
-                }
+    LaunchedEffect(initialRoute) {
+        val route = initialRoute ?: return@LaunchedEffect
+        if (navController.currentBackStackEntry?.destination?.route == route) {
+            return@LaunchedEffect
+        }
+        navController.navigate(route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                inclusive = false
+                saveState = false
             }
+            launchSingleTop = true
+            restoreState = false
         }
     }
 

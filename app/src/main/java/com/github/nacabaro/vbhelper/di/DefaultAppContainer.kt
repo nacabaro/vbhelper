@@ -8,6 +8,7 @@ import com.github.cfogrady.vitalwear.common.data.SharedDatabaseFactory
 import com.github.cfogrady.vitalwear.common.data.SharedTransferSeenDao
 import com.github.nacabaro.vbhelper.di.AppContainer
 import com.github.nacabaro.vbhelper.database.AppDatabase
+import com.github.nacabaro.vbhelper.source.CardSettingsRepository
 import com.github.nacabaro.vbhelper.source.CurrencyRepository
 import com.github.nacabaro.vbhelper.source.DataStoreSecretsRepository
 import com.github.nacabaro.vbhelper.source.SecretsSerializer
@@ -37,6 +38,7 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
             .addMigrations(AppDatabase.MIGRATION_2_3)
             .addMigrations(AppDatabase.MIGRATION_3_5)
             .addMigrations(AppDatabase.MIGRATION_4_5)
+            .addMigrations(AppDatabase.MIGRATION_5_6)
             .build()
     }
 
@@ -47,5 +49,7 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
     override val dataStoreSecretsRepository = DataStoreSecretsRepository(context.secretsStore)
 
     override val currencyRepository = CurrencyRepository(context.currencyStore)
+
+    override val cardSettingsRepository = CardSettingsRepository(context.currencyStore)
 }
 

@@ -2,6 +2,7 @@ package com.github.nacabaro.vbhelper.daos
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.RewriteQueriesToDropUnusedColumns
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import kotlinx.coroutines.flow.Flow
@@ -27,12 +28,12 @@ interface CardFusionsDao {
         toCharaId: Int
     )
 
+    @RewriteQueriesToDropUnusedColumns
     @Query("""
         SELECT 
             cf.toCharaId as charaId,
             cf.fromCharaId as fromCharaId,
             s.spriteIdle1 as spriteIdle,
-            cc.attribute as attribute,
             s.width as spriteWidth,
             s.height as spriteHeight,
             d.discoveredOn as discoveredOn,

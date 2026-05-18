@@ -20,7 +20,12 @@ interface ScanScreenController {
 
     fun onClickRead(secrets: Secrets, onComplete: ()->Unit, onMultipleCards: (List<Card>) -> Unit)
     fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit)
-    fun onClickWrite(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: (WriteResult) -> Unit)
+    fun onClickWrite(
+        secrets: Secrets,
+        nfcCharacter: NfcCharacter,
+        characterId: Long? = null,
+        onComplete: (WriteResult) -> Unit
+    )
 
     fun cancelRead()
 

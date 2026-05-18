@@ -13,7 +13,8 @@ import com.github.nacabaro.vbhelper.domain.characters.Sprite
 import java.io.InputStream
 
 class CardImportController(
-    private val database: AppDatabase
+    private val database: AppDatabase,
+    private val enableDimToBemConversion: Boolean = false
 ) {
     suspend fun importCard(
         fileReader: InputStream?
@@ -117,6 +118,16 @@ class CardImportController(
                 .spriteDao()
                 .insertSprite(domainSprite)
 
+            // Apply DIM-to-BEM conversion if enabled and card is a DIM card (not BEM)
+            var baseHp = characters[index].hp
+            var baseBp = characters[index].dp
+            var baseAp = characters[index].ap
+
+            if (enableDimToBemConversion && card is DimCard) {
+                baseHp = convertDimStatToBem(baseHp, characters[index].stage, Stat.HP)
+                baseBp = convertDimStatToBem(baseBp, characters[index].stage, Stat.BP)
+                baseAp = convertDimStatToBem(baseAp, characters[index].stage, Stat.AP)
+            }
 
             domainCharacters.add(
                 CardCharacter(
@@ -126,9 +137,9 @@ class CardImportController(
                     nameSprite = card.spriteData.sprites[spriteCounter].pixelData,
                     stage = characters[index].stage,
                     attribute = NfcCharacter.Attribute.entries[characters[index].attribute],
-                    baseHp = characters[index].hp,
-                    baseBp = characters[index].dp,
-                    baseAp = characters[index].ap,
+                    baseHp = baseHp,
+                    baseBp = baseBp,
+                    baseAp = baseAp,
                     nameWidth = card.spriteData.sprites[spriteCounter].spriteDimensions.width,
                     nameHeight = card.spriteData.sprites[spriteCounter].spriteDimensions.height
                 )
@@ -148,6 +159,40 @@ class CardImportController(
         database
             .characterDao()
             .insertCharacter(*domainCharacters.toTypedArray())
+    }
+
+    private enum class Stat { HP, BP, AP }
+
+    private fun convertDimStatToBem(dimStat: Int, phase: Int, statType: Stat): Int {
+        // DIM-to-BEM conversion factors based on phase and stat type
+        // These are approximations based on the average conversion ratios
+        val conversionFactor = when (phase) {
+            1 -> 0.0f
+            2 -> 0.0f
+            3 -> when (statType) {
+                Stat.HP -> 4657.5f
+                Stat.BP -> 4657.5f
+                Stat.AP -> 1022.5f
+            }
+            4 -> when (statType) {
+                Stat.HP -> 5171.528f
+                Stat.BP -> 5028.528f
+                Stat.AP -> 1222.9167f
+            }
+            5 -> when (statType) {
+                Stat.HP -> 5664.4f
+                Stat.BP -> 5036.4f
+                Stat.AP -> 1505.7333f
+            }
+            6 -> when (statType) {
+                Stat.HP -> 5972.2974f
+                Stat.BP -> 5256.2974f
+                Stat.AP -> 1976.7568f
+            }
+            else -> 0.0f
+        }
+
+        return (dimStat * conversionFactor).toInt()
     }
 
     private suspend fun importAdventureMissions(

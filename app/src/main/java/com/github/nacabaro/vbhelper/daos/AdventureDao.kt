@@ -2,6 +2,7 @@ package com.github.nacabaro.vbhelper.daos
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.RewriteQueriesToDropUnusedColumns
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import kotlinx.coroutines.flow.Flow
 
@@ -19,6 +20,7 @@ interface AdventureDao {
     """)
     fun getAdventureCount(): Int
 
+    @RewriteQueriesToDropUnusedColumns
     @Query(
         """
         SELECT
