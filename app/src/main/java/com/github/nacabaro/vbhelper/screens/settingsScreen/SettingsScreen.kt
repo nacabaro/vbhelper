@@ -1,7 +1,6 @@
 package com.github.nacabaro.vbhelper.screens.settingsScreen
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +23,7 @@ import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.R
+import androidx.core.net.toUri
 
 
 @Composable
@@ -80,9 +80,15 @@ fun SettingsScreen(
             ) {
                 val browserIntent = Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse("https://github.com/nacabaro/vbhelper/")
+                    "https://github.com/nacabaro/vbhelper/".toUri()
                 )
                 context.startActivity(browserIntent)
+            }
+            SettingsEntry(
+                title = stringResource(R.string.settings_logs_title),
+                description = stringResource(R.string.settings_logs_desc)
+            ) {
+                navController.navigate(NavigationItems.Logger.route)
             }
 
             SettingsSection(title = stringResource(R.string.settings_section_data))

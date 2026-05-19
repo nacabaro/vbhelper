@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.screens.storageScreen
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -149,7 +148,7 @@ fun StorageScreen(
                         .deleteCharacter(
                             characterId = selectedCharacter!!,
                             onCompletion = {
-                                Log.d("StorageScreen", "Character deleted")
+                                AppLogger.d("StorageScreen", "Character deleted")
                             }
                         )
                     selectedCharacter = null

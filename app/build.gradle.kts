@@ -17,7 +17,7 @@ android {
         minSdk = 28
         targetSdk = 36
         versionCode = 1
-        versionName = "Alpha 0.6.3"
+        versionName = "Alpha 0.6.3.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -56,9 +56,6 @@ protobuf {
         artifact = "com.google.protobuf:protoc:4.27.0"
     }
 
-    // Generates the java Protobuf-lite code for the Protobufs in this project. See
-    // https://github.com/google/protobuf-gradle-plugin#customizing-protobuf-compilation
-    // for more information.
     generateProtoTasks {
         all().forEach  { task ->
             task.builtins {

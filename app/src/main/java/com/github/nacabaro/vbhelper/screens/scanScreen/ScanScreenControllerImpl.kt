@@ -6,7 +6,6 @@ import android.nfc.Tag
 import android.nfc.tech.NfcA
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -127,18 +126,18 @@ class ScanScreenControllerImpl(
         handleTag(secrets) { tagCommunicator ->
             try {
                 if (nfcCharacter is VBNfcCharacter) {
-                    Log.d("SendCharacter", "VBNfcCharacter")
+                    AppLogger.d("SendCharacter", "VBNfcCharacter")
                     val castNfcCharacter: VBNfcCharacter = nfcCharacter
                     tagCommunicator.sendCharacter(castNfcCharacter)
                 } else if (nfcCharacter is BENfcCharacter) {
-                    Log.d("SendCharacter", "BENfcCharacter")
+                    AppLogger.d("SendCharacter", "BENfcCharacter")
                     val castNfcCharacter: BENfcCharacter = nfcCharacter
                     tagCommunicator.sendCharacter(castNfcCharacter)
                 }
                 onComplete.invoke()
                 componentActivity.getString(R.string.scan_sent_character_success)
             } catch (e: Throwable) {
-                Log.e("TAG", e.stackTraceToString())
+                AppLogger.e("TAG", e.stackTraceToString())
                 componentActivity.getString(R.string.scan_error_generic)
             }
         }
@@ -178,7 +177,7 @@ class ScanScreenControllerImpl(
         )
 
         val character = nfcGenerator.characterToNfc(characterId)
-        Log.d("CharacterType", character.toString())
+        AppLogger.d("CharacterType", character.toString())
         return character
     }
 

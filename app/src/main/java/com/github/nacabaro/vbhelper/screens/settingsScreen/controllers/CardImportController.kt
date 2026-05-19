@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.screens.settingsScreen.controllers
 
-import android.util.Log
 import com.github.cfogrady.vb.dim.card.BemCard
 import com.github.cfogrady.vb.dim.card.DimCard
 import com.github.cfogrady.vb.dim.card.DimReader
@@ -154,7 +153,7 @@ class CardImportController(
         cardId: Long,
         card: com.github.cfogrady.vb.dim.card.Card<*, *, *, *, *, *>
     ) {
-        Log.d("importAdventureMissions", "Importing adventure missions")
+        AppLogger.d("importAdventureMissions", "Importing adventure missions")
         if (card is BemCard) {
             card.adventureLevels.levels.forEach {
                 database
@@ -190,13 +189,13 @@ class CardImportController(
         cardId: Long,
         card: com.github.cfogrady.vb.dim.card.Card<*, *, *, *, *, *>
     ) {
-        Log.d("importCardFusions", "Importing card fusions")
+        AppLogger.d("importCardFusions", "Importing card fusions")
         if (card is DimCard) {
             card
                 .attributeFusions
                 .entries
                 .forEach {
-                    Log.d("importCardFusions", "Importing fusion: ${it.attribute1Fusion}")
+                    AppLogger.d("importCardFusions", "Importing fusion: ${it.attribute1Fusion}")
                     if (it.attribute1Fusion != 65535 && it.characterIndex != 65535) {
                         database
                             .cardFusionsDao()

@@ -2,7 +2,6 @@ package com.github.nacabaro.vbhelper.screens.scanScreen.converters
 
 import android.icu.util.Calendar
 import android.icu.util.TimeZone
-import android.util.Log
 import androidx.activity.ComponentActivity
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.be.FirmwareVersion
@@ -161,7 +160,7 @@ class ToNfcConverter(
         }
 
         nfcVitalsHistory.map {
-            Log.d("NFC", it.toString())
+            AppLogger.d("NFC", it.toString())
         }
 
         return nfcVitalsHistory
@@ -247,7 +246,7 @@ class ToNfcConverter(
                 val calendar = android.icu.util.GregorianCalendar(TimeZone.getTimeZone("UTC"))
                 calendar.time = date
 
-                Log.d(
+                AppLogger.d(
                     "TransformationHistory",
                     "Year: ${calendar.get(Calendar.YEAR)}, " +
                             "Month: ${calendar.get(Calendar.MONTH) + 1}, " +

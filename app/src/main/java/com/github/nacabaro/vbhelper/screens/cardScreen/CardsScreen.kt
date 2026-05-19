@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.screens.cardScreen
 
-import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -98,8 +97,8 @@ fun CardsScreen(
                 selectedCard.value = null
             },
             onRename = { newName ->
-                Log.d("CardsScreen", "New name: $newName")
-                Log.d("CardsScreen", "Card: ${selectedCard.value.toString()}")
+                AppLogger.d("CardsScreen", "New name: $newName")
+                AppLogger.d("CardsScreen", "Card: ${selectedCard.value.toString()}")
                 cardScreenController
                     .renameCard(
                         cardId = selectedCard.value!!.cardId,

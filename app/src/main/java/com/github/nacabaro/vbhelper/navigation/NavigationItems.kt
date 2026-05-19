@@ -98,4 +98,10 @@ sealed class NavigationItems(
         R.drawable.baseline_data_24,
         R.string.nav_credits
     )
+
+    object Logger : NavigationItems(
+        "Logger",
+        R.drawable.baseline_bug_report,
+        R.string.nav_logs
+    )
 }

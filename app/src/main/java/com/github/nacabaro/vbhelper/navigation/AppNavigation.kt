@@ -36,6 +36,7 @@ import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenContr
 import com.github.nacabaro.vbhelper.screens.cardScreen.CardAdventureScreen
 import com.github.nacabaro.vbhelper.screens.cardScreen.CardScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.settingsScreen.CreditsScreen
+import com.github.nacabaro.vbhelper.screens.settingsScreen.LoggerScreen
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
 import com.github.nacabaro.vbhelper.source.StorageRepository
@@ -181,6 +182,11 @@ fun AppNavigation(
                             .cardScreenController
                     )
                 }
+            }
+            composable(NavigationItems.Logger.route) {
+                LoggerScreen(
+                    navController = navController
+                )
             }
         }
     }

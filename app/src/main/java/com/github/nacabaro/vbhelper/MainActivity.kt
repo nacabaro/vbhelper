@@ -1,7 +1,6 @@
 package com.github.nacabaro.vbhelper
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -68,13 +67,10 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-
-        Log.i("MainActivity", "Activity onCreated")
     }
 
     override fun onPause() {
         super.onPause()
-        Log.i("MainActivity", "onPause")
         for(activityListener in onActivityLifecycleListeners) {
             activityListener.value.onPause()
         }
@@ -82,7 +78,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        Log.i("MainActivity", "Resume")
         for(activityListener in onActivityLifecycleListeners) {
             activityListener.value.onResume()
         }

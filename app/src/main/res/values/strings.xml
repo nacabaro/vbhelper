@@ -225,5 +225,9 @@
     <string name="home_special_mission_delete_main">Are you sure you want to delete this special mission with this progress?</string>
     <string name="home_special_mission_delete_dismiss">Dismiss</string>
     <string name="home_special_mission_delete_remove">Remove</string>
+    <string name="nav_logs">Logs</string>
+    <string name="settings_logs_title">Log viewer</string>
+    <string name="settings_logs_desc">Check logs generated within the app</string>
+    <string name="logs_title">Application logs</string>
 
 </resources>

@@ -1,7 +1,6 @@
 package com.github.nacabaro.vbhelper.screens.spriteViewer
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -13,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
@@ -26,8 +24,6 @@ fun SpriteViewer(
     spriteViewerController: SpriteViewerController
 ) {
     val spriteList = remember { mutableStateListOf<Bitmap>() }
-
-    Log.d("SpriteViewer", "spriteList: $spriteList")
 
     LaunchedEffect(spriteViewerController) {
         val sprites = spriteViewerController.getAllSprites()

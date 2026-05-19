@@ -2,7 +2,6 @@ package com.github.nacabaro.vbhelper.screens.settingsScreen.controllers
 
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -41,7 +40,7 @@ class DatabaseManagementController(
                     componentActivity.finishAffinity()
                 }
             } catch (e: Exception) {
-                Log.e("ScanScreenController", "Error exporting database $e")
+                AppLogger.e("ScanScreenController", "Error exporting database $e")
                 componentActivity.runOnUiThread {
                     Toast.makeText(componentActivity, "Error exporting database: ${e.message}", Toast.LENGTH_LONG).show()
                 }
@@ -84,7 +83,7 @@ class DatabaseManagementController(
                     componentActivity.finishAffinity()
                 }
             } catch (e: Exception) {
-                Log.e("ScanScreenController", "Error importing database $e")
+                AppLogger.e("ScanScreenController", "Error importing database $e")
                 componentActivity.runOnUiThread {
                     Toast.makeText(componentActivity, "Error importing database: ${e.message}", Toast.LENGTH_LONG).show()
                 }
