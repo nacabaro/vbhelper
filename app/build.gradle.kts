@@ -103,4 +103,19 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
+    implementation("androidx.navigation:navigation-compose:2.7.0")
+    implementation("com.google.android.material:material:1.2.0")
+    implementation(libs.protobuf.javalite)
+    implementation("androidx.compose.material:material")
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // HTTP request logging
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 }
