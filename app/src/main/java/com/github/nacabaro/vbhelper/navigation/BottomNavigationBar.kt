@@ -7,7 +7,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.ui.res.stringResource
 
@@ -31,14 +30,17 @@ fun BottomNavigationBar(navController: NavController) {
                 label = { Text(text = stringResource(item.label)) },
                 selected = currentRoute == item.route,
                 onClick = {
-                    navController.navigate(item.route) {
-                        // Always route tab clicks to each tab's root screen.
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = false
-                            saveState = false
+                    if (item == NavigationItems.Home) {
+                        navController.navigate(NavigationItems.Home.route) {
+                            popUpTo(0) { inclusive = false }
+                            launchSingleTop = true
                         }
-                        launchSingleTop = true
-                        restoreState = false
+                    } else {
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 }
             )

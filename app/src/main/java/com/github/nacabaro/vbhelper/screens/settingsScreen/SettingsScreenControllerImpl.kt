@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.screens.settingsScreen
 
-import android.content.Intent
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import android.net.Uri
@@ -8,13 +7,8 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import com.github.nacabaro.vbhelper.companion.card.CompanionImportCardActivity
-import com.github.nacabaro.vbhelper.companion.firmware.CompanionFirmwareImportActivity
-import com.github.nacabaro.vbhelper.companion.logs.CompanionWatchLogsActivity
-import com.github.nacabaro.vbhelper.companion.logging.TinyLogTree
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.screens.settingsScreen.controllers.CardImportController
 import com.github.nacabaro.vbhelper.screens.settingsScreen.controllers.DatabaseManagementController
 import com.github.nacabaro.vbhelper.source.ApkSecretsImporter
@@ -22,7 +16,6 @@ import com.github.nacabaro.vbhelper.source.SecretsImporter
 import com.github.nacabaro.vbhelper.source.SecretsRepository
 import com.github.nacabaro.vbhelper.source.proto.Secrets
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 
 
 class SettingsScreenControllerImpl(
@@ -36,13 +29,10 @@ class SettingsScreenControllerImpl(
     private val application = context.applicationContext as VBHelper
     private val secretsRepository: SecretsRepository = application.container.dataStoreSecretsRepository
     private val database: AppDatabase = application.container.db
-    private val cardSettingsRepository = application.container.cardSettingsRepository
     private val databaseManagementController = DatabaseManagementController(
         componentActivity = context,
         application = application
     )
-
-    val dimToBemConversionEnabled = cardSettingsRepository.enableDimToBemConversion
 
     init {
         filePickerLauncher = context.registerForActivityResult(
@@ -111,41 +101,13 @@ class SettingsScreenControllerImpl(
         filePickerCard.launch(arrayOf("*/*"))
     }
 
-    override fun onClickCompanionImportCardImage() {
-        context.startActivity(Intent(context, CompanionImportCardActivity::class.java))
-    }
-
-    override fun onClickCompanionImportFirmware() {
-        context.startActivity(Intent(context, CompanionFirmwareImportActivity::class.java))
-    }
-
-    override fun onClickCompanionSendWatchLogs() {
-        context.startActivity(Intent(context, CompanionWatchLogsActivity::class.java))
-    }
-
-    override fun onClickCompanionSendPhoneLogs() {
-        val file = TinyLogTree.getMostRecentLogFile(context.applicationContext)
-        if (file == null) {
-            Toast.makeText(context, context.getString(R.string.companion_logs_no_files), Toast.LENGTH_SHORT).show()
-            return
-        }
-        application.companionLogService.sendLogFile(context.applicationContext, file, context)
-    }
-
-    fun onToggleDimToBemConversion(enabled: Boolean) {
-        context.lifecycleScope.launch(Dispatchers.IO) {
-            cardSettingsRepository.setEnableDimToBemConversion(enabled)
-        }
-    }
-
     private fun importCard(uri: Uri) {
         context.lifecycleScope.launch(Dispatchers.IO) {
             val contentResolver = context.contentResolver
             val inputStream = contentResolver.openInputStream(uri)
 
             inputStream.use { fileReader ->
-                val dimToBemEnabled = cardSettingsRepository.enableDimToBemConversion.first()
-                val cardImportController = CardImportController(database, dimToBemEnabled)
+                val cardImportController = CardImportController(database)
                 cardImportController.importCard(fileReader)
             }
 

@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
-import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,7 +34,7 @@ fun ItemsScreen(
         topBar = {
             Column {
                 TopBanner(text = stringResource(R.string.items_title))
-                PrimaryTabRow(
+                TabRow(
                     selectedTabIndex = selectedTabItem,
                     modifier = Modifier
                 ) {

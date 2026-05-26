@@ -3,7 +3,6 @@ package com.github.nacabaro.vbhelper.screens.scanScreen
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
-import android.nfc.tech.IsoDep
 import android.nfc.tech.NfcA
 import android.os.Bundle
 import android.provider.Settings
@@ -12,34 +11,21 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.github.cfogrady.vbnfc.TagCommunicator
-import com.github.cfogrady.vitalwear.protos.Character
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
-import com.github.cfogrady.vbnfc.data.DeviceType as NfcDeviceTypeId
 import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.ActivityLifecycleListener
 import com.github.nacabaro.vbhelper.domain.card.Card
-import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.screens.scanScreen.converters.FromNfcConverter
 import com.github.nacabaro.vbhelper.screens.scanScreen.converters.ToNfcConverter
-import com.github.nacabaro.vbhelper.source.VitalWearCharacterExporter
-import com.github.nacabaro.vbhelper.source.VitalWearCharacterImporter
 import com.github.nacabaro.vbhelper.source.getCryptographicTransformerMap
 import com.github.nacabaro.vbhelper.source.isMissingSecrets
 import com.github.nacabaro.vbhelper.source.proto.Secrets
-import com.github.nacabaro.vbhelper.transfer.hce.VitalWearHceReaderClient
-import com.github.nacabaro.vbhelper.utils.DeviceType
-import com.github.nacabaro.vbhelper.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import java.util.Arrays
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicLong
+import com.github.nacabaro.vbhelper.R
 
 class ScanScreenControllerImpl(
     override val secretsFlow: Flow<Secrets>,
@@ -47,316 +33,49 @@ class ScanScreenControllerImpl(
     private val registerActivityLifecycleListener: (String, ActivityLifecycleListener)->Unit,
     private val unregisterActivityLifecycleListener: (String)->Unit,
 ): ScanScreenController {
-
-    override val detectedTransportFlow: StateFlow<DetectedTransport>
-        get() = _detectedTransportFlow
-    override val transferStatusFlow: StateFlow<String?>
-        get() = _transferStatusFlow
-
-    private val _detectedTransportFlow = MutableStateFlow(DetectedTransport.UNKNOWN)
-    private val _transferStatusFlow = MutableStateFlow<String?>(null)
     private var lastScannedCharacter: NfcCharacter? = null
-    private var lastRequestedCharacterId: Long? = null
-    private var lastWriteCharacterId: Long? = null
     private val nfcAdapter: NfcAdapter
-    private val isHandlingTag = AtomicBoolean(false)
-    private var lastTagId: ByteArray? = null
-    private var lastTagHandledAtMs: Long = 0L
-    private val tagStateLock = Any()
-    private val readerSessionCounter = AtomicLong(0L)
-    @Volatile private var activeReaderSessionId: Long = 0L
-
-    companion object {
-        private const val TAG_DEBOUNCE_MS = 1500L
-        private const val TAG_IGNORE_AFTER_HANDLED_MS = 2000
-        private val VITALWEAR_AID = byteArrayOf(
-            0xF0.toByte(), 0x56, 0x49, 0x54, 0x41, 0x4C, 0x57, 0x45, 0x41, 0x52
-        )
-        private const val SW_OK = 0x9000
-        // Lifecycle key for the always-on NFC suppressor that prevents Android from launching
-        // com.android.apps.tag/.TagViewer whenever the watch's HCE comes into range.
-        private const val LIFECYCLE_KEY_NFC_SUPPRESSOR = "nfc_suppressor"
-    }
 
     init {
         val maybeNfcAdapter = NfcAdapter.getDefaultAdapter(componentActivity)
         if (maybeNfcAdapter == null) {
-            Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_no_nfc_on_device), Toast.LENGTH_SHORT).show()
+            Toast.makeText(componentActivity,  componentActivity.getString(R.string.scan_no_nfc_on_device), Toast.LENGTH_SHORT).show()
         }
         nfcAdapter = maybeNfcAdapter
         checkSecrets()
-        registerNfcSuppressor()
     }
 
-    /**
-     * Registers a lifecycle listener that keeps reader mode active (with a no-op callback)
-     * whenever this Activity is in the foreground. This prevents Android's default NFC dispatch
-     * system from launching com.android.apps.tag/.TagViewer when the watch's HCE service is
-     * detected while the user hasn't explicitly pressed a transfer button yet.
-     *
-     * When the user presses Read/Write/CheckCard, [handleTag] replaces this suppressor with
-     * the real transfer callback via [NfcAdapter.enableReaderMode]. After the transfer
-     * completes, [enableNfcSuppressor] is called again to restore the passive suppressor.
-     */
-    private fun registerNfcSuppressor() {
-        registerActivityLifecycleListener(
-            LIFECYCLE_KEY_NFC_SUPPRESSOR,
-            object : ActivityLifecycleListener {
-                override fun onResume() {
-                    enableNfcSuppressor()
+    override fun onClickRead(secrets: Secrets, onComplete: ()->Unit, onMultipleCards: (List<Card>) -> Unit) {
+        handleTag(secrets) { tagCommunicator ->
+            try {
+                val character = tagCommunicator.receiveCharacter()
+                val resultMessage = characterFromNfc(character) { cards, nfcCharacter ->
+                    lastScannedCharacter = nfcCharacter
+                    onMultipleCards(cards)
                 }
-                override fun onPause() {
-                    disableReaderModeSafely()
+                onComplete.invoke()
+                resultMessage
+            } catch (e: Exception) {
+                Log.e("NFC_READ", "Error reading character from NFC", e)
+                componentActivity.runOnUiThread {
+                    Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_error_generic) + ": " + (e.message ?: e.javaClass.simpleName), Toast.LENGTH_LONG).show()
                 }
+                onComplete.invoke()
+                componentActivity.getString(R.string.scan_error_generic)
             }
-        )
-    }
-
-    /**
-     * Enables reader mode with a silent no-op callback. Calling [NfcAdapter.enableReaderMode]
-     * suppresses Android's default tag-dispatch system (and therefore the "new tag scanned"
-     * TagViewer screen) for as long as this Activity is in the foreground. The actual transfer
-     * logic is wired up separately via [handleTag] when the user presses a button.
-     */
-    private fun enableNfcSuppressor() {
-        if (!nfcAdapter.isEnabled) return
-        val options = Bundle()
-        options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 250)
-        val flags = NfcAdapter.FLAG_READER_NFC_A or
-                NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS or
-                NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK
-        runCatching {
-            nfcAdapter.enableReaderMode(
-                componentActivity,
-                { /* suppress default dispatch — user must tap a transfer button */ },
-                flags,
-                options
-            )
-        }.onFailure {
-            Log.w("NFC", "Failed to enable NFC suppressor reader mode", it)
         }
     }
-
-    // ---- Read (phone receives character FROM watch or bracelet) --------------------
-
-    override fun onClickRead(secrets: Secrets, onComplete: () -> Unit, onMultipleCards: (List<Card>) -> Unit) {
-        _detectedTransportFlow.value = DetectedTransport.UNKNOWN
-        setTransferStatus(R.string.scan_transfer_waiting_tap)
-        handleTag(
-            secrets,
-            nfcAHandler = { tagCommunicator ->
-                try {
-                    val character = tagCommunicator.receiveCharacter()
-                    val resultMessage = characterFromNfc(character) { cards, nfcCharacter ->
-                        lastScannedCharacter = nfcCharacter
-                        onMultipleCards(cards)
-                    }
-                    onComplete.invoke()
-                    resultMessage
-                } catch (e: Exception) {
-                    Log.e("NFC_READ", "Error reading character from NFC", e)
-                    componentActivity.runOnUiThread {
-                        Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_error_generic) + ": " + (e.message ?: e.javaClass.simpleName), Toast.LENGTH_LONG).show()
-                    }
-                    onComplete.invoke()
-                    componentActivity.getString(R.string.scan_error_generic)
-                }
-            },
-             isoDepHandler = { isoDep ->
-                 val application = componentActivity.applicationContext as VBHelper
-                 val importer = VitalWearCharacterImporter(application.container.db, application.container.transferSeenDao)
-                 try {
-                     // ISO-DEP/HCE route: VitalWear characters are always imported as BE device type.
-                     var importResult: VitalWearCharacterImporter.ImportResult? = null
-                     val moved = VitalWearHceReaderClient(isoDep).moveCharacterFromWatch { character ->
-                         // Force imported device type to BE since source is VitalWear HCE (BE only).
-                         val result = importer.importCharacter(character, forcedDeviceType = DeviceType.BEDevice)
-                         importResult = result
-                         result.success
-                     }
-                     onComplete.invoke()
-                     if (moved) {
-                         importResult?.message ?: componentActivity.getString(R.string.scan_sent_character_success)
-                     } else {
-                         importResult?.message
-                             ?: "VitalWear import was rejected. Source character remains on the watch."
-                     }
-                 } catch (readError: Exception) {
-                     Log.e("NFC_READ", "HCE read failed; watch may be armed as destination", readError)
-                     onComplete.invoke()
-                     "No source character detected on watch. If the watch is waiting to receive, use VBH to Watch."
-                 }
-             }
-        )
-    }
-
-    // ---- Write (phone sends character TO watch or bracelet) ------------------------
-
-    override fun onClickWrite(
-        secrets: Secrets,
-        nfcCharacter: NfcCharacter,
-        characterId: Long?,
-        onComplete: (ScanScreenController.WriteResult) -> Unit
-    ) {
-        _detectedTransportFlow.value = DetectedTransport.UNKNOWN
-        setTransferStatus(R.string.scan_transfer_waiting_tap)
-        handleTag(
-            secrets,
-             nfcAHandler = { tagCommunicator ->
-                 try {
-                     val targetHeader = runCatching { tagCommunicator.readTargetHeader() }.getOrNull()
-                     val normalizedDeviceType = when (targetHeader?.deviceTypeId) {
-                         512u.toUShort() -> NfcDeviceTypeId.VitalSeriesDeviceType
-                         768u.toUShort() -> NfcDeviceTypeId.VitalCharactersDeviceType
-                         1024u.toUShort() -> NfcDeviceTypeId.VitalBraceletBEDeviceType
-                         else -> targetHeader?.deviceTypeId
-                     }
-                     val forcedProfile = when (normalizedDeviceType) {
-                         NfcDeviceTypeId.VitalBraceletBEDeviceType -> DeviceType.BEDevice
-                         else -> DeviceType.VBDevice
-                     }
-                     Log.i(
-                         "NFC_WRITE_A",
-                         "Target NFC-A header rawDeviceType=${targetHeader?.deviceTypeId}, normalizedDeviceType=$normalizedDeviceType, dimId=${targetHeader?.getDimId()}, forcedProfile=$forcedProfile"
-                     )
-
-                     // NFC-A route: choose export profile by target bracelet type.
-                     // - Vital Series / Vital Characters => VB profile
-                     // - Vital Bracelet BE => BE profile
-                     val nfcACharacter = if (characterId != null) {
-                         runBlocking {
-                             ToNfcConverter(componentActivity = componentActivity)
-                                 .characterToNfc(characterId, forcedProfile)
-                         }
-                     } else {
-                         nfcCharacter
-                     }
-
-                     val initialSlotState = readNfcASlotState(tagCommunicator)
-                     if (initialSlotState.isFull()) {
-                         onComplete.invoke(ScanScreenController.WriteResult.BLOCKED_DEVICE_FULL)
-                         return@handleTag componentActivity.getString(R.string.scan_target_device_full)
-                     }
-
-                     val migrationCheck = verifyActiveToBackupMigration(tagCommunicator, initialSlotState)
-                     if (!migrationCheck.canProceed) {
-                         onComplete.invoke(ScanScreenController.WriteResult.COPIED)
-                         return@handleTag migrationCheck.message
-                     }
-
-                     // Send with VB profile (which was forced above). Real bracelets only accept VBNfcCharacter.
-                     return@handleTag try {
-                         when (nfcACharacter) {
-                             is VBNfcCharacter -> tagCommunicator.sendCharacter(nfcACharacter)
-                             is BENfcCharacter -> {
-                                 // This should not happen since we forced VBDevice above, but fail if it does.
-                                 Log.e("NFC_WRITE_A", "BENfcCharacter sent to NFC-A (real bracelet) — protocol error")
-                                 throw IllegalStateException("NFC-A forced VBDevice but received BENfcCharacter")
-                             }
-                         }
-                         onComplete.invoke(ScanScreenController.WriteResult.MOVE_CONFIRMED)
-                         componentActivity.getString(R.string.scan_sent_character_success)
-                     } catch (deviceTypeMismatch: Exception) {
-                         // Device type mismatch on NFC-A is terminal for this tap.
-                         if (deviceTypeMismatch.message?.contains("Character doesn't match device type") == true) {
-                             Log.e("NFC_WRITE_A", "Device type mismatch on NFC-A with selected transfer profile", deviceTypeMismatch)
-                             onComplete.invoke(ScanScreenController.WriteResult.COPIED)
-                             "Transfer failed: bracelet rejected character profile for this tap. Retry and keep bracelet steady."
-                         } else {
-                             Log.e("NFC_WRITE_A", "NFC-A write failed", deviceTypeMismatch)
-                             onComplete.invoke(ScanScreenController.WriteResult.COPIED)
-                             throw deviceTypeMismatch
-                         }
-                     }
-                 } catch (writeError: Throwable) {
-                     Log.e("NFC_WRITE_A", "NFC-A setup failed", writeError)
-                     onComplete.invoke(ScanScreenController.WriteResult.COPIED)
-                     throw writeError
-                 }
-             },
-             isoDepHandler = { isoDep ->
-                 val characterId = lastRequestedCharacterId
-                     ?: throw IllegalStateException("No character id available for VitalWear HCE write")
-                 val application = componentActivity.applicationContext as VBHelper
-                 val hceClient = VitalWearHceReaderClient(isoDep)
-                 try {
-                     // ISO-DEP/HCE route: VitalWear always uses BE profile (enforced).
-                     // Create protobuf with forced BE device type for correct serialization.
-                     val proto = runBlocking {
-                         VitalWearCharacterExporter(application.container.db)
-                             .buildCharacterProto(characterId, forcedTransferProfile = DeviceType.BEDevice)
-                     }
-                      if (proto.characterStats.deviceType != Character.CharacterStats.TransferDeviceType.TRANSFER_DEVICE_TYPE_BE) {
-                          throw IllegalStateException("VitalWear HCE export must use BE transfer profile")
-                      }
-                     // Send with status confirmation: only mark MOVE_CONFIRMED after watch confirms import.
-                     val confirmedMove = hceClient.sendCharacterToWatchAndConfirm(proto)
-                     if (confirmedMove) {
-                         onComplete.invoke(ScanScreenController.WriteResult.MOVE_CONFIRMED)
-                         componentActivity.getString(R.string.scan_sent_character_success)
-                     } else {
-                         // Transfer acknowledging but watch import failed or did not confirm.
-                         onComplete.invoke(ScanScreenController.WriteResult.COPIED)
-                         "Transfer sent but watch did not confirm import. Source was kept in VBH."
-                     }
-                 } catch (writeError: Throwable) {
-                     Log.e("NFC_WRITE_HCE", "HCE write failed", writeError)
-                     onComplete.invoke(ScanScreenController.WriteResult.COPIED)
-                     throw writeError
-                 }
-             }
-        )
-    }
-
-
-
-    // ---- Check card (NFC-A only; ISO-DEP watches don't need a DIM prep) -----------
-
-    override fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {
-        _detectedTransportFlow.value = DetectedTransport.UNKNOWN
-        setTransferStatus(R.string.scan_transfer_waiting_tap)
-        handleTag(
-            secrets,
-            nfcAHandler = { tagCommunicator ->
-                tagCommunicator.prepareDIMForCharacter(nfcCharacter.dimId)
-                onComplete.invoke()
-                componentActivity.getString(R.string.scan_sent_dim_success)
-            },
-            // HCE equivalent of the prep step: verify watch is armed for phone->watch transfer.
-            isoDepHandler = { isoDep ->
-                runCatching {
-                    VitalWearHceReaderClient(isoDep).verifyWatchReadyToReceive()
-                }.fold(
-                    onSuccess = {
-                        onComplete.invoke()
-                        "Watch ready. Tap again to send character."
-                    },
-                    onFailure = { error ->
-                        Log.e("NFC_HCE", "Watch is not ready to receive character", error)
-                        "Watch is not ready. On watch: Transfer > Receive from VBH, then tap again."
-                    }
-                )
-            }
-        )
-    }
-
-    // ---- Cancel / lifecycle -------------------------------------------------------
 
     override fun cancelRead() {
-        _detectedTransportFlow.value = DetectedTransport.UNKNOWN
-        setTransferStatus(R.string.scan_transfer_cancelled)
-        activeReaderSessionId = readerSessionCounter.incrementAndGet()
-        isHandlingTag.set(false)
-        synchronized(tagStateLock) {
-            lastTagId = null
-            lastTagHandledAtMs = 0L
+        if(nfcAdapter.isEnabled) {
+            nfcAdapter.disableReaderMode(componentActivity)
         }
-        // Re-arm the suppressor so the TagViewer doesn't appear while the user is still
-        // on the scan screen but hasn't pressed a transfer button yet.
-        enableNfcSuppressor()
     }
 
-    override fun registerActivityLifecycleListener(key: String, activityLifecycleListener: ActivityLifecycleListener) {
+    override fun registerActivityLifecycleListener(
+        key: String,
+        activityLifecycleListener: ActivityLifecycleListener
+    ) {
         registerActivityLifecycleListener.invoke(key, activityLifecycleListener)
     }
 
@@ -364,232 +83,43 @@ class ScanScreenControllerImpl(
         unregisterActivityLifecycleListener.invoke(key)
     }
 
-    // ---- NFC adapter wiring -------------------------------------------------------
-
-    /**
-     * Arms the NFC reader for both NFC-A (bracelet) and ISO-DEP (VitalWear HCE).
-     * [isoDepHandler] is optional; when null the reader only accepts NFC-A.
-     */
-    private fun handleTag(
-        secrets: Secrets,
-        nfcAHandler: (TagCommunicator) -> String,
-        isoDepHandler: ((IsoDep) -> String)? = null
-    ) {
+    // EXTRACTED DIRECTLY FROM EXAMPLE APP
+    private fun handleTag(secrets: Secrets, handlerFunc: (TagCommunicator)->String) {
         if (!nfcAdapter.isEnabled) {
             showWirelessSettings()
-            return
+        } else {
+            val options = Bundle()
+            // Work around for some broken Nfc firmware implementations that poll the card too fast
+            options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 250)
+            nfcAdapter.enableReaderMode(componentActivity, buildOnReadTag(secrets, handlerFunc), NfcAdapter.FLAG_READER_NFC_A or NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,
+                options
+            )
         }
-        val options = Bundle()
-        // Work around for some broken Nfc firmware implementations that poll the card too fast
-        options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 250)
-        val flags = NfcAdapter.FLAG_READER_NFC_A or
-                NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS or
-                NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK
-        val sessionId = readerSessionCounter.incrementAndGet()
-        activeReaderSessionId = sessionId
-        isHandlingTag.set(false)
-        synchronized(tagStateLock) {
-            lastTagId = null
-            lastTagHandledAtMs = 0L
-        }
-        disableReaderModeSafely()
-        nfcAdapter.enableReaderMode(
-            componentActivity,
-            buildOnReadTag(secrets, nfcAHandler, isoDepHandler, sessionId),
-            flags,
-            options
-        )
     }
 
-    private fun buildOnReadTag(
-        secrets: Secrets,
-        nfcAHandler: (TagCommunicator) -> String,
-        isoDepHandler: ((IsoDep) -> String)?,
-        sessionId: Long,
-    ): (Tag) -> Unit {
-        return { tag ->
-            if (activeReaderSessionId == sessionId) {
-                val now = System.currentTimeMillis()
-                val shouldHandleTag = synchronized(tagStateLock) {
-                    val sameRecentTag = lastTagId != null && tag.id != null && Arrays.equals(lastTagId, tag.id) &&
-                        (now - lastTagHandledAtMs) < TAG_DEBOUNCE_MS
-                    if (sameRecentTag || !isHandlingTag.compareAndSet(false, true)) {
-                        false
-                    } else {
-                        lastTagId = tag.id?.clone()
-                        lastTagHandledAtMs = now
-                        true
-                    }
-                }
-                if (shouldHandleTag) {
-                    setTransferStatus(R.string.scan_transfer_detected_keep_tap)
-
-                // Detect transport once per tap and lock to that route for this transfer.
-                // Real Bandai bracelets route through NFC-A; VitalWear routes through ISO-DEP/HCE.
-                val isoDep = IsoDep.get(tag)
-                val hasNfcARoute = NfcA.get(tag) != null
-                val hasIsoDepHandler = isoDep != null && isoDepHandler != null
-                val confirmedVitalWear = if (hasIsoDepHandler) {
-                    runCatching { isVitalWearHceTarget(isoDep) }.getOrDefault(false)
-                } else {
-                    false
-                }
-                try {
-                    if (hasIsoDepHandler && confirmedVitalWear) {
-                        val isoDepTarget = isoDep
-                        val isoDepAction = isoDepHandler
-                        try {
-                            _detectedTransportFlow.value = DetectedTransport.ISO_DEP
-                            isoDepTarget.connect()
-                            isoDepTarget.use {
-                                setTransferStatus(R.string.scan_transfer_in_progress)
-                                val successText = isoDepAction.invoke(isoDepTarget)
-                                componentActivity.runOnUiThread {
-                                    Toast.makeText(componentActivity, successText, Toast.LENGTH_SHORT).show()
-                                    setTransferStatus(R.string.scan_transfer_complete_remove)
-                            }
-                        }
-                        } catch (e: Throwable) {
-                            Log.e("NFC_HCE", "IsoDep transfer failed", e)
-                            componentActivity.runOnUiThread {
-                                Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_error_generic), Toast.LENGTH_SHORT).show()
-                                setTransferStatus(R.string.scan_transfer_failed_try_again)
-                            }
-                        }
-                    } else if (hasIsoDepHandler && !confirmedVitalWear && !hasNfcARoute) {
-                        // Hard-fail only when IsoDep is present without any NFC-A fallback.
-                        // This keeps HCE safety while allowing real bracelets to route via NFC-A.
-                        Log.w("NFC_ROUTE", "IsoDep present but VitalWear AID not confirmed and no NFC-A route; cancelling transfer")
-                        _detectedTransportFlow.value = DetectedTransport.UNKNOWN
-                        componentActivity.runOnUiThread {
-                            Toast.makeText(componentActivity, "VitalWear HCE not detected. Transfer cancelled.", Toast.LENGTH_SHORT).show()
-                            setTransferStatus(R.string.scan_transfer_failed_try_again)
-                        }
-                    } else if (hasNfcARoute) {
-                        if (hasIsoDepHandler && !confirmedVitalWear) {
-                            Log.i("NFC_ROUTE", "IsoDep present but VitalWear AID not confirmed; routing to NFC-A fallback")
-                        }
-                        if (!handleNfcATag(tag, secrets, nfcAHandler)) {
-                            componentActivity.runOnUiThread {
-                                Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_tag_not_vb), Toast.LENGTH_SHORT).show()
-                                setTransferStatus(R.string.scan_transfer_failed_try_again)
-                            }
-                        }
-                    } else {
-                        if (hasIsoDepHandler && !confirmedVitalWear) {
-                            Log.w("NFC_ROUTE", "IsoDep tag does not expose VitalWear HCE AID and has no NFC-A fallback")
-                        }
-                        _detectedTransportFlow.value = DetectedTransport.UNKNOWN
-                        componentActivity.runOnUiThread {
-                            Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_tag_not_vb), Toast.LENGTH_SHORT).show()
-                            setTransferStatus(R.string.scan_transfer_failed_try_again)
-                        }
-                    }
-                    } finally {
-                        finishHandledTagSession(tag, sessionId)
-                    }
+    // EXTRACTED DIRECTLY FROM EXAMPLE APP
+    private fun buildOnReadTag(secrets: Secrets, handlerFunc: (TagCommunicator)->String): (Tag)->Unit {
+        return { tag->
+            val nfcData = NfcA.get(tag)
+            if (nfcData == null) {
+                componentActivity.runOnUiThread {
+                    Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_tag_not_vb), Toast.LENGTH_SHORT).show()
                 }
             }
-        }
-    }
-
-    private fun finishHandledTagSession(tag: Tag, sessionId: Long) {
-        if (activeReaderSessionId != sessionId) return
-
-        // Keep Android from redispatching this same tag to other NFC apps while still in range.
-        runCatching {
-            nfcAdapter.ignore(
-                tag,
-                TAG_IGNORE_AFTER_HANDLED_MS,
-                NfcAdapter.OnTagRemovedListener { },
-                null
-            )
-        }.onFailure {
-            Log.w("NFC", "Failed to ignore handled tag", it)
-        }
-
-        // Restore the passive suppressor so devices can remain close without Android
-        // launching the TagViewer between transfers or while waiting for the next button press.
-        enableNfcSuppressor()
-        isHandlingTag.set(false)
-    }
-
-    private fun handleNfcATag(
-        tag: Tag,
-        secrets: Secrets,
-        nfcAHandler: (TagCommunicator) -> String,
-    ): Boolean {
-        val nfcData = NfcA.get(tag) ?: return false
-        _detectedTransportFlow.value = DetectedTransport.NFC_A
-        return try {
             nfcData.connect()
             nfcData.use {
                 val tagCommunicator = TagCommunicator.getInstance(nfcData, secrets.getCryptographicTransformerMap())
-                setTransferStatus(R.string.scan_transfer_in_progress)
-                val successText = nfcAHandler(tagCommunicator)
+                val successText = handlerFunc(tagCommunicator)
                 componentActivity.runOnUiThread {
                     Toast.makeText(componentActivity, successText, Toast.LENGTH_SHORT).show()
-                    setTransferStatus(R.string.scan_transfer_complete_remove)
                 }
             }
-            true
-        } catch (e: Throwable) {
-            val staleTagSession = e is SecurityException && (e.message?.contains("out of date", ignoreCase = true) == true)
-            if (staleTagSession) {
-                Log.w("NFC_A", "Ignoring stale NFC-A tag session; waiting for a fresh tap", e)
-                componentActivity.runOnUiThread {
-                    Toast.makeText(componentActivity, "Tag session expired. Please tap again.", Toast.LENGTH_SHORT).show()
-                    setTransferStatus(R.string.scan_transfer_waiting_tap)
-                }
-                return false
-            }
-            Log.e("NFC_A", "NfcA transfer failed", e)
-            componentActivity.runOnUiThread {
-                Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_error_generic), Toast.LENGTH_SHORT).show()
-                setTransferStatus(R.string.scan_transfer_failed_try_again)
-            }
-            true
         }
     }
 
-    private fun setTransferStatus(messageRes: Int) {
-        _transferStatusFlow.value = componentActivity.getString(messageRes)
-    }
-
-    private fun disableReaderModeSafely() {
-        if (!nfcAdapter.isEnabled) return
-        runCatching { nfcAdapter.disableReaderMode(componentActivity) }
-    }
-
-    private fun isVitalWearHceTarget(isoDep: IsoDep): Boolean {
-        return runCatching {
-            val originalTimeout = isoDep.timeout
-            try {
-                isoDep.timeout = 500
-                if (!isoDep.isConnected) {
-                    isoDep.connect()
-                }
-                val selectApdu = byteArrayOf(0x00, 0xA4.toByte(), 0x04, 0x00, VITALWEAR_AID.size.toByte()) + VITALWEAR_AID
-                val response = isoDep.transceive(selectApdu)
-                statusWord(response) == SW_OK
-            } finally {
-                isoDep.timeout = originalTimeout
-                runCatching { if (isoDep.isConnected) isoDep.close() }
-            }
-        }.getOrDefault(false)
-    }
-
-    private fun statusWord(response: ByteArray): Int {
-        if (response.size < 2) return -1
-        return ((response[response.size - 2].toInt() and 0xFF) shl 8) or
-            (response[response.size - 1].toInt() and 0xFF)
-    }
-
-    // ---- Misc ---------------------------------------------------------------------
-
     private fun checkSecrets() {
         componentActivity.lifecycleScope.launch(Dispatchers.IO) {
-            if (secretsFlow.stateIn(componentActivity.lifecycleScope).value.isMissingSecrets()) {
+            if(secretsFlow.stateIn(componentActivity.lifecycleScope).value.isMissingSecrets()) {
                 componentActivity.runOnUiThread {
                     Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_missing_secrets), Toast.LENGTH_SHORT).show()
                 }
@@ -597,153 +127,74 @@ class ScanScreenControllerImpl(
         }
     }
 
+    override fun onClickWrite(
+        secrets: Secrets,
+        nfcCharacter: NfcCharacter,
+        onComplete: () -> Unit
+    ) {
+        handleTag(secrets) { tagCommunicator ->
+            try {
+                if (nfcCharacter is VBNfcCharacter) {
+                    Log.d("SendCharacter", "VBNfcCharacter")
+                    val castNfcCharacter: VBNfcCharacter = nfcCharacter
+                    tagCommunicator.sendCharacter(castNfcCharacter)
+                } else if (nfcCharacter is BENfcCharacter) {
+                    Log.d("SendCharacter", "BENfcCharacter")
+                    val castNfcCharacter: BENfcCharacter = nfcCharacter
+                    tagCommunicator.sendCharacter(castNfcCharacter)
+                }
+                onComplete.invoke()
+                componentActivity.getString(R.string.scan_sent_character_success)
+            } catch (e: Throwable) {
+                Log.e("TAG", e.stackTraceToString())
+                componentActivity.getString(R.string.scan_error_generic)
+            }
+        }
+    }
+
+    override fun onClickCheckCard(
+        secrets: Secrets,
+        nfcCharacter: NfcCharacter,
+        onComplete: () -> Unit
+    ) {
+        handleTag(secrets) { tagCommunicator ->
+            tagCommunicator.prepareDIMForCharacter(nfcCharacter.dimId)
+            onComplete.invoke()
+            componentActivity.getString(R.string.scan_sent_dim_success)
+        }
+    }
+
+    // EXTRACTED DIRECTLY FROM EXAMPLE APP
     private fun showWirelessSettings() {
-        Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_nfc_must_be_enabled), Toast.LENGTH_SHORT).show()
+        Toast.makeText(componentActivity,  componentActivity.getString(R.string.scan_nfc_must_be_enabled), Toast.LENGTH_SHORT).show()
         componentActivity.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
     }
 
-    /**
-     * Best-effort, non-destructive slot-capacity check for NFC-A devices.
-     */
-    private fun readNfcASlotState(tagCommunicator: TagCommunicator): NfcASlotState {
-        val communicatorClass = tagCommunicator.javaClass
-
-        val countMethod = communicatorClass.methods.firstOrNull {
-            it.parameterCount == 0 &&
-                Number::class.java.isAssignableFrom(it.returnType) &&
-                it.name.contains("count", ignoreCase = true) &&
-                it.name.contains("character", ignoreCase = true)
-        }
-        val count = if (countMethod != null) {
-            runCatching { (countMethod.invoke(tagCommunicator) as Number).toInt() }.getOrNull()
-        } else null
-
-        val activeMethod = communicatorClass.methods.firstOrNull {
-            it.parameterCount == 0 && it.returnType == java.lang.Boolean.TYPE &&
-                (it.name.contains("active", ignoreCase = true) || it.name.contains("current", ignoreCase = true)) &&
-                it.name.contains("character", ignoreCase = true)
-        }
-        val backupMethod = communicatorClass.methods.firstOrNull {
-            it.parameterCount == 0 && it.returnType == java.lang.Boolean.TYPE &&
-                it.name.contains("backup", ignoreCase = true) &&
-                it.name.contains("character", ignoreCase = true)
-        }
-
-        val activePresent = if (activeMethod != null) {
-            runCatching { activeMethod.invoke(tagCommunicator) as Boolean }.getOrNull()
-        } else null
-        val backupPresent = if (backupMethod != null) {
-            runCatching { backupMethod.invoke(tagCommunicator) as Boolean }.getOrNull()
-        } else null
-
-        if (count == null && activePresent == null && backupPresent == null) {
-            Log.w("NFC_A", "Unable to introspect NFC-A slot occupancy; defaulting to non-blocking write path")
-        }
-
-        return NfcASlotState(count = count, activePresent = activePresent, backupPresent = backupPresent)
-    }
-
-    /**
-     * Attempts to mirror official toy behavior by moving the active character to backup.
-     * If the library already does this internally, this is a harmless no-op.
-     */
-    private fun verifyActiveToBackupMigration(
-        tagCommunicator: TagCommunicator,
-        beforeState: NfcASlotState,
-    ): SlotMigrationCheck {
-        val migrationResult = moveActiveToBackupIfSupported(tagCommunicator)
-        if (migrationResult.attempted && !migrationResult.success) {
-            return SlotMigrationCheck(
-                canProceed = false,
-                message = "Transfer blocked. Could not move active character to backup safely."
-            )
-        }
-
-        // If we could not introspect occupancy at all, keep legacy behavior and proceed.
-        if (!beforeState.hasOccupancySignal()) {
-            return SlotMigrationCheck(canProceed = true, message = "")
-        }
-
-        val afterState = readNfcASlotState(tagCommunicator)
-        val migrationVerified = afterState.backupPresent == true ||
-            (beforeState.count != null && afterState.count != null && afterState.count >= beforeState.count)
-        if (!migrationVerified) {
-            // Some real bracelets do not expose stable occupancy signals through the current
-            // reflection-based probing. In that case, prefer compatibility over false blocks.
-            Log.w("NFC_A", "Could not verify active->backup migration from slot signals; proceeding with write")
-            return SlotMigrationCheck(canProceed = true, message = "")
-        }
-
-        return SlotMigrationCheck(canProceed = true, message = "")
-    }
-
-    private fun moveActiveToBackupIfSupported(tagCommunicator: TagCommunicator): MigrationInvokeResult {
-        val communicatorClass = tagCommunicator.javaClass
-        val candidate = communicatorClass.methods.firstOrNull {
-            it.parameterCount == 0 &&
-                (
-                    (it.name.contains("move", ignoreCase = true) && it.name.contains("backup", ignoreCase = true)) ||
-                    (it.name.contains("shift", ignoreCase = true) && it.name.contains("backup", ignoreCase = true)) ||
-                    (it.name.contains("promote", ignoreCase = true) && it.name.contains("backup", ignoreCase = true))
-                )
-        }
-        if (candidate == null) {
-            return MigrationInvokeResult(attempted = false, success = true)
-        }
-
-        return runCatching { candidate.invoke(tagCommunicator) }
-            .fold(
-                onSuccess = { MigrationInvokeResult(attempted = true, success = true) },
-                onFailure = {
-                    Log.w("NFC_A", "Failed to move active character to backup", it)
-                    MigrationInvokeResult(attempted = true, success = false)
-                }
-            )
-    }
-
-    private data class NfcASlotState(
-        val count: Int?,
-        val activePresent: Boolean?,
-        val backupPresent: Boolean?,
-    ) {
-        fun hasOccupancySignal(): Boolean {
-            return count != null || activePresent != null || backupPresent != null
-        }
-
-        fun isFull(): Boolean {
-            if (count != null) {
-                return count >= 2
-            }
-            if (activePresent != null && backupPresent != null) {
-                return activePresent && backupPresent
-            }
-            return false
-        }
-    }
-
-    private data class SlotMigrationCheck(
-        val canProceed: Boolean,
-        val message: String,
-    )
-
-    private data class MigrationInvokeResult(
-        val attempted: Boolean,
-        val success: Boolean,
-    )
-
-    override fun characterFromNfc(nfcCharacter: NfcCharacter, onMultipleCards: (List<Card>, NfcCharacter) -> Unit): String {
-        return FromNfcConverter(componentActivity = componentActivity).addCharacter(nfcCharacter, onMultipleCards)
+    override fun characterFromNfc(
+        nfcCharacter: NfcCharacter,
+        onMultipleCards: (List<Card>, NfcCharacter) -> Unit
+    ): String {
+        val nfcConverter = FromNfcConverter(
+            componentActivity = componentActivity
+        )
+        return nfcConverter.addCharacter(nfcCharacter, onMultipleCards)
     }
 
     override suspend fun characterToNfc(characterId: Long): NfcCharacter {
-        lastRequestedCharacterId = characterId
-        val character = ToNfcConverter(componentActivity = componentActivity).characterToNfc(characterId)
+        val nfcGenerator = ToNfcConverter(
+            componentActivity = componentActivity
+        )
+
+        val character = nfcGenerator.characterToNfc(characterId)
         Log.d("CharacterType", character.toString())
         return character
     }
 
     override fun flushCharacter(cardId: Long) {
-        val nfcConverter = FromNfcConverter(componentActivity = componentActivity)
+        val nfcConverter = FromNfcConverter(
+            componentActivity = componentActivity
+        )
+
         componentActivity.lifecycleScope.launch(Dispatchers.IO) {
             if (lastScannedCharacter != null) {
                 nfcConverter.addCharacterUsingCard(lastScannedCharacter!!, cardId)

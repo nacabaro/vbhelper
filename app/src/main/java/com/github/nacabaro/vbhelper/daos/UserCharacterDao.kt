@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Upsert
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
@@ -39,7 +38,6 @@ interface UserCharacterDao {
     @Upsert
     fun insertSpecialMissions(vararg specialMissions: SpecialMissions)
 
-    @RewriteQueriesToDropUnusedColumns
     @Query(
         """
         SELECT 
@@ -57,7 +55,6 @@ interface UserCharacterDao {
     )
     fun getTransformationHistory(monId: Long): Flow<List<CharacterDtos.TransformationHistory>>
 
-    @RewriteQueriesToDropUnusedColumns
     @Query(
         """
         SELECT
@@ -74,7 +71,6 @@ interface UserCharacterDao {
     )
     suspend fun getTransformationHistoryForExport(monId: Long): List<CharacterDtos.TransformationHistoryExport>
 
-    @RewriteQueriesToDropUnusedColumns
     @Query(
         """
         SELECT
@@ -100,7 +96,6 @@ interface UserCharacterDao {
     )
     fun getAllCharacters(): Flow<List<CharacterDtos.CharacterWithSprites>>
 
-    @RewriteQueriesToDropUnusedColumns
     @Query(
         """
         SELECT
@@ -133,22 +128,12 @@ interface UserCharacterDao {
     @Query("SELECT * FROM BECharacterData WHERE id = :id")
     fun getBeData(id: Long): Flow<BECharacterData>
 
-    @Query("SELECT * FROM BECharacterData WHERE id = :id")
-    suspend fun getBeDataOrNull(id: Long): BECharacterData?
-
     @Query("SELECT * FROM VBCharacterData WHERE id = :id")
     fun getVbData(id: Long): Flow<VBCharacterData>
-
-    @Query("SELECT * FROM VBCharacterData WHERE id = :id")
-    suspend fun getVbDataOrNull(id: Long): VBCharacterData?
-
-    @Query("DELETE FROM BECharacterData WHERE id = :id")
-    suspend fun deleteBECharacterData(id: Long)
 
     @Query("SELECT * FROM SpecialMissions WHERE characterId = :id")
     fun getSpecialMissions(id: Long): Flow<List<SpecialMissions>>
 
-    @RewriteQueriesToDropUnusedColumns
     @Query(
         """
         SELECT
@@ -214,7 +199,6 @@ interface UserCharacterDao {
     @Query("""SELECT * FROM VitalsHistory WHERE charId = :charId ORDER BY id ASC""")
     suspend fun getVitalsHistory(charId: Long): List<VitalsHistory>
 
-    @RewriteQueriesToDropUnusedColumns
     @Query(
         """
         SELECT
@@ -241,7 +225,6 @@ interface UserCharacterDao {
     )
     suspend fun getBECharacters(): List<CharacterDtos.CharacterWithSprites>
 
-    @RewriteQueriesToDropUnusedColumns
     @Query(
         """
         SELECT

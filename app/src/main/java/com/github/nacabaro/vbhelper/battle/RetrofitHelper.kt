@@ -12,14 +12,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import com.github.nacabaro.vbhelper.battle.BattleAuthContainer
-import java.net.SocketTimeoutException
-import java.io.InterruptedIOException
-import java.util.concurrent.TimeUnit
 
 class RetrofitHelper {
-
+    
     /**
      * Creates an OkHttpClient with authentication interceptor for game endpoints.
      * Requires a non-null, non-empty token.
@@ -32,22 +28,9 @@ class RetrofitHelper {
         return OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(token))
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .callTimeout(45, TimeUnit.SECONDS)
-            .retryOnConnectionFailure(true)
             .build()
     }
-
-    private fun classifyNetworkError(t: Throwable): String {
-        return when (t) {
-            is SocketTimeoutException -> "Authentication server timed out"
-            is InterruptedIOException -> "Request timed out"
-            else -> t.message ?: "Network error"
-        }
-    }
-
+    
     /**
      * Gets the session token from AuthRepository for API calls.
      * Falls back to nacatech token if session token is not available (backward compatibility).
@@ -55,8 +38,7 @@ class RetrofitHelper {
     private fun getAuthToken(context: Context): String? {
         return try {
             val authContainer = BattleAuthContainer(context)
-            runBlocking(Dispatchers.IO) {
-                withTimeoutOrNull(5000L) {
+            runBlocking {
                 // Prefer session token, fall back to nacatech token for backward compatibility
                 val sessionToken = authContainer.authRepository.sessionToken.first()
                 if (!sessionToken.isNullOrEmpty()) {
@@ -69,10 +51,6 @@ class RetrofitHelper {
                         println("RetrofitHelper: No sessionToken found, falling back to nacatechToken")
                     }
                     nacatechToken
-                }
-                } ?: run {
-                    println("RetrofitHelper: Timed out while reading auth token from DataStore")
-                    null
                 }
             }
         } catch (e: Exception) {
@@ -98,30 +76,7 @@ class RetrofitHelper {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
-    /**
-     * Creates a Retrofit instance without authentication for public endpoints.
-     */
-    private fun createPublicRetrofit(): Retrofit {
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-
-        val client = OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .callTimeout(45, TimeUnit.SECONDS)
-            .retryOnConnectionFailure(true)
-            .build()
-
-        return Retrofit.Builder()
-            .baseUrl("http://battle.io-void.com:8080/")
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
-
+    
     /**
      * Handles HTTP error responses (401, 403, 429).
      * For 401/403, clears authentication state to trigger re-authentication.
@@ -166,15 +121,16 @@ class RetrofitHelper {
         }
     }
 
-    fun getOpponents(context: Context, stage: String, onComplete: (() -> Unit)? = null, callback: (OpponentsDataModel) -> Unit) {
+    fun getOpponents(context: Context, stage: String, callback: (OpponentsDataModel) -> Unit) {
         //println("RetrofitHelper: Starting API call for stage: $stage")
 
         try {
-            // Opponents endpoint requires auth on the current backend.
-            // Prefer authenticated Retrofit; fall back to public client only if no token is available.
-            val retrofit = createAuthenticatedRetrofit(context) ?: run {
-                println("RetrofitHelper: No auth token for opponents request, falling back to public Retrofit")
-                createPublicRetrofit()
+            // Create an authenticated Retrofit instance
+            val retrofit = createAuthenticatedRetrofit(context)
+            if (retrofit == null) {
+                println("RetrofitHelper: Cannot create authenticated Retrofit - no token available")
+                Toast.makeText(context, "Authentication required. Please log in.", Toast.LENGTH_SHORT).show()
+                return
             }
 
             // Create an ApiService instance from the Retrofit instance.
@@ -190,11 +146,9 @@ class RetrofitHelper {
             // make an asynchronous API request.
             call.enqueue(object : Callback<OpponentsDataModel> {
                 override fun onFailure(call: Call<OpponentsDataModel>, t: Throwable) {
-                    val classified = classifyNetworkError(t)
-                    println("RetrofitHelper: API call failed (${t::class.java.simpleName}): $classified")
+                    println("RetrofitHelper: API call failed: ${t.message}")
                     t.printStackTrace()
-                    Toast.makeText(context, classified, Toast.LENGTH_SHORT).show()
-                    onComplete?.invoke()
+                    Toast.makeText(context, "Request Fail", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onResponse(call: Call<OpponentsDataModel>, response: Response<OpponentsDataModel>) {
@@ -202,19 +156,13 @@ class RetrofitHelper {
                     println("RetrofitHelper: Response body: ${response.body()}")
 
                     if(response.isSuccessful){
-                        val opponentsList = response.body()
-                        if (opponentsList != null) {
-                            callback(opponentsList)
-                        } else {
-                            println("RetrofitHelper: Successful opponents response had empty body")
-                            Toast.makeText(context, "Empty response from server", Toast.LENGTH_SHORT).show()
-                        }
-                        onComplete?.invoke()
+                        //println("RetrofitHelper: Response successful, calling callback")
+                        val opponentsList: OpponentsDataModel = response.body() as OpponentsDataModel
+                        callback(opponentsList)
                     } else {
                         val errorBody = response.errorBody()?.string()
-                        println("RetrofitHelper: Opponents response not successful - Code: ${response.code()}, Error: $errorBody")
-                        handleErrorResponse(context, response, errorBody ?: "Unable to load opponents right now.")
-                        onComplete?.invoke()
+                        println("RetrofitHelper: Response not successful - Error: $errorBody")
+                        handleErrorResponse(context, response, errorBody ?: "Unknown error")
                     }
                 }
             })
@@ -222,7 +170,6 @@ class RetrofitHelper {
             println("RetrofitHelper: Exception in getOpponents: ${e.message}")
             e.printStackTrace()
             Toast.makeText(context, "Request failed: ${e.message}", Toast.LENGTH_SHORT).show()
-            onComplete?.invoke()
         }
     }
 
@@ -337,10 +284,9 @@ class RetrofitHelper {
 
                 override fun onFailure(call: Call<PVPDataModel>, t: Throwable) {
                     // This method is called when the API request fails.
-                    val classified = classifyNetworkError(t)
-                    println("RetrofitHelper: PVP API call failed (${t::class.java.simpleName}): $classified")
+                    println("RetrofitHelper: PVP API call failed: ${t.message}")
                     t.printStackTrace()
-                    Toast.makeText(context, classified, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Request Fail", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onResponse(call: Call<PVPDataModel>, response: Response<PVPDataModel>) {
@@ -348,13 +294,13 @@ class RetrofitHelper {
                     println("RetrofitHelper: PVP API response received - Code: ${response.code()}")
 
                     if(response.isSuccessful){
-                        val apiResults = response.body()
-                        if (apiResults != null) {
-                            callback(apiResults)
-                        } else {
-                            println("RetrofitHelper: Successful PVP response had empty body")
-                            Toast.makeText(context, "Empty response from server", Toast.LENGTH_SHORT).show()
-                        }
+                        // If the response is successful, parse the
+                        // response body to a DataModel object.
+                        val apiResults: PVPDataModel = response.body() as PVPDataModel
+
+                        // Call the callback function with the DataModel
+                        // object as a parameter.
+                        callback(apiResults)
                     } else {
                         val errorBody = response.errorBody()?.string()
                         println("RetrofitHelper: PVP API response not successful - Code: ${response.code()}, Error: $errorBody")
@@ -369,20 +315,12 @@ class RetrofitHelper {
         }
     }
 
-    fun authenticate(
-        context: Context,
-        token: String,
-        showUserFacingErrors: Boolean = true,
-        callback: (AuthenticateResponse) -> Unit,
-    ) {
+    fun authenticate(context: Context, token: String, callback: (AuthenticateResponse) -> Unit) {
         //println("RetrofitHelper: Starting validate API call with token: $token")
         
         if (token.isEmpty()) {
             println("RetrofitHelper: ERROR - Token is empty!")
-            if (showUserFacingErrors) {
-                Toast.makeText(context, "Authentication failed: Token is empty", Toast.LENGTH_SHORT).show()
-            }
-            callback(AuthenticateResponse(success = false, message = "Token is empty"))
+            Toast.makeText(context, "Authentication failed: Token is empty", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -393,10 +331,6 @@ class RetrofitHelper {
             }
             val okHttpClient = OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .callTimeout(45, TimeUnit.SECONDS)
                 .build()
             
             val retrofit: Retrofit = Retrofit.Builder()
@@ -414,11 +348,7 @@ class RetrofitHelper {
                 override fun onFailure(call: Call<AuthenticateResponse>, t: Throwable) {
                     println("RetrofitHelper: Validate API call failed: ${t.message}")
                     t.printStackTrace()
-                    val message = classifyNetworkError(t)
-                    if (showUserFacingErrors) {
-                        Toast.makeText(context, "Authentication failed: $message", Toast.LENGTH_SHORT).show()
-                    }
-                    callback(AuthenticateResponse(success = false, message = message))
+                    Toast.makeText(context, "Authentication failed: ${t.message}", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onResponse(call: Call<AuthenticateResponse>, response: Response<AuthenticateResponse>) {
@@ -430,25 +360,11 @@ class RetrofitHelper {
                         } else {
                             println("RetrofitHelper: Validation failed: Invalid response body")
                             Toast.makeText(context, "Authentication failed: Invalid response", Toast.LENGTH_SHORT).show()
-                            callback(AuthenticateResponse(success = false, message = "Invalid response body"))
                         }
                     } else {
                         val errorBody = response.errorBody()?.string()
                         println("RetrofitHelper: Validate response not successful - Code: ${response.code()}, Error: $errorBody")
-                        val userMessage = when {
-                            response.code() == 522 -> "Authentication server timed out. Please try again in a moment."
-                            response.code() >= 500 -> "Authentication server is unavailable. Please try again later."
-                            else -> "Authentication failed: ${response.code()}"
-                        }
-                        if (showUserFacingErrors) {
-                            Toast.makeText(context, userMessage, Toast.LENGTH_SHORT).show()
-                        }
-                        callback(
-                            AuthenticateResponse(
-                                success = false,
-                                message = "HTTP ${response.code()}: ${errorBody ?: "Authentication server error"}"
-                            )
-                        )
+                        Toast.makeText(context, "Authentication failed: ${response.code()}", Toast.LENGTH_SHORT).show()
                     }
                 }
             })
@@ -456,7 +372,6 @@ class RetrofitHelper {
             println("RetrofitHelper: Exception in validate: ${e.message}")
             e.printStackTrace()
             Toast.makeText(context, "Authentication failed: ${e.message}", Toast.LENGTH_SHORT).show()
-            callback(AuthenticateResponse(success = false, message = e.message ?: "Authentication error"))
         }
     }
 }

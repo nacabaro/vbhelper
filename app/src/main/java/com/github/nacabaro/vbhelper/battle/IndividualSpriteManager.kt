@@ -1,10 +1,12 @@
 package com.github.nacabaro.vbhelper.battle
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Environment
 import java.io.File
 
-class IndividualSpriteManager {
+class IndividualSpriteManager(private val context: Context) {
     private val spriteCache = mutableMapOf<String, Bitmap>()
     
     // Get the external storage directory for sprite files
@@ -63,4 +65,68 @@ class IndividualSpriteManager {
         }
     }
     
-}
+    /**
+     * Get all available sprite frames for a character
+     * @param characterId The character ID
+     * @return List of frame numbers (1-12) that exist for this character
+     */
+    fun getAvailableFrames(characterId: String): List<Int> {
+        val spriteBaseDir = getSpriteBaseDir()
+        val characterDir = File(spriteBaseDir, characterId)
+        
+        if (!characterDir.exists()) {
+            return emptyList()
+        }
+        
+        val spriteFiles = characterDir.listFiles { file ->
+            file.name.startsWith("${characterId}_") && file.name.endsWith(".png")
+        } ?: emptyArray()
+        
+        return spriteFiles.mapNotNull { file ->
+            val fileName = file.name
+            val frameMatch = Regex("${characterId}_(\\d{2})\\.png").find(fileName)
+            frameMatch?.groupValues?.get(1)?.toIntOrNull()
+        }.sorted()
+    }
+    
+    /**
+     * Get all available character IDs
+     * @return List of character IDs that have sprite directories
+     */
+    fun getAvailableCharacters(): List<String> {
+        val spriteBaseDir = getSpriteBaseDir()
+        
+        if (!spriteBaseDir.exists()) {
+            return emptyList()
+        }
+        
+        return spriteBaseDir.listFiles { file ->
+            file.isDirectory && file.listFiles()?.any { it.name.endsWith(".png") } == true
+        }?.map { it.name }?.sorted() ?: emptyList()
+    }
+    
+    /**
+     * Clear the sprite cache
+     */
+    fun clearCache() {
+        spriteCache.clear()
+    }
+    
+    /**
+     * Check if a character has sprite files
+     * @param characterId The character ID to check
+     * @return true if the character has sprite files, false otherwise
+     */
+    fun hasCharacterSprites(characterId: String): Boolean {
+        val characterDir = File(getSpriteBaseDir(), characterId)
+        if (!characterDir.exists()) {
+            return false
+        }
+        
+        val spriteFiles = characterDir.listFiles { file ->
+            file.name.startsWith("${characterId}_") && file.name.endsWith(".png")
+        } ?: emptyArray()
+        
+        return spriteFiles.isNotEmpty()
+    }
+} 

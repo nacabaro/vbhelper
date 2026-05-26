@@ -2,11 +2,9 @@ package com.github.nacabaro.vbhelper.domain.device_data
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    indices = [Index(value = ["charId"])],
     foreignKeys = [
         ForeignKey(
             entity = UserCharacter::class,

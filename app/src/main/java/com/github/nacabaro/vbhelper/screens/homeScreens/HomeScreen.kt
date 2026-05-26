@@ -33,12 +33,16 @@ import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
+import com.github.nacabaro.vbhelper.screens.homeScreens.screens.BEBEmHomeScreen
+import com.github.nacabaro.vbhelper.screens.homeScreens.screens.BEDiMHomeScreen
 import com.github.nacabaro.vbhelper.screens.homeScreens.screens.VBDiMHomeScreen
 import com.github.nacabaro.vbhelper.screens.itemsScreen.ObtainedItemDialog
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.dtos.CardDtos
 import com.github.nacabaro.vbhelper.source.CardRepository
+import com.github.nacabaro.vbhelper.source.VitalWearCharacterExporter
+import android.widget.Toast
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import kotlinx.coroutines.flow.flowOf
 import kotlin.collections.emptyList
@@ -72,8 +76,9 @@ fun HomeScreen(
             ?: flowOf(emptyList())
     ).collectAsState(initial = emptyList())
 
-    val specialMissions by (
+    val vbSpecialMissions by (
         activeMon
+            ?.takeIf { it.characterType == DeviceType.VBDevice }
             ?.let { chara ->
                 storageRepository.getSpecialMissions(chara.id)
             }
@@ -141,20 +146,29 @@ fun HomeScreen(
                     height = cardIconData!!.cardIconHeight
                 )
 
-                val activeCharacter = activeMon!!
-                val displaySpecialMissions = specialMissions
-
-                if (activeCharacter.characterType == DeviceType.BEDevice || vbData != null) {
-                    VBDiMHomeScreen(
-                        activeMon = activeCharacter,
-                        vbData = vbData ?: VBCharacterData(
-                            id = activeCharacter.id,
-                            generation = 0,
-                            totalTrophies = activeCharacter.trophies,
-                        ),
+                if (activeMon!!.isBemCard && beData != null) {
+                    BEBEmHomeScreen(
+                        activeMon = activeMon!!,
+                        beData = beData!!,
                         transformationHistory = transformationHistory,
                         contentPadding = PaddingValues(0.dp),
-                        specialMissions = displaySpecialMissions,
+                        cardIcon = cardIcon
+                    )
+                } else if (!activeMon!!.isBemCard && activeMon!!.characterType == DeviceType.BEDevice && beData != null) {
+                    BEDiMHomeScreen(
+                        activeMon = activeMon!!,
+                        beData = beData!!,
+                        transformationHistory = transformationHistory,
+                        contentPadding = PaddingValues(0.dp),
+                        cardIcon = cardIcon
+                    )
+                } else if (vbData != null) {
+                    VBDiMHomeScreen(
+                        activeMon = activeMon!!,
+                        vbData = vbData!!,
+                        transformationHistory = transformationHistory,
+                        contentPadding = PaddingValues(0.dp),
+                        specialMissions = vbSpecialMissions,
                         homeScreenController = homeScreenController,
                         onClickCollect = { item, currency ->
                             collectedItem = item
@@ -164,6 +178,27 @@ fun HomeScreen(
                     )
                 }
 
+                Button(
+                    onClick = {
+                        try {
+                            val intent = VitalWearCharacterExporter(application, application.container.db)
+                                .buildShareIntent(activeMon!!.id)
+                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            application.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(
+                                application,
+                                "Could not send character to VitalWear: ${e.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(text = "Send to VitalWear")
+                }
             }
         }
     }
@@ -213,5 +248,3 @@ fun HomeScreen(
         }
     }
 }
-
-

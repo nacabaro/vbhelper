@@ -5,7 +5,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @Composable
 fun AnimatedSpriteImage(
@@ -13,10 +15,12 @@ fun AnimatedSpriteImage(
     animationType: DigimonAnimationType = DigimonAnimationType.IDLE,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
+    reloadMappings: Boolean = false,
     animationOffset: Long = 0L // New parameter for offsetting animation timing
 ) {
-    val spriteManager = remember { IndividualSpriteManager() }
-
+    val context = LocalContext.current
+    val spriteManager = remember { IndividualSpriteManager(context) }
+    
     // Calculate frame offset based on animation offset
     // 750ms is the idle animation duration, so we calculate how many frames to offset
     val frameOffset = if (animationOffset > 0L) {
@@ -26,10 +30,17 @@ fun AnimatedSpriteImage(
         0
     }
     
-    val animationStateMachine = remember { DigimonAnimationStateMachine(characterId, frameOffset, animationOffset) }
+    val animationStateMachine = remember { DigimonAnimationStateMachine(characterId, context, frameOffset, animationOffset) }
     val coroutineScope = rememberCoroutineScope()
     
     var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    
+    // Reload mappings when reloadMappings parameter changes
+    LaunchedEffect(reloadMappings) {
+        if (reloadMappings) {
+            animationStateMachine.reloadMappings()
+        }
+    }
     
     // Start the animation when the component is first created
     LaunchedEffect(characterId) {

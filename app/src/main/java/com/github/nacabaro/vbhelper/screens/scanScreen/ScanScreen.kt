@@ -24,7 +24,6 @@ import com.github.nacabaro.vbhelper.source.isMissingSecrets
 import com.github.nacabaro.vbhelper.source.proto.Secrets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 import com.github.nacabaro.vbhelper.R
 
@@ -132,8 +131,6 @@ fun ScanScreenPreview() {
         navController = rememberNavController(),
         scanScreenController = object: ScanScreenController {
             override val secretsFlow = MutableStateFlow<Secrets>(Secrets.getDefaultInstance())
-            override val detectedTransportFlow: StateFlow<DetectedTransport> = MutableStateFlow(DetectedTransport.UNKNOWN)
-            override val transferStatusFlow: StateFlow<String?> = MutableStateFlow(null)
             override fun unregisterActivityLifecycleListener(key: String) { }
             override fun registerActivityLifecycleListener(
                 key: String,
@@ -144,12 +141,7 @@ fun ScanScreenPreview() {
             override fun flushCharacter(cardId: Long) {}
             override fun onClickRead(secrets: Secrets, onComplete: ()->Unit, onMultipleCards: (List<Card>) -> Unit) {}
             override fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
-            override fun onClickWrite(
-                secrets: Secrets,
-                nfcCharacter: NfcCharacter,
-                characterId: Long?,
-                onComplete: (ScanScreenController.WriteResult) -> Unit
-            ) {}
+            override fun onClickWrite(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
             override fun cancelRead() {}
             override fun characterFromNfc(nfcCharacter: NfcCharacter, onMultipleCards: (List<Card>, NfcCharacter) -> Unit): String { return "" }
             override suspend fun characterToNfc(characterId: Long): NfcCharacter? { return null }

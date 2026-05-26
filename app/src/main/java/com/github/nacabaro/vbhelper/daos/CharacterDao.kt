@@ -13,14 +13,8 @@ interface CharacterDao {
     @Insert
     suspend fun insertCharacter(vararg characterData: CardCharacter)
 
-    @Query("SELECT * FROM CardCharacter WHERE id = :id LIMIT 1")
-    fun getCharacterById(id: Long): CardCharacter?
-
     @Query("SELECT * FROM CardCharacter WHERE charaIndex = :monIndex AND cardId = :dimId LIMIT 1")
     fun getCharacterByMonIndex(monIndex: Int, dimId: Long): CardCharacter
-
-    @Query("SELECT * FROM CardCharacter WHERE charaIndex = :monIndex AND cardId = :dimId LIMIT 1")
-    fun getCharacterByMonIndexOrNull(monIndex: Int, dimId: Long): CardCharacter?
 
     @Insert
     suspend fun insertSprite(vararg sprite: Sprite)

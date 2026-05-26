@@ -42,7 +42,7 @@ fun BitmapData.getImageBitmap(
 }
 
 fun BitmapData.getBitmap(): Bitmap {
-    return Bitmap.createBitmap(createARGBIntArray(), this.width, this.height, Bitmap.Config.ARGB_8888)
+    return Bitmap.createBitmap(createARGBIntArray(), this.width, this.height, Bitmap.Config.HARDWARE)
 }
 
 object ARGBMasks {
@@ -64,7 +64,7 @@ fun BitmapData.getObscuredBitmap(): Bitmap {
             argbPixels[i] = BLACK
         }
     }
-    return Bitmap.createBitmap(argbPixels, this.width, this.height, Bitmap.Config.ARGB_8888)
+    return Bitmap.createBitmap(argbPixels, this.width, this.height, Bitmap.Config.HARDWARE)
 }
 
 

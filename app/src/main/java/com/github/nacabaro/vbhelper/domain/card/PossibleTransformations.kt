@@ -2,14 +2,9 @@ package com.github.nacabaro.vbhelper.domain.card
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    indices = [
-        Index(value = ["charaId"]),
-        Index(value = ["toCharaId"])
-    ],
     foreignKeys = [
         ForeignKey(
             entity = CardCharacter::class,

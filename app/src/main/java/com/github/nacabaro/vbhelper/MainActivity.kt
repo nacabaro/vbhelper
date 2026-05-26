@@ -1,19 +1,19 @@
 package com.github.nacabaro.vbhelper
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.lifecycle.lifecycleScope
+import com.github.cfogrady.vitalwear.protos.Character
 import com.github.nacabaro.vbhelper.navigation.AppNavigation
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.navigation.AppNavigationHandlers
-import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.screens.homeScreens.HomeScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.itemsScreen.ItemsScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenControllerImpl
@@ -22,12 +22,15 @@ import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenContr
 import com.github.nacabaro.vbhelper.screens.cardScreen.CardScreenControllerImpl
 import com.github.nacabaro.vbhelper.screens.spriteViewer.SpriteViewerControllerImpl
 import com.github.nacabaro.vbhelper.screens.storageScreen.StorageScreenControllerImpl
+import com.github.nacabaro.vbhelper.source.VitalWearCharacterImporter
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
     private val onActivityLifecycleListeners = HashMap<String, ActivityLifecycleListener>()
-    private var initialRoute: String? by mutableStateOf(null)
+    private var initialRoute: String? = null
 
     private fun registerActivityLifecycleListener(key: String, activityLifecycleListener: ActivityLifecycleListener) {
         if( onActivityLifecycleListeners[key] != null) {
@@ -79,6 +82,7 @@ class MainActivity : ComponentActivity() {
         }
 
         Log.i("MainActivity", "Activity onCreated")
+        handleImportIntent(intent)
     }
 
     override fun onPause() {
@@ -101,25 +105,62 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         initialRoute = getInitialRouteFromIntent(intent)
+        // Optionally, you may want to trigger navigation here if needed
+        handleImportIntent(intent)
+    }
+
+    private fun handleImportIntent(intent: Intent?) {
+        val importUri = extractVitalWearImportUri(intent) ?: return
+        val application = applicationContext as VBHelper
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val result = runCatching {
+                contentResolver.openInputStream(importUri)?.use { inputStream ->
+                    val character = Character.parseFrom(inputStream)
+                    VitalWearCharacterImporter(application.container.db).importCharacter(character)
+                } ?: VitalWearCharacterImporter.ImportResult(
+                    success = false,
+                    message = "VitalWear import file could not be opened."
+                )
+            }.getOrElse {
+                VitalWearCharacterImporter.ImportResult(
+                    success = false,
+                    message = "VitalWear import failed: ${it.message ?: "Unknown error"}"
+                )
+            }
+
+            runOnUiThread {
+                Toast.makeText(this@MainActivity, result.message, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun extractVitalWearImportUri(intent: Intent?): Uri? {
+        if (intent == null) {
+            return null
+        }
+
+        val isVitalWearImport = intent.type == VITALWEAR_CHARACTER_MIME
+        if (!isVitalWearImport) {
+            return null
+        }
+
+        return when (intent.action) {
+            Intent.ACTION_SEND -> {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_STREAM)
+            }
+            Intent.ACTION_VIEW -> intent.data
+            else -> null
+        }
     }
 
     private fun getInitialRouteFromIntent(intent: Intent?): String? {
         if (intent == null) return null
         val data = intent.data
         if (intent.action == Intent.ACTION_VIEW && data != null) {
-            val isAppAuthCallback = data.scheme == "vbhelper" && data.host == "auth"
-            val isLocalhostAuthCallback =
-                (data.scheme == "http" || data.scheme == "https") &&
-                    (data.host == "localhost" || data.host == "127.0.0.1") &&
-                    data.path?.startsWith("/authenticate") == true
-            val token = data.getQueryParameter("c") ?: data.getQueryParameter("token")
-            val hasAuthToken = !token.isNullOrEmpty()
-
-            if (isAppAuthCallback || isLocalhostAuthCallback || hasAuthToken) {
-                // BattlesScreen consumes the callback intent and exchanges the single-use token
-                // for a durable session token. Writing partial auth state here can clear an
-                // already-valid session token and cause the browser login loop to restart.
-                return NavigationItems.Battles.route
+            if (data.scheme == "vbhelper" && data.host == "auth") {
+                return "Battle"
             }
         }
         return null
@@ -150,5 +191,9 @@ class MainActivity : ComponentActivity() {
             ),
             initialRoute = initialRoute
         )
+    }
+
+    companion object {
+        private const val VITALWEAR_CHARACTER_MIME = "application/x-vitalwear-character"
     }
 }

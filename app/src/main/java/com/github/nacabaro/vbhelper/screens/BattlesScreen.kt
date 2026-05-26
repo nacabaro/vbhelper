@@ -51,7 +51,6 @@ import android.content.Intent
 import android.net.Uri
 import android.media.MediaPlayer
 import android.os.Environment
-import android.widget.Toast
 //import androidx.compose.animation.core.animateFloatAsState
 //import androidx.compose.animation.core.tween
 import kotlinx.coroutines.delay
@@ -65,8 +64,6 @@ import com.github.nacabaro.vbhelper.battle.APIBattleCharacter
 import android.util.Log
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.battle.RetrofitHelper
-import com.github.nacabaro.vbhelper.battle.extractSessionToken
-import com.github.nacabaro.vbhelper.battle.extractUserId
 import com.github.nacabaro.vbhelper.battle.AttackSpriteImage
 import com.github.nacabaro.vbhelper.battle.SpriteFileManager
 import com.github.nacabaro.vbhelper.battle.ArenaBattleSystem
@@ -74,7 +71,6 @@ import com.github.nacabaro.vbhelper.battle.DigimonAnimationType
 import com.github.nacabaro.vbhelper.battle.AnimatedSpriteImage
 import com.github.nacabaro.vbhelper.battle.HitEffectOverlay
 import com.github.nacabaro.vbhelper.battle.BattleAuthContainer
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.collect
 import androidx.compose.foundation.lazy.LazyColumn
@@ -903,6 +899,7 @@ fun MiddleBattleView(
                                 y = enemyVerticalOffset + 40.dp
                             ),
                     contentScale = ContentScale.Fit,
+                        reloadMappings = false,
                         animationOffset = 375L // Offset enemy animation by half the idle duration
                     )
                     
@@ -989,6 +986,7 @@ fun MiddleBattleView(
                                 y = playerVerticalOffset - 40.dp
                             ),
                         contentScale = ContentScale.Fit,
+                        reloadMappings = false,
                         animationOffset = 0L // Player animation starts immediately
                     )
                     
@@ -1074,30 +1072,19 @@ fun MiddleBattleView(
                     
                     // Capture userId for use in this lambda
                     val playerUserId = userId
-                    if (playerUserId == null) {
-                        context?.let {
-                            Toast.makeText(it, "Session missing user id. Please re-authenticate.", Toast.LENGTH_SHORT).show()
-                        }
-                        battleSystem.resetAttackState()
-                        battleSystem.enableAttackButton()
-                        return@Button
-                    }
-
+                    
                     // Get crit bar progress as float (0.0f to 100.0f)
                     val critBarProgressFloat = battleSystem.critBarProgress.toFloat()
                     
                     // Determine player and opponent stages
-                    // activeCharacter.stage is DB stage (2=rookie, 3=champion, 4=ultimate, 5=mega)
-                    // API expects stage 0-3
                     val playerStage = when (activeCharacter?.stage) {
-                        2 -> 0 // rookie
-                        3 -> 1 // champion
-                        4 -> 2 // ultimate
-                        5 -> 3 // mega
+                        0 -> 0 // rookie
+                        1 -> 1 // champion
+                        2 -> 2 // ultimate
+                        3 -> 3 // mega
                         else -> 0
                     }
                     
-                    // opponentCharacter.stage comes from the API and is already 0-3
                     val opponentStage = when (opponentCharacter?.stage) {
                         0 -> 0 // rookie
                         1 -> 1 // champion
@@ -1114,11 +1101,11 @@ fun MiddleBattleView(
                         RetrofitHelper().getPVPWinner(
                             ctx, 
                             1, 
-                            playerUserId,
-                            activeCharacter?.charaId ?: "dim011_mon01",
-                            playerStage,
-                            battleSystem.critBarProgress,
-                            opponentCharacter?.charaId ?: "dim011_mon01",
+                            playerUserId ?: 2L, 
+                            activeCharacter?.name ?: "Player", 
+                            playerStage, 
+                            opponentStage, 
+                            opponentCharacter?.name ?: "Opponent", 
                             opponentStage
                         ) { apiResult ->
                             // Handle API response here
@@ -1322,6 +1309,7 @@ fun PlayerBattleView(
                             y = verticalOffset
                         ),
                 contentScale = ContentScale.Fit,
+                    reloadMappings = false,
                     animationOffset = 0L // Player animation starts immediately
             )
             
@@ -1503,6 +1491,7 @@ fun EnemyBattleView(
                             y = verticalOffset
                         ),
                 contentScale = ContentScale.Fit,
+                    reloadMappings = false,
                     animationOffset = 375L // Offset enemy animation by half the idle duration
             )
             
@@ -1652,63 +1641,8 @@ fun BattlesScreen() {
     // Track processed tokens to prevent duplicate API calls
     // Use rememberSaveable to persist across configuration changes (screen rotation)
     var processedTokens by rememberSaveable { mutableStateOf<Set<String>>(emptySet()) }
-    var isProcessingAuthCallback by rememberSaveable { mutableStateOf(false) }
-    var authBrowserLaunchInFlight by rememberSaveable { mutableStateOf(false) }
 
     var opponentsList by remember { mutableStateOf(ArrayList<APIBattleCharacter>()) }
-    var isLoadingOpponents by remember { mutableStateOf(false) }
-    var authReadyToken by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) {
-        battleAuthContainer.authRepository.sessionToken
-            .combine(battleAuthContainer.authRepository.authToken) { sessionToken, nacatechToken ->
-                sessionToken?.takeIf { it.isNotBlank() }
-                    ?: nacatechToken?.takeIf { it.isNotBlank() }
-            }
-            .collect { token ->
-                authReadyToken = token
-                if (token.isNullOrBlank() && opponentsList.isNotEmpty()) {
-                    opponentsList = ArrayList()
-                }
-            }
-    }
-
-    val openBattleAuthPage: () -> Unit = openAuth@{
-        if (isAuthenticated && !authReadyToken.isNullOrBlank()) {
-            println("BATTLESCREEN: Skipping auth browser launch because session is already ready")
-            return@openAuth
-        }
-        if (isProcessingAuthCallback) {
-            println("BATTLESCREEN: Skipping auth browser launch while callback is being processed")
-            return@openAuth
-        }
-        if (authBrowserLaunchInFlight) {
-            println("BATTLESCREEN: Auth browser launch already in flight, skipping duplicate request")
-            return@openAuth
-        }
-
-        val authUrl = "http://auth.nacatech.es/begin?app=443654920&redirect_uri=vbhelper://auth?token="
-        authBrowserLaunchInFlight = true
-        try {
-            val customTabsIntent = androidx.browser.customtabs.CustomTabsIntent.Builder()
-                .setShowTitle(true)
-                .build()
-            customTabsIntent.launchUrl(context, Uri.parse(authUrl))
-            println("BATTLESCREEN: Opened auth URL in Custom Tab: $authUrl")
-        } catch (e: Exception) {
-            authBrowserLaunchInFlight = false
-            println("BATTLESCREEN: Failed to open auth URL in Custom Tab: ${e.message}")
-            // Fall back to external browser if Custom Tabs is unavailable
-            try {
-                val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
-                context.startActivity(fallbackIntent)
-                println("BATTLESCREEN: Fallback to external browser succeeded")
-            } catch (e2: Exception) {
-                println("BATTLESCREEN: Fallback browser also failed: ${e2.message}")
-                e2.printStackTrace()
-            }
-        }
-    }
 
     var activeCharacter by remember { mutableStateOf<APIBattleCharacter?>(null) }
     var selectedOpponent by remember { mutableStateOf<APIBattleCharacter?>(null) }
@@ -1790,85 +1724,39 @@ fun BattlesScreen() {
     // Determine if player can battle based on stage (derived from activeUserCharacter)
     val canBattle = activeUserCharacter?.stage?.let { it >= 2 } ?: false
     
-    val loadOpponentsIfReady: () -> Unit = loadOpponents@{
-        val currentCharacter = activeUserCharacter
-        val readyToken = authReadyToken
-
+    // Load opponents automatically based on player's stage
+    // Only load if authenticated and character is ready
+    LaunchedEffect(activeUserCharacter, isAuthenticated) {
+        // Wait for authentication to complete before loading opponents
         if (!isAuthenticated) {
-            if (opponentsList.isNotEmpty()) {
-                opponentsList = ArrayList()
-            }
-            return@loadOpponents
+            return@LaunchedEffect
         }
-
-        if (readyToken.isNullOrBlank()) {
-            println("BATTLESCREEN: Skipping opponent load - auth token not persisted yet")
-            return@loadOpponents
-        }
-
-        if (isLoadingOpponents) {
-            println("BATTLESCREEN: Opponents load already in flight, skipping duplicate request")
-            return@loadOpponents
-        }
-
-        if (currentCharacter != null && currentCharacter.stage >= 2) {
-            val battleType = when (currentCharacter.stage) {
-                2 -> "rookie"
-                3 -> "champion"
-                4 -> "ultimate"
-                5 -> "mega"
-                else -> null
-            }
-            if (battleType == null) {
-                println("BATTLESCREEN: Stage ${currentCharacter.stage} has no battle type, skipping")
-                return@loadOpponents
-            }
-            try {
-                isLoadingOpponents = true
-                RetrofitHelper().getOpponents(context, battleType, onComplete = {
-                    isLoadingOpponents = false
-                }) { opponents ->
-                    try {
-                        opponentsList = ArrayList(opponents.opponentsList)
-                        println("BATTLESCREEN: Loaded ${opponents.opponentsList.size} opponents for stage $battleType")
-                    } catch (e: Exception) {
-                        Log.d(TAG, "Error processing opponents data: ${e.message}")
-                        e.printStackTrace()
-                    }
-                }
-            } catch (e: Exception) {
-                isLoadingOpponents = false
-                Log.d(TAG, "Error calling getOpponents: ${e.message}")
-                e.printStackTrace()
-            }
-        } else {
-            if (opponentsList.isNotEmpty()) {
-                opponentsList = ArrayList()
-            }
-            println("BATTLESCREEN: Cannot load opponents - stage ${currentCharacter?.stage}, must be >= 2")
-        }
-    }
-
-    // Load opponents automatically based on player's stage once auth is truly ready.
-    LaunchedEffect(activeUserCharacter, isAuthenticated, authReadyToken, playerBattleType) {
-        loadOpponentsIfReady()
-    }
-
-    // Re-fetch opponents when returning from browser (resume)
-    DisposableEffect(context, isAuthenticated, activeUserCharacter, canBattle, playerBattleType, authReadyToken) {
-        val activity = context as? ComponentActivity
-        val lifecycleOwner = activity as? LifecycleOwner
         
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                if (isAuthenticated && !authReadyToken.isNullOrBlank()) {
-                    loadOpponentsIfReady()
+        val currentCharacter = activeUserCharacter
+        if (currentCharacter != null && canBattle && playerBattleType != null) {
+            try {
+                RetrofitHelper().getOpponents(context, playerBattleType!!) { opponents ->
+                    try {
+                        // Create a new list to trigger UI recomposition
+                        opponentsList = ArrayList(opponents.opponentsList)
+                        } catch (e: Exception) {
+                            Log.d(TAG, "Error processing opponents data: ${e.message}")
+                            e.printStackTrace()
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.d(TAG,"Error calling getOpponents: ${e.message}")
+                    e.printStackTrace()
                 }
+        } else {
+            println("BATTLESCREEN: Cannot load opponents - activeUserCharacter: $currentCharacter")
+            println("BATTLESCREEN: canBattle: $canBattle")
+            println("BATTLESCREEN: playerBattleType: $playerBattleType")
+            println("BATTLESCREEN: currentCharacter != null: ${currentCharacter != null}")
+            if (currentCharacter != null) {
+                println("BATTLESCREEN: currentCharacter.stage: ${currentCharacter.stage}")
+                println("BATTLESCREEN: currentCharacter.stage >= 2: ${currentCharacter.stage >= 2}")
             }
-        }
-        lifecycleOwner?.lifecycle?.addObserver(observer)
-        onDispose {
-            lifecycleOwner?.lifecycle?.removeObserver(observer)
         }
     }
     
@@ -1887,19 +1775,17 @@ fun BattlesScreen() {
             if (!processedTokens.contains(token)) {
                 // Mark token as being processed IMMEDIATELY to prevent duplicate API calls
                 processedTokens = processedTokens + token
-                isProcessingAuthCallback = true
-                authBrowserLaunchInFlight = false
-
+                
                 // Exchange token with battle server
                 RetrofitHelper().authenticate(context, token) { response ->
                     if (response.success) {
                         // Extract userId and sessionToken from response
-                        val extractedUserId = response.extractUserId()
-                        val sessionToken = response.extractSessionToken()
-
+                        val extractedUserId = response.userInfo?.userId?.toLongOrNull()
+                        val sessionToken = response.sessionToken
+                        
                         println("BATTLESCREEN: Authentication successful, userId: $extractedUserId, sessionToken: ${if (sessionToken != null) "present" else "missing"}")
                         
-                        // Persist auth first so follow-up API calls can immediately use the token.
+                        // Store both nacatech token (for re-auth) and sessionToken (for API calls)
                         kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
                             battleAuthContainer.authRepository.setAuthenticated(
                                 isAuthenticated = true,
@@ -1907,16 +1793,14 @@ fun BattlesScreen() {
                                 sessionToken = sessionToken,
                                 userId = extractedUserId
                             )
-
-                            withContext(Dispatchers.Main) {
-                                isAuthenticated = true
-                                isCheckingAuth = false
-                                userId = extractedUserId
-                                isProcessingAuthCallback = false
-                                authBrowserLaunchInFlight = false
-                                println("BATTLESCREEN: Authentication successful, userId: $extractedUserId")
-                                android.widget.Toast.makeText(context, "Authentication successful!", android.widget.Toast.LENGTH_SHORT).show()
-                            }
+                        }
+                        // Update UI state on main thread
+                        kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
+                            isAuthenticated = true
+                            isCheckingAuth = false
+                            userId = extractedUserId
+                            println("BATTLESCREEN: Authentication successful, userId: $extractedUserId")
+                            android.widget.Toast.makeText(context, "Authentication successful!", android.widget.Toast.LENGTH_SHORT).show()
                         }
                     } else {
                         println("BATTLESCREEN: Authentication failed: ${response.message}")
@@ -1931,16 +1815,23 @@ fun BattlesScreen() {
                             kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
                                 isAuthenticated = false
                                 isCheckingAuth = false
-                                isProcessingAuthCallback = false
-                                authBrowserLaunchInFlight = false
-                                println("BATTLESCREEN: Auth callback token was already used; avoiding automatic browser relaunch loop")
-                            }
+                                // Small delay to ensure state is updated
+                                kotlinx.coroutines.delay(100)
+                                // Open auth URL to get a fresh token
+                                val authUrl = "http://auth.nacatech.es/begin?app=443654920&redirect_uri=vbhelper://auth?token="
+                                val authIntent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+                                try {
+                                    context.startActivity(authIntent)
+                                    println("BATTLESCREEN: Opened auth URL after token expiration: $authUrl")
+                        } catch (e: Exception) {
+                                    println("BATTLESCREEN: Failed to open auth URL: ${e.message}")
+                            e.printStackTrace()
+                        }
+                    }
                         } else {
                             // For other errors, remove from processed set to allow retry with a new token
                             println("BATTLESCREEN: Authentication failed, removing token from processed set to allow retry")
                             processedTokens = processedTokens - token
-                            isProcessingAuthCallback = false
-                            authBrowserLaunchInFlight = false
                         }
                         // Show toast on main thread
                         kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
@@ -1948,47 +1839,12 @@ fun BattlesScreen() {
                         }
                     }
                 }
-            } else {
-                println("BATTLESCREEN: Ignoring already processed auth token")
             }
         } else {
             println("BATTLESCREEN: No token found in URI: $uri (checked 'c' and 'token' parameters)")
         }
     }
-
-    val consumeAuthCallbackIntent: () -> Boolean = consume@{
-        val currentActivity = context as? ComponentActivity ?: return@consume false
-        val incomingIntent = currentActivity.intent ?: return@consume false
-        if (incomingIntent.action != Intent.ACTION_VIEW) return@consume false
-
-        val uri = incomingIntent.data ?: return@consume false
-        val isAppAuthCallback = uri.scheme == "vbhelper" && uri.host == "auth"
-        val isLocalhostAuthCallback =
-            (uri.scheme == "http" || uri.scheme == "https") &&
-                (uri.host == "localhost" || uri.host == "127.0.0.1") &&
-                uri.path?.startsWith("/authenticate") == true
-        val hasAuthToken = !uri.getQueryParameter("c").isNullOrEmpty() ||
-            !uri.getQueryParameter("token").isNullOrEmpty()
-
-        if (!hasAuthToken) {
-            return@consume false
-        }
-
-        if (!isAppAuthCallback && !isLocalhostAuthCallback) {
-            return@consume false
-        }
-
-        handleTokenFromUri(uri)
-
-        // Clear callback intent so reopening Battles does not replay stale deep links.
-        currentActivity.setIntent(Intent(incomingIntent).apply {
-            action = Intent.ACTION_MAIN
-            data = null
-        })
-
-        true
-    }
-
+    
     // Check authentication status on load
     LaunchedEffect(Unit) {
         try {
@@ -1996,8 +1852,7 @@ fun BattlesScreen() {
             val localAuthState = authRepository.isAuthenticated.first()
             val storedToken = authRepository.authToken.first()
             val storedUserId = authRepository.userId.first()
-            val storedSessionToken = authRepository.sessionToken.first()
-
+            
             // Load stored userId if available
             if (storedUserId != null) {
                 userId = storedUserId
@@ -2012,36 +1867,41 @@ fun BattlesScreen() {
                 userId = storedUserId
             }
             
-            if (consumeAuthCallbackIntent()) {
-                return@LaunchedEffect
+            // Only check for token in intent if it's a fresh deep link (ACTION_VIEW intent)
+            // This prevents processing stale tokens from previous sessions
+            val activity = context as? ComponentActivity
+            val intent = activity?.intent
+            if (intent?.action == Intent.ACTION_VIEW) {
+                intent.data?.let { uri ->
+                    if (uri.getQueryParameter("c") != null || uri.getQueryParameter("token") != null) {
+                        handleTokenFromUri(uri)
+                        return@LaunchedEffect // Don't open auth URL if we're processing a token
+                    }
+                }
             }
             
             // If we have a stored token and userId, assume session is still active
             // The single-use token can't be re-validated, but the server maintains a session after initial validation
             // We'll only re-authenticate if API calls fail with authentication errors
-            if (localAuthState && storedToken != null && storedToken.isNotEmpty() && (storedUserId != null || !storedSessionToken.isNullOrEmpty())) {
+            if (localAuthState && storedToken != null && storedToken.isNotEmpty() && storedUserId != null) {
                 // Session appears to be active - user is already authenticated
                 // No need to re-validate the single-use token, just restore the session
-                println("BATTLESCREEN: Restoring active session (userId: $storedUserId, sessionTokenPresent=${!storedSessionToken.isNullOrEmpty()})")
+                println("BATTLESCREEN: Restoring active session (userId: $storedUserId)")
                 isAuthenticated = true
                 isCheckingAuth = false
                 userId = storedUserId
                 // Session is restored, no need to validate token again
-            } else if (localAuthState && storedToken != null && storedToken.isNotEmpty() && storedSessionToken.isNullOrEmpty()) {
+            } else if (localAuthState && storedToken != null && storedToken.isNotEmpty()) {
                 // We have a token but no userId - try to validate once to get userId
                 // This should only happen on first login or if userId was lost
                 println("BATTLESCREEN: Have token but no userId, validating once to get userId...")
-                RetrofitHelper().authenticate(
-                    context = context,
-                    token = storedToken,
-                    showUserFacingErrors = false,
-                ) { response ->
+                RetrofitHelper().authenticate(context, storedToken) { response ->
                     // Update UI on main thread
                     kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
                         if (response.success) {
-                            val extractedUserId = response.extractUserId()
-                            val sessionToken = response.extractSessionToken()
-
+                            val extractedUserId = response.userInfo?.userId?.toLongOrNull()
+                            val sessionToken = response.sessionToken
+                            
                             // Update stored userId and sessionToken
                             if (extractedUserId != null) {
                                 kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
@@ -2064,22 +1924,8 @@ fun BattlesScreen() {
                                                   response.message?.contains("nonce") == true ||
                                                   response.message?.contains("invalid") == true ||
                                                   response.message?.contains("expired") == true
-                            val latestSessionToken = withContext(Dispatchers.IO) {
-                                authRepository.sessionToken.first()
-                            }
-                            val latestUserId = withContext(Dispatchers.IO) {
-                                authRepository.userId.first()
-                            }
-
+                            
                             if (isCriticalError) {
-                                // A parallel callback auth can complete before this fallback check returns.
-                                if (!latestSessionToken.isNullOrEmpty() || latestUserId != null) {
-                                    println("BATTLESCREEN: Ignoring nonce validation failure because a valid session already exists")
-                                    isAuthenticated = true
-                                    isCheckingAuth = false
-                                    userId = latestUserId ?: userId
-                                    return@launch
-                                }
                                 // Critical error - token is invalid, need to re-authenticate
                                 println("BATTLESCREEN: Critical authentication error, clearing state and redirecting")
                                 kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
@@ -2087,7 +1933,11 @@ fun BattlesScreen() {
                                 }
                                 isAuthenticated = false
                                 isCheckingAuth = false
-                                openBattleAuthPage()
+                                // Open auth URL
+                                val authUrl = "http://auth.nacatech.es/begin?app=443654920&redirect_uri=vbhelper://auth?token="
+                                val authIntent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+                                context.startActivity(authIntent)
+                                println("BATTLESCREEN: Opened auth URL after critical validation failure: $authUrl")
                             } else {
                                 // Non-critical error (e.g., network issue) - keep authenticated state
                                 println("BATTLESCREEN: Non-critical validation error, keeping authenticated state")
@@ -2102,7 +1952,10 @@ fun BattlesScreen() {
                 isAuthenticated = false
                 isCheckingAuth = false
                 // If not authenticated and no fresh token in intent, open auth URL
-                openBattleAuthPage()
+                val authUrl = "http://auth.nacatech.es/begin?app=443654920&redirect_uri=vbhelper://auth?token="
+                val authIntent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+                context.startActivity(authIntent)
+                println("BATTLESCREEN: Opened auth URL: $authUrl")
             }
         } catch (e: Exception) {
             println("BATTLESCREEN: Error checking authentication status: ${e.message}")
@@ -2111,11 +1964,42 @@ fun BattlesScreen() {
         }
     }
     
-    // Handle deep link callback once on initial load and consume it.
+    // Handle deep link callback to get token
+    // Check intent data on initial load - handle both vbhelper:// and http://localhost:8080/authenticate?c=
+    // Only process if it's a fresh ACTION_VIEW intent (deep link)
     LaunchedEffect(Unit) {
         // Small delay to ensure activity is fully initialized
         kotlinx.coroutines.delay(100)
-        consumeAuthCallbackIntent()
+        
+        val activity = context as? ComponentActivity
+        val intent = activity?.intent
+        
+        // Only process if this is a fresh deep link (ACTION_VIEW)
+        if (intent?.action == Intent.ACTION_VIEW) {
+            val uri = intent.data
+            if (uri != null) {
+                
+                // Handle vbhelper://auth?token= or vbhelper://auth?c= deep link
+                if (uri.scheme == "vbhelper" && uri.host == "auth") {
+                    handleTokenFromUri(uri)
+                }
+                // Handle http://localhost:8080/authenticate?c= redirect
+                else if ((uri.scheme == "http" || uri.scheme == "https") && 
+                         (uri.host == "localhost" || uri.host == "127.0.0.1" || uri.host?.contains("8080") == true)) {
+                    handleTokenFromUri(uri)
+                }
+                // Also check if there's a 'c' or 'token' parameter in any URL
+                else if (uri.getQueryParameter("c") != null || uri.getQueryParameter("token") != null) {
+                    handleTokenFromUri(uri)
+                } else {
+                    println("BATTLESCREEN: URI found but no token parameter detected")
+                }
+            } else {
+                println("BATTLESCREEN: ACTION_VIEW intent but no URI found")
+            }
+        } else {
+            println("BATTLESCREEN: Not an ACTION_VIEW intent, skipping deep link processing")
+        }
     }
     
     // Check intent when screen becomes visible or when authentication state changes
@@ -2125,10 +2009,15 @@ fun BattlesScreen() {
         val lifecycleOwner = activity as? LifecycleOwner
         
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                authBrowserLaunchInFlight = false
-                if (!isAuthenticated) {
-                    consumeAuthCallbackIntent()
+            if (event == Lifecycle.Event.ON_RESUME && !isAuthenticated) {
+                // Check intent data when activity resumes - only if it's a fresh ACTION_VIEW intent
+                val intent = activity?.intent
+                if (intent?.action == Intent.ACTION_VIEW) {
+                    intent.data?.let { uri ->
+                        if (uri.getQueryParameter("c") != null || uri.getQueryParameter("token") != null) {
+                            handleTokenFromUri(uri)
+                        }
+                    }
                 }
             }
         }
@@ -2149,16 +2038,45 @@ fun BattlesScreen() {
                 isAuthenticated = false
                 isCheckingAuth = false
                 // Open auth URL to get a fresh token
-                openBattleAuthPage()
+                val authUrl = "http://auth.nacatech.es/begin?app=443654920&redirect_uri=vbhelper://auth?token="
+                val authIntent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+                try {
+                    context.startActivity(authIntent)
+                    println("BATTLESCREEN: Opened auth URL after token expiration: $authUrl")
+                } catch (e: Exception) {
+                    println("BATTLESCREEN: Failed to open auth URL: ${e.message}")
+                    e.printStackTrace()
+                }
             }
         }
     }
     
-    // Also check for callback when auth state changes.
+    // Also check intent when authentication state changes
+    // Only process if it's a fresh ACTION_VIEW intent (deep link)
     LaunchedEffect(isAuthenticated) {
         if (!isAuthenticated) {
             kotlinx.coroutines.delay(200) // Small delay to ensure intent is available
-            consumeAuthCallbackIntent()
+            val activity = context as? ComponentActivity
+            val intent = activity?.intent
+            // Only process if this is a fresh deep link (ACTION_VIEW)
+            if (intent?.action == Intent.ACTION_VIEW) {
+                intent.data?.let { uri ->
+                    println("BATTLESCREEN: Re-checking ACTION_VIEW intent data - URI: $uri, scheme: ${uri.scheme}, host: ${uri.host}")
+                    // Handle vbhelper://auth?token= or vbhelper://auth?c= deep link
+                    if (uri.scheme == "vbhelper" && uri.host == "auth") {
+                        handleTokenFromUri(uri)
+                    }
+                    // Handle http://localhost:8080/authenticate?c= redirect
+                    else if ((uri.scheme == "http" || uri.scheme == "https") && 
+                             (uri.host == "localhost" || uri.host == "127.0.0.1" || uri.host?.contains("8080") == true)) {
+                        handleTokenFromUri(uri)
+                    }
+                    // Also check if there's a 'c' or 'token' parameter in any URL
+                    else if (uri.getQueryParameter("c") != null || uri.getQueryParameter("token") != null) {
+                        handleTokenFromUri(uri)
+                    }
+                }
+            }
         }
     }
     
@@ -2166,8 +2084,9 @@ fun BattlesScreen() {
     // Only check if permission is granted
     LaunchedEffect(hasStoragePermission) {
         if (hasStoragePermission) {
-            val spriteFileManager = SpriteFileManager()
-            if (!spriteFileManager.checkSpriteFilesExist()) {
+            val spriteFileManager = SpriteFileManager(context)
+            if (spriteFileManager.checkSpriteFilesExist()) {
+            } else {
                 println("BATTLESCREEN: Sprite files not found in external storage")
             }
         } else {
@@ -2314,10 +2233,6 @@ fun BattlesScreen() {
                                     color = Color.Gray,
                                     textAlign = TextAlign.Center
                                 )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Button(onClick = { openBattleAuthPage() }) {
-                                    Text("Open Login")
-                                }
                             }
                         }
                     }
@@ -2352,12 +2267,6 @@ fun BattlesScreen() {
                                             items(opponentsList) { opponent ->
                                 Button(
                                     onClick = {
-                                                        val currentUserId = userId
-                                                        if (currentUserId == null) {
-                                                            Toast.makeText(context, "Session missing user id. Please re-authenticate.", Toast.LENGTH_SHORT).show()
-                                                            return@Button
-                                                        }
-
                                                         activeCardId?.let { cardId ->
                                             selectedOpponent = opponent
                                                             // Randomly select background set (0, 1, or 2)
@@ -2372,7 +2281,7 @@ fun BattlesScreen() {
                                                                 else -> 0
                                                             }
                                                             
-                                                            RetrofitHelper().getPVPWinner(context, 0, currentUserId, cardId, apiStage, 0, opponent.charaId, apiStage) { apiResult ->
+                                                            RetrofitHelper().getPVPWinner(context, 0, userId ?: 2L, cardId, apiStage, 0, opponent.charaId, apiStage) { apiResult ->
                                                                 // Check if there's an existing match
                                                                 when {
                                                                     apiResult.status.contains("Existing match found", ignoreCase = true) -> {
@@ -2473,17 +2382,14 @@ fun BattlesScreen() {
                     
                     LaunchedEffect(Unit) {
                         // Determine player and opponent stages
-                        // activeCharacter.stage is DB stage (2=rookie, 3=champion, 4=ultimate, 5=mega)
-                        // API expects stage 0-3
                         val playerStage = when (activeCharacter?.stage) {
-                            2 -> 0 // rookie
-                            3 -> 1 // champion
-                            4 -> 2 // ultimate
-                            5 -> 3 // mega
+                            0 -> 0 // rookie
+                            1 -> 1 // champion
+                            2 -> 2 // ultimate
+                            3 -> 3 // mega
                             else -> 0
                         }
                         
-                        // selectedOpponent.stage comes from the API and is already 0-3
                         val opponentStage = when (selectedOpponent?.stage) {
                             0 -> 0 // rookie
                             1 -> 1 // champion
@@ -2496,16 +2402,11 @@ fun BattlesScreen() {
                         RetrofitHelper().getPVPWinner(
                             context, 
                             1, 
-                            userId ?: run {
-                                Toast.makeText(context, "Session missing user id. Please re-authenticate.", Toast.LENGTH_SHORT).show()
-                                isWinnerLoaded = true
-                                winnerName = "Unknown"
-                                return@LaunchedEffect
-                            },
-                            activeCharacter?.charaId ?: "dim011_mon01",
-                            playerStage,
-                            0,
-                            selectedOpponent?.charaId ?: "dim011_mon01",
+                            userId ?: 2L, 
+                            activeCharacter?.name ?: "Player", 
+                            playerStage, 
+                            opponentStage, 
+                            selectedOpponent?.name ?: "Opponent", 
                             opponentStage
                         ) { apiResult ->
                             // Winner might be empty in first call, but we can check HP values
@@ -2514,7 +2415,7 @@ fun BattlesScreen() {
                             
                             // Also check winner field if it's not empty
                             val playerWonFromWinner = activeCardId?.let { cardId ->
-                                val winner = apiResult.winner
+                                val winner = apiResult.winner ?: ""
                                 if (winner.isNotEmpty()) {
                                     if (winner.contains("|")) {
                                         // Pipe-separated format: first part is the winner
@@ -2541,21 +2442,18 @@ fun BattlesScreen() {
                             println("BATTLESCREEN: Battle result (first call) - winner: '${apiResult.winner}', playerHP: ${apiResult.playerHP}, opponentHP: ${apiResult.opponentHP}, playerWonFromHP: $playerWonFromHP, playerWonFromWinner: $playerWonFromWinner, final playerWon: $playerWon")
                             
                             // Store winner name for display (will be updated in cleanup call if available)
-                            winnerName = if (apiResult.winner.isNotEmpty()) apiResult.winner else if (playerWon) "You" else "Opponent"
+                            winnerName = apiResult.winner ?: if (playerWon) "You" else "Opponent"
                             isWinnerLoaded = true
                             
                             // Then send the cleanup call - this will have the actual winner name
                             RetrofitHelper().getPVPWinner(
                                 context, 
                                 2, 
-                                userId ?: run {
-                                    Toast.makeText(context, "Session missing user id. Please re-authenticate.", Toast.LENGTH_SHORT).show()
-                                    return@getPVPWinner
-                                }, 
-                                activeCharacter?.charaId ?: "dim011_mon01",
+                                userId ?: 2L, 
+                                activeCharacter?.name ?: "Player", 
                                 playerStage, 
-                                0, 
-                                selectedOpponent?.charaId ?: "dim011_mon01", 
+                                opponentStage, 
+                                selectedOpponent?.name ?: "Opponent", 
                                 opponentStage
                             ) { cleanupResult ->
                                 // Update winner name from cleanup call if available
@@ -2567,7 +2465,7 @@ fun BattlesScreen() {
                                 // Primary method: Check HP values (opponentHP <= 0 means opponent lost = player won)
                                 // Secondary method: Check winner name (if winner doesn't match opponent, player won)
                                 val opponentName = selectedOpponent?.name ?: ""
-                                val winner = cleanupResult.winner
+                                val winner = cleanupResult.winner ?: ""
                                 
                                 // Primary: HP-based determination (most reliable)
                                 // If opponentHP <= 0, opponent is dead = player won
@@ -2704,13 +2602,8 @@ fun BattlesScreen() {
                                 RetrofitHelper().getPVPWinner(
                                     context, 
                                     0, 
-                                    userId ?: run {
-                                        Toast.makeText(context, "Session missing user id. Please re-authenticate.", Toast.LENGTH_SHORT).show()
-                                        showResumeDialog = false
-                                        existingMatchState = null
-                                        return@let
-                                    }, 
-                                    cardId,
+                                    userId ?: 2L, 
+                                    cardId, 
                                     apiStage, 
                                     0, 
                                     clickedOpponent.charaId, 
@@ -2834,13 +2727,8 @@ fun BattlesScreen() {
                                 RetrofitHelper().getPVPWinner(
                                     context, 
                                     0, 
-                                    userId ?: run {
-                                        Toast.makeText(context, "Session missing user id. Please re-authenticate.", Toast.LENGTH_SHORT).show()
-                                        showResumeDialog = false
-                                        existingMatchState = null
-                                        return@let
-                                    }, 
-                                    cardId,
+                                    userId ?: 2L, 
+                                    cardId, 
                                     apiStage, 
                                     0, 
                                     opponent.charaId, 

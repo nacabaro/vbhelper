@@ -11,42 +11,22 @@ import com.github.cfogrady.vbnfc.vb.SpecialMission
 import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
-import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
-import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import java.util.Date
 
 class ToNfcConverter(
     private val componentActivity: ComponentActivity
 ) {
-    companion object {
-        private const val MIN_NFC_TRANSFORMATION_YEAR = 2021
-        private const val MAX_NFC_TRANSFORMATION_YEAR = 2035
-
-        internal fun shouldEncodeAsBem(
-            forcedProfile: DeviceType?,
-            storedDeviceType: DeviceType,
-        ): Boolean {
-            return when (forcedProfile) {
-                DeviceType.BEDevice -> true
-                DeviceType.VBDevice -> false
-                else -> storedDeviceType == DeviceType.BEDevice
-            }
-        }
-    }
-
     private val application: VBHelper = componentActivity.applicationContext as VBHelper
     private val database: AppDatabase = application.container.db
 
 
 
     suspend fun characterToNfc(
-        characterId: Long,
-        forcedProfile: DeviceType? = null,
+        characterId: Long
     ): NfcCharacter {
         val app = componentActivity.applicationContext as VBHelper
         val database = app.container.db
@@ -59,13 +39,7 @@ class ToNfcConverter(
             .characterDao()
             .getCharacterInfo(userCharacter.charId)
 
-        // Forced profile overrides stored device type for transfer semantics:
-        // - NFC-A route forces VBDevice (real bracelets only understand VB)
-        // - HCE route forces BEDevice (VitalWear only sends/accepts BE)
-        // Otherwise, use the character's own stored type.
-        val shouldEncodeAsBem = shouldEncodeAsBem(forcedProfile, userCharacter.characterType)
-
-        return if (shouldEncodeAsBem)
+        return if (userCharacter.characterType == DeviceType.BEDevice)
             nfcToBENfc(characterId, characterInfo, userCharacter)
         else
             nfcToVBNfc(characterId, characterInfo, userCharacter)
@@ -81,12 +55,7 @@ class ToNfcConverter(
         val vbData = database
             .userCharacterDao()
             .getVbData(characterId)
-            .firstOrNull()
-            ?: VBCharacterData(
-                id = characterId,
-                generation = 0,
-                totalTrophies = userCharacter.trophies
-            )
+            .first()
 
         val paddedTransformationArray = generateTransformationHistory(characterId, 9)
 
@@ -207,46 +176,10 @@ class ToNfcConverter(
     ): BENfcCharacter {
         val beData = database
             .userCharacterDao()
-            .getBeDataOrNull(characterId)
-            ?: BECharacterData(
-                id = characterId,
-                trainingHp = 0,
-                trainingAp = 0,
-                trainingBp = 0,
-                remainingTrainingTimeInMinutes = 0,
-                itemEffectMentalStateValue = 0,
-                itemEffectMentalStateMinutesRemaining = 0,
-                itemEffectActivityLevelValue = 0,
-                itemEffectActivityLevelMinutesRemaining = 0,
-                itemEffectVitalPointsChangeValue = 0,
-                itemEffectVitalPointsChangeMinutesRemaining = 0,
-                abilityRarity = NfcCharacter.AbilityRarity.None,
-                abilityType = 0,
-                abilityBranch = 0,
-                abilityReset = 0,
-                rank = 0,
-                itemType = 0,
-                itemMultiplier = 0,
-                itemRemainingTime = 0,
-                otp0 = "",
-                otp1 = "",
-                minorVersion = 0,
-                majorVersion = 0,
-            )
+            .getBeData(characterId)
+            .first()
 
         val paddedTransformationArray = generateTransformationHistory(characterId)
-
-        // Convert hex-encoded OTP strings back to ByteArrays; use empty arrays if not stored
-        val otp0ByteArray = if (beData.otp0.isNotEmpty()) {
-            beData.otp0.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-        } else {
-            ByteArray(8) // Default to 8-byte zero array if not available
-        }
-        val otp1ByteArray = if (beData.otp1.isNotEmpty()) {
-            beData.otp1.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-        } else {
-            ByteArray(8) // Default to 8-byte zero array if not available
-        }
 
         val nfcData = BENfcCharacter(
             dimId = characterInfo.cardId.toUShort(),
@@ -288,8 +221,8 @@ class ToNfcConverter(
             itemType = beData.itemType.toByte(),
             itemMultiplier = beData.itemMultiplier.toByte(),
             itemRemainingTime = beData.itemRemainingTime.toByte(),
-            otp0 = otp0ByteArray,
-            otp1 = otp1ByteArray,
+            otp0 = byteArrayOf(8),
+            otp1 = byteArrayOf(8),
             characterCreationFirmwareVersion = FirmwareVersion(
                 minorVersion = beData.minorVersion.toByte(),
                 majorVersion = beData.majorVersion.toByte()
@@ -321,15 +254,11 @@ class ToNfcConverter(
                             "Day: ${calendar.get(Calendar.DAY_OF_MONTH)}"
                 )
 
-                val rawYear = calendar.get(Calendar.YEAR)
-                val normalizedYear = rawYear.coerceIn(MIN_NFC_TRANSFORMATION_YEAR, MAX_NFC_TRANSFORMATION_YEAR)
-                if (normalizedYear != rawYear) {
-                    Log.w("TransformationHistory", "Normalizing out-of-range transformation year $rawYear to $normalizedYear")
-                }
-
                 NfcCharacter.Transformation(
                     toCharIndex = it.monIndex.toUByte(),
-                    year = normalizedYear.toUShort(),
+                    year = calendar
+                        .get(Calendar.YEAR)
+                        .toUShort(),
                     month = (calendar
                         .get(Calendar.MONTH) + 1)
                         .toUByte(),

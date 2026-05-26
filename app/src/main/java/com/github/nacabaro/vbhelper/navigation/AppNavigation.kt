@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,7 +14,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.github.nacabaro.vbhelper.di.VBHelper
@@ -59,21 +57,6 @@ fun AppNavigation(
     initialRoute: String? = null
 ) {
     val navController = rememberNavController()
-
-    LaunchedEffect(initialRoute) {
-        val route = initialRoute ?: return@LaunchedEffect
-        if (navController.currentBackStackEntry?.destination?.route == route) {
-            return@LaunchedEffect
-        }
-        navController.navigate(route) {
-            popUpTo(navController.graph.findStartDestination().id) {
-                inclusive = false
-                saveState = false
-            }
-            launchSingleTop = true
-            restoreState = false
-        }
-    }
 
     Scaffold(
         bottomBar = {

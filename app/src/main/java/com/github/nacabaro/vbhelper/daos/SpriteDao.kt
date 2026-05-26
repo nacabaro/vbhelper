@@ -11,9 +11,6 @@ interface SpriteDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertSprite(sprite: Sprite): Long
 
-    @Query("SELECT * FROM Sprite WHERE id = :id LIMIT 1")
-    fun getSpriteById(id: Long): Sprite?
-
     @Query("SELECT * FROM Sprite")
     suspend fun getAllSprites(): List<Sprite>
 }

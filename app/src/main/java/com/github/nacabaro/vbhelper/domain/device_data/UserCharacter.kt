@@ -2,14 +2,12 @@ package com.github.nacabaro.vbhelper.domain.device_data
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 
 @Entity(
-    indices = [Index(value = ["charId"])],
     foreignKeys = [
         ForeignKey(
             entity = CardCharacter::class,

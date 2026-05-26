@@ -3,7 +3,6 @@ package com.github.nacabaro.vbhelper.screens.scanScreen.converters
 import androidx.activity.ComponentActivity
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
-import com.github.cfogrady.vbnfc.vb.SpecialMission
 import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.card.Card
@@ -20,8 +19,7 @@ class FromNfcConverter (
 ) {
     private val application = componentActivity.applicationContext as VBHelper
     private val database = application.container.db
-    private val transferSeenDao = application.container.transferSeenDao
-
+    
     
     fun addCharacterUsingCard(
         nfcCharacter: NfcCharacter,
@@ -120,16 +118,11 @@ class FromNfcConverter (
             .userCharacterDao()
             .insertCharacterData(characterData)
 
-        val seenTimestamp = System.currentTimeMillis()
-        markSeen(cardData, nfcCharacter.charIndex.toInt(), seenTimestamp)
-
         if (nfcCharacter is BENfcCharacter) {
             addBeCharacterToDatabase(
                 characterId = characterId,
                 nfcCharacter = nfcCharacter
             )
-            // Keep a VB profile alongside BE stats for later VB-target exports.
-            addVbCharacterProfileFromBe(characterId, nfcCharacter)
         } else if (nfcCharacter is VBNfcCharacter) {
             addVbCharacterToDatabase(
                 characterId = characterId,
@@ -236,8 +229,8 @@ class FromNfcConverter (
             itemType = nfcCharacter.itemType.toInt(),
             itemMultiplier = nfcCharacter.itemMultiplier.toInt(),
             itemRemainingTime = nfcCharacter.itemRemainingTime.toInt(),
-            otp0 = nfcCharacter.getOtp0().joinToString("") { "%02x".format(it) },
-            otp1 = nfcCharacter.getOtp1().joinToString("") { "%02x".format(it) },
+            otp0 = "", //nfcCharacter.value!!.otp0.toString(),
+            otp1 = "", //nfcCharacter.value!!.otp1.toString(),
             minorVersion = nfcCharacter.characterCreationFirmwareVersion.minorVersion.toInt(),
             majorVersion = nfcCharacter.characterCreationFirmwareVersion.majorVersion.toInt(),
         )
@@ -245,42 +238,6 @@ class FromNfcConverter (
         database
             .userCharacterDao()
             .insertBECharacterData(extraCharacterData)
-    }
-
-    private fun addVbCharacterProfileFromBe(
-        characterId: Long,
-        nfcCharacter: BENfcCharacter,
-    ) {
-        val historyCount = nfcCharacter.transformationHistory.count { it.toCharIndex.toInt() != 255 }
-        val vbData = VBCharacterData(
-            id = characterId,
-            generation = (historyCount - 1).coerceAtLeast(0),
-            totalTrophies = nfcCharacter.trophies.toInt(),
-        )
-        database.userCharacterDao().insertVBCharacterData(vbData)
-
-        // Populate empty mission slots for BE characters for UI consistency
-        addEmptyMissionSlotsForBe(characterId)
-    }
-
-    private fun addEmptyMissionSlotsForBe(characterId: Long) {
-        // Create 4 empty mission slots (one for each watch position 0-3)
-        val emptyMissions = (0..3).map { watchId ->
-            SpecialMissions(
-                characterId = characterId,
-                watchId = watchId,
-                missionType = SpecialMission.Type.NONE,
-                status = SpecialMission.Status.UNAVAILABLE,
-                goal = 0,
-                progress = 0,
-                timeElapsedInMinutes = 0,
-                timeLimitInMinutes = 0,
-            )
-        }
-
-        database
-            .userCharacterDao()
-            .insertSpecialMissions(*emptyMissions.toTypedArray())
     }
 
 
@@ -335,14 +292,12 @@ class FromNfcConverter (
 
                 database
                     .dexDao()
-                    .insertCharacter(item.toCharIndex.toInt(), dimData.id, date)
-                transferSeenDao.markSeen(dimData.name, item.toCharIndex.toInt(), date)
+                    .insertCharacter(
+                        item.toCharIndex.toInt(),
+                        dimData.id,
+                        date
+                    )
             }
         }
-    }
-
-    private fun markSeen(cardData: Card, slotId: Int, timestamp: Long) {
-        database.dexDao().insertCharacter(slotId, cardData.id, timestamp)
-        transferSeenDao.markSeen(cardData.name, slotId, timestamp)
     }
 }

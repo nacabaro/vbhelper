@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun SpriteImage(
@@ -13,8 +14,9 @@ fun SpriteImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit
 ) {
-    val spriteManager = remember { IndividualSpriteManager() }
-
+    val context = LocalContext.current
+    val spriteManager = remember { IndividualSpriteManager(context) }
+    
     var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
     
     LaunchedEffect(characterId, frameNumber) {

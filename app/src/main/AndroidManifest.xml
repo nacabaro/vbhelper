@@ -2,16 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <permission
-        android:name="com.github.nacabaro.vbhelper.permission.ACCESS_TRANSFER_SEEN"
-        android:protectionLevel="signature" />
-    <permission
-        android:name="com.github.nacabaro.vbhelper.permission.ACCESS_CARD_DATA"
-        android:protectionLevel="signature" />
-
     <uses-permission android:name="android.permission.NFC" />
     <uses-feature android:name="android.hardware.nfc" android:required="true" />
-    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -39,25 +31,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
-        <provider
-            android:name=".transfer.CardImportProvider"
-            android:authorities="com.github.nacabaro.vbhelper.cardimport"
-            android:exported="true"
-            android:readPermission="com.github.nacabaro.vbhelper.permission.ACCESS_CARD_DATA"
-            android:writePermission="com.github.nacabaro.vbhelper.permission.ACCESS_CARD_DATA" />
-        <provider
-            android:name=".transfer.SharedTransferSeenProvider"
-            android:authorities="com.github.nacabaro.vbhelper.transferseen"
-            android:exported="true"
-            android:readPermission="com.github.nacabaro.vbhelper.permission.ACCESS_TRANSFER_SEEN"
-            android:writePermission="com.github.nacabaro.vbhelper.permission.ACCESS_TRANSFER_SEEN" />
-        <activity android:name=".companion.card.CompanionImportCardActivity" />
-        <activity android:name=".companion.card.CompanionValidateCardActivity" />
-        <activity android:name=".companion.firmware.CompanionFirmwareImportActivity" />
-        <activity android:name=".companion.logs.CompanionWatchLogsActivity" />
-        <activity
-            android:name=".companion.transfer.CompanionCharacterImportActivity"
-            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -81,17 +54,12 @@
                 <data android:scheme="http" android:host="localhost" android:port="8080" android:pathPrefix="/authenticate" />
                 <data android:scheme="http" android:host="127.0.0.1" android:port="8080" android:pathPrefix="/authenticate" />
             </intent-filter>
-        </activity>
-        <service
-            android:name=".companion.logs.WatchCommunicationService"
-            android:exported="true"
-            android:enabled="true">
             <intent-filter>
-                <action android:name="com.google.android.gms.wearable.CHANNEL_EVENT" />
-                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
-                <data android:scheme="wear" android:host="*" />
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/x-vitalwear-character" />
             </intent-filter>
-        </service>
+        </activity>
     </application>
 
 </manifest>

@@ -6,8 +6,8 @@ import androidx.annotation.StringRes
 
 sealed class NavigationItems(
     val route: String,
-    @param:DrawableRes val icon: Int,
-    @param:StringRes val label: Int
+    @DrawableRes val icon: Int,
+    @StringRes val label: Int
 ) {
     object Scan : NavigationItems(
         "Scan/{characterId}",

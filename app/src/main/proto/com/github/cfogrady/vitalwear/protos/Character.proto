@@ -7,48 +7,7 @@ message Character {
   string card_name = 1;
   int32 card_id = 2;
 
-  message TransferCard {
-    int32 card_id = 1;
-    string card_name = 2;
-    bool is_bem = 3;
-    int32 stage_count = 4;
-    int32 franchise = 5;
-  }
-
-  message TransferSpecies {
-    int32 slot_id = 1;
-    int32 stage = 2;
-    int32 attribute = 3;
-    int32 base_hp = 4;
-    int32 base_bp = 5;
-    int32 base_ap = 6;
-    bytes name_sprite = 7;
-    int32 name_sprite_width = 8;
-    int32 name_sprite_height = 9;
-    bytes idle1 = 10;
-    bytes idle2 = 11;
-    bytes walk1 = 12;
-    bytes walk2 = 13;
-    bytes run1 = 14;
-    bytes run2 = 15;
-    bytes train1 = 16;
-    bytes train2 = 17;
-    bytes win = 18;
-    bytes down = 19;
-    bytes attack = 20;
-    bytes dodge = 21;
-    bytes splash = 22;
-    int32 sprite_width = 23;
-    int32 sprite_height = 24;
-  }
-
   message CharacterStats {
-    enum TransferDeviceType {
-      TRANSFER_DEVICE_TYPE_UNSPECIFIED = 0;
-      TRANSFER_DEVICE_TYPE_VB = 1;
-      TRANSFER_DEVICE_TYPE_BE = 2;
-    }
-
     int32 slot_id = 1;
     int32 vitals = 2;
     int64 training_time_remaining_in_seconds = 3;
@@ -64,29 +23,6 @@ message Character {
     int32 total_wins = 13;
     int32 current_phase_wins = 14;
     int32 mood = 15;
-    TransferDeviceType device_type = 16;
-    int32 age_in_days = 17;
-    int32 activity_level = 18;
-    int32 heart_rate_current = 19;
-    int32 generation = 20;
-    int32 total_trophies = 21;
-    int32 next_adventure_mission_stage = 22;
-    int32 item_effect_mental_state_value = 23;
-    int32 item_effect_mental_state_minutes_remaining = 24;
-    int32 item_effect_activity_level_value = 25;
-    int32 item_effect_activity_level_minutes_remaining = 26;
-    int32 item_effect_vital_points_change_value = 27;
-    int32 item_effect_vital_points_change_minutes_remaining = 28;
-    int32 ability_rarity = 29;
-    int32 ability_type = 30;
-    int32 ability_branch = 31;
-    int32 ability_reset = 32;
-    int32 rank = 33;
-    int32 item_type = 34;
-    int32 item_multiplier = 35;
-    int32 item_remaining_time = 36;
-    int32 firmware_minor_version = 37;
-    int32 firmware_major_version = 38;
   }
   CharacterStats character_stats = 3;
 
@@ -112,8 +48,4 @@ message Character {
   repeated TransformationEvent transformation_history = 5;
 
   map<string, int32> max_adventure_completed_by_card = 6;
-
-  optional TransferCard transfer_card = 7;
-
-  optional TransferSpecies transfer_species = 8;
 }

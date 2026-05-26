@@ -20,7 +20,6 @@ class AuthInterceptor(private val token: String) : Interceptor {
         // Use X-Session-Token header (preferred) or Authorization: Bearer
         val authenticatedRequest = originalRequest.newBuilder()
             .header("X-Session-Token", token)
-            .header("Authorization", "Bearer $token")
             .build()
         
         // Debug: Log which header is being used (first few chars of token for security)

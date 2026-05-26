@@ -13,9 +13,6 @@ interface CardDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertNewCard(card: Card): Long
 
-    @Query("SELECT * FROM Card")
-    fun getAllCards(): List<Card>
-
     @Query("SELECT * FROM Card WHERE cardId = :id")
     fun getCardByCardId(id: Int): List<Card>
 

@@ -2,8 +2,6 @@ package com.github.nacabaro.vbhelper.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.github.nacabaro.vbhelper.daos.AdventureDao
 import com.github.nacabaro.vbhelper.daos.CardAdventureDao
 import com.github.nacabaro.vbhelper.daos.CharacterDao
@@ -15,7 +13,6 @@ import com.github.nacabaro.vbhelper.daos.ItemDao
 import com.github.nacabaro.vbhelper.daos.SpecialMissionDao
 import com.github.nacabaro.vbhelper.daos.SpriteDao
 import com.github.nacabaro.vbhelper.daos.UserCharacterDao
-import com.github.nacabaro.vbhelper.daos.VitalWearSettingsDao
 import com.github.nacabaro.vbhelper.domain.card.Background
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.domain.card.Card
@@ -32,12 +29,10 @@ import com.github.nacabaro.vbhelper.domain.device_data.TransformationHistory
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
-import com.github.nacabaro.vbhelper.domain.device_data.VitalWearCharacterSettings
 import com.github.nacabaro.vbhelper.domain.items.Items
 
 @Database(
-    version = 6,
-    exportSchema = false,
+    version = 1,
     entities = [
         Card::class,
         CardProgress::class,
@@ -55,8 +50,7 @@ import com.github.nacabaro.vbhelper.domain.items.Items
         Items::class,
         Adventure::class,
         Background::class,
-        PossibleTransformations::class,
-        VitalWearCharacterSettings::class,
+        PossibleTransformations::class
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -71,92 +65,4 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun specialMissionDao(): SpecialMissionDao
     abstract fun cardAdventureDao(): CardAdventureDao
     abstract fun cardFusionsDao(): CardFusionsDao
-    abstract fun vitalWearSettingsDao(): VitalWearSettingsDao
-
-    companion object {
-        val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL(
-                    """
-                    CREATE TABLE IF NOT EXISTS `VitalWearCharacterSettings` (
-                        `characterId` INTEGER NOT NULL,
-                        `trainingInBackground` INTEGER NOT NULL,
-                        `allowedBattles` INTEGER NOT NULL,
-                        `accumulatedDailyInjuries` INTEGER NOT NULL,
-                        PRIMARY KEY(`characterId`)
-                    )
-                    """.trimIndent()
-                )
-
-                // Clean existing duplicates before adding the unique index.
-                db.execSQL(
-                    """
-                    DELETE FROM `CardCharacter`
-                    WHERE `id` NOT IN (
-                        SELECT MIN(`id`) FROM `CardCharacter` GROUP BY `cardId`, `charaIndex`
-                    )
-                    """.trimIndent()
-                )
-                db.execSQL(
-                    """
-                    CREATE UNIQUE INDEX IF NOT EXISTS `index_CardCharacter_cardId_charaIndex`
-                    ON `CardCharacter` (`cardId`, `charaIndex`)
-                    """.trimIndent()
-                )
-            }
-        }
-
-        val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                val backfillTimestamp = System.currentTimeMillis()
-                db.execSQL(
-                    """
-                    INSERT INTO `TransformationHistory`(`monId`, `stageId`, `transformationDate`)
-                    SELECT uc.`id`, uc.`charId`, $backfillTimestamp
-                    FROM `UserCharacter` uc
-                    WHERE NOT EXISTS (
-                        SELECT 1
-                        FROM `TransformationHistory` th
-                        WHERE th.`monId` = uc.`id`
-                    )
-                    """.trimIndent()
-                )
-            }
-        }
-
-        val MIGRATION_3_5 = object : Migration(3, 5) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                // TransferSeen moved to shared_transfer.db
-                db.execSQL("DROP TABLE IF EXISTS `TransferSeen`")
-                db.execSQL("DROP INDEX IF EXISTS `index_TransferSeen_cardLookupKey_slotId`")
-            }
-        }
-
-        val MIGRATION_4_5 = object : Migration(4, 5) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                // TransferSeen moved to shared_transfer.db
-                db.execSQL("DROP TABLE IF EXISTS `TransferSeen`")
-                db.execSQL("DROP INDEX IF EXISTS `index_TransferSeen_cardLookupKey_slotId`")
-            }
-        }
-
-        val MIGRATION_5_6 = object : Migration(5, 6) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_CardCharacter_spriteId` ON `CardCharacter` (`spriteId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_CardAdventure_cardId` ON `CardAdventure` (`cardId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_CardAdventure_characterId` ON `CardAdventure` (`characterId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_CardFusions_fromCharaId` ON `CardFusions` (`fromCharaId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_CardFusions_toCharaId` ON `CardFusions` (`toCharaId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_Background_cardId` ON `Background` (`cardId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_PossibleTransformations_charaId` ON `PossibleTransformations` (`charaId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_PossibleTransformations_toCharaId` ON `PossibleTransformations` (`toCharaId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_UserCharacter_charId` ON `UserCharacter` (`charId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_SpecialMissions_characterId` ON `SpecialMissions` (`characterId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_TransformationHistory_monId` ON `TransformationHistory` (`monId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_TransformationHistory_stageId` ON `TransformationHistory` (`stageId`)")
-                db.execSQL("CREATE INDEX IF NOT EXISTS `index_VitalsHistory_charId` ON `VitalsHistory` (`charId`)")
-            }
-        }
-
-    }
 }

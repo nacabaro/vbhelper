@@ -56,14 +56,6 @@
     <string name="scan_error_generic">Ops!</string>
     <string name="scan_sent_dim_success">DIM enviado com sucesso!</string>
     <string name="scan_nfc_must_be_enabled">O NFC precisa estar ativado.</string>
-    <string name="scan_target_device_full">O dispositivo de destino está cheio (ativo + backup). Remova um personagem antes de enviar.</string>
-    <string name="scan_transfer_skipped_storage_state">Transferência ignorada. O envio só é permitido quando o brinquedo tem um personagem ativo e o slot de backup está vazio.</string>
-    <string name="scan_transfer_waiting_tap">Pronto. Encoste e mantenha o celular e o relógio juntos até concluir.</string>
-    <string name="scan_transfer_detected_keep_tap">Conexão detectada. Mantenha os dispositivos juntos...</string>
-    <string name="scan_transfer_in_progress">Transferindo agora. Não afaste o celular ainda.</string>
-    <string name="scan_transfer_complete_remove">Transferência concluída. Agora você pode afastar o celular.</string>
-    <string name="scan_transfer_failed_try_again">Falha na transferência. Reposicione os dispositivos e tente novamente.</string>
-    <string name="scan_transfer_cancelled">Transferência cancelada.</string>
 
     <string name="settings_title">Configurações</string>
 
@@ -178,7 +170,7 @@
     <string name="dex_chara_name_icon_description">Nome do personagem</string>
     <string name="dex_chara_stats">HP: %1$d, BP: %2$d, AP: %3$d</string>
     <string name="dex_chara_stage_attribute">Stg: %1$s, Atr: %2$s</string>
-    <string name="dex_chara_unknown_name">________________</string>
+    <string name="dex_chara_unknown_name">\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?</string>
     <string name="dex_chara_stage_attribute_unknown">Stg: -, Atr: -</string>
     <string name="dex_chara_stats_unknown">HP: -, BP: -, AP: -</string>
     <string name="dex_chara_requirements">

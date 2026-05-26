@@ -2,16 +2,11 @@ package com.github.nacabaro.vbhelper.domain.card
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.domain.characters.Sprite
 
 @Entity(
-    indices = [
-        Index(value = ["cardId", "charaIndex"], unique = true),
-        Index(value = ["spriteId"])
-    ],
     foreignKeys = [
         ForeignKey(
             entity = Card::class,
@@ -29,8 +24,9 @@ import com.github.nacabaro.vbhelper.domain.characters.Sprite
 )
 
 /*
- * Character represents a character on a specific card slot.
- * Uniqueness is enforced per cardId + charaIndex.
+ * Character represents a character on a card. There should only be one of these per dimId
+ * and monIndex.
+ * TODO: Customs will mean this should be unique per cardName and monIndex
  */
 data class CardCharacter (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
