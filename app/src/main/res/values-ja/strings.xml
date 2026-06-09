@@ -20,7 +20,7 @@
     <string name="adventure_empty_state">何もありません。</string>
     <string name="home_title">VB Helper</string>
     <string name="scan_secrets_not_imported">"         APKの読み込みがされていません。設定から読み込をして下さい。 "</string>
-    <string name="scan_title">転送</string>
+    <string name="scan_title">デバイスをスキャン</string>
     <string name="scan_sent_dim_success">DIMの転送に成功しました。</string>
     <string name="scan_nfc_must_be_enabled">NFC機能を有効にして下さい。</string>
     <string name="settings_title">設定</string>
