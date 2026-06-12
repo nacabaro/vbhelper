@@ -38,6 +38,8 @@ fun CreditsScreen(
             SettingsEntry(title = "nacabaro", description = stringResource(R.string.credits_nacabaro_description)) { }
             SettingsEntry(title = "lightheel", description = stringResource(R.string.credits_lightheel_description)) { }
             SettingsEntry(title = "shvstrz", description = stringResource(R.string.credits_shvstrz_description)) { }
+
+            SettingsEntry(title = "redeyez", description = stringResource(R.string.credits_RedEyez_description)) { }
         }
     }
 }
