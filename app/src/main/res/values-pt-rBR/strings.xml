@@ -49,9 +49,7 @@
 
     <string name="scan_no_nfc_on_device">O dispositivo não possui NFC!</string>
     <string name="scan_tag_not_vb">A tag detectada não é do Vital Bracelet.</string>
-    <string name="scan_missing_secrets">
-        Segredos ausentes. Vá em Configurações e importe o APK do Vital Arena.
-    </string>
+    <string name="scan_missing_secrets">"         Segredos ausentes. Vá em Configurações e importe o APK do Vital Arena.     "</string>
     <string name="scan_sent_character_success">Personagem enviado com sucesso!</string>
     <string name="scan_error_generic">Ops!</string>
     <string name="scan_sent_dim_success">DIM enviado com sucesso!</string>
@@ -94,9 +92,7 @@
     <string name="credits_section_reverse_engineering">Engenharia reversa</string>
     <string name="credits_section_app_development">Desenvolvimento do aplicativo</string>
 
-    <string name="credits_cyanic_description">
-        Reverteu o firmware e nos ajudou durante o desenvolvimento.
-    </string>
+    <string name="credits_cyanic_description">"         Reverteu o firmware e nos ajudou durante o desenvolvimento.     "</string>
     <string name="credits_cfogrady_description">
         Desenvolveu vb-lib-nfc e parte deste aplicativo.
     </string>
@@ -128,9 +124,7 @@
 
     <string name="write_character_title">Escrevendo personagem</string>
     <string name="write_character_icon_description">Ícone do personagem</string>
-    <string name="write_character_success">
-        Cartão instalado com sucesso!!
-    </string>
+    <string name="write_character_success">"         Cartão instalado com sucesso!!     "</string>
     <string name="write_character_wait_ready">
         Aguarde até que seu dispositivo esteja pronto e então toque em Confirmar
     </string>

@@ -36,13 +36,9 @@
     <string name="adventure_empty_state">Nothing to see here</string>
 
     <string name="home_title">VB Helper</string>
-    <string name="home_adventure_mission_finished">
-        One of your characters has finished their adventure mission!
-    </string>
+    <string name="home_adventure_mission_finished">"         One of your characters has finished their adventure mission!     "</string>
 
-    <string name="scan_secrets_not_initialized">
-        Secrets is not yet initialized. Try again.
-    </string>
+    <string name="scan_secrets_not_initialized">"         Secrets is not yet initialized. Try again.     "</string>
     <string name="scan_secrets_not_imported">
         Secrets not yet imported. Go to Settings and Import APK.
     </string>
@@ -53,9 +49,7 @@
 
     <string name="scan_no_nfc_on_device">No NFC on device!</string>
     <string name="scan_tag_not_vb">Tag detected is not VB</string>
-    <string name="scan_missing_secrets">
-        Missing Secrets. Go to settings and import Vital Arena APK.
-    </string>
+    <string name="scan_missing_secrets">"         Missing Secrets. Go to settings and import Vital Arena APK.     "</string>
     <string name="scan_sent_character_success">Sent character successfully!</string>
     <string name="scan_error_generic">Whoops</string>
     <string name="scan_sent_dim_success">Sent DIM successfully!</string>
@@ -99,9 +93,7 @@
     <string name="credits_section_reverse_engineering">Reverse engineering</string>
     <string name="credits_section_app_development">Application development</string>
 
-    <string name="credits_cyanic_description">
-        Reversed the firmware and helped us during development.
-    </string>
+    <string name="credits_cyanic_description">"         Reversed the firmware and helped us during development.     "</string>
     <string name="credits_cfogrady_description">
         Developed vb-lib-nfc and part of this application.
     </string>
@@ -136,9 +128,7 @@
 
     <string name="write_character_title">Writing character</string>
     <string name="write_character_icon_description">Character icon</string>
-    <string name="write_character_success">
-        Card installed successfully!!
-    </string>
+    <string name="write_character_success">"         Card installed successfully!!     "</string>
     <string name="write_character_wait_ready">
         Wait until your device is ready, then tap Confirm
     </string>
