@@ -32,6 +32,7 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
             klass = AppDatabase::class.java,
             "internalDb"
         )
+            .addMigrations(AppDatabase.MIGRATION_1_2)
             .createFromAsset("items.db")
             .build()
     }
