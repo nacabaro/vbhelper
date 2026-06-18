@@ -3,10 +3,6 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
-}
-
-buildscript {
-    dependencies {
-        classpath(libs.protobuf.gradle.plugin)
-    }
+    alias(libs.plugins.vksp) apply false
+    alias(libs.plugins.vprotobuf) apply false
 }

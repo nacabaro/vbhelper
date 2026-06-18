@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "9.2.1"
 datastore = "1.2.0"
 datastorePreferences = "1.2.0"
 kotlin = "2.3.0"
@@ -17,6 +17,14 @@ protobufJavalite = "4.33.4"
 roomRuntime = "2.8.4"
 vbNfcReader = "0.2.0-SNAPSHOT"
 dimReader = "2.1.0"
+playServicesWearable = "20.0.1"
+kotlinxCoroutinesPlayServices = "1.11.0"
+timber = "5.0.1"
+tinylog = "2.7.0"
+retrofit = "2.9.0"
+gson = "2.10.1"
+okhttp = "4.11.0"
+ksp = "2.3.2"
 
 [libraries]
 androidx-compose-material = { module = "androidx.compose.material:material" }
@@ -46,9 +54,20 @@ protobuf-gradle-plugin = { module = "com.google.protobuf:protobuf-gradle-plugin"
 protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufJavalite" }
 vb-nfc-reader = { module = "com.github.cfogrady:vb-nfc-reader", version.ref = "vbNfcReader" }
 dim-reader = { module = "com.github.cfogrady:vb-dim-reader", version.ref = "dimReader" }
+play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+tinylog-api = { module = "org.tinylog:tinylog-api", version.ref = "tinylog" }
+tinylog-impl = { module = "org.tinylog:tinylog-impl", version.ref = "tinylog" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+okhttp-logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+vksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+vprotobuf = { id = "com.google.protobuf", version.ref = "protobufGradlePlugin" }
 

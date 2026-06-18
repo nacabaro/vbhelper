@@ -23,6 +23,13 @@ message Character {
     int32 total_wins = 13;
     int32 current_phase_wins = 14;
     int32 mood = 15;
+
+    enum TransferDeviceType {
+      TRANSFER_DEVICE_TYPE_UNSPECIFIED = 0;
+      TRANSFER_DEVICE_TYPE_VB = 1;
+      TRANSFER_DEVICE_TYPE_BE = 2;
+    }
+    TransferDeviceType transfer_device_type = 16;
   }
   CharacterStats character_stats = 3;
 

@@ -131,6 +131,9 @@ interface UserCharacterDao {
     @Query("SELECT * FROM VBCharacterData WHERE id = :id")
     fun getVbData(id: Long): Flow<VBCharacterData>
 
+    @Query("SELECT * FROM VBCharacterData WHERE id = :id")
+    suspend fun getVbDataOrNull(id: Long): VBCharacterData?
+
     @Query("SELECT * FROM SpecialMissions WHERE characterId = :id")
     fun getSpecialMissions(id: Long): Flow<List<SpecialMissions>>
 

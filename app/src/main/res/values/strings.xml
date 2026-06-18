@@ -219,4 +219,17 @@
     <string name="home_special_mission_delete_dismiss">Dismiss</string>
     <string name="home_special_mission_delete_remove">Remove</string>
 
+    <string name="settings_companion_import_card_image_title">Import Card Image</string>
+    <string name="companion_validation_connect_vb">Connect Vital Bracelet</string>
+    <string name="companion_card_import_success">Card imported successfully!</string>
+    <string name="companion_firmware_no_watch">No watch found!</string>
+    <string name="companion_validation_insert_card">Insert card into Vital Bracelet</string>
+    <string name="companion_validation_success">Validation successful!</string>
+    <string name="companion_loading_select_firmware">Select firmware file</string>
+    <string name="companion_firmware_sent_success">Firmware sent successfully!</string>
+    <string name="companion_logs_receive_failed">Failed to receive logs</string>
+    <string name="companion_logs_failed_request">Failed to request logs</string>
+    <string name="companion_logs_warning">Warning: Log transfer might take a while</string>
+    <string name="settings_companion_send_watch_logs_title">Send Watch Logs</string>
+    <string name="companion_transfer_disabled_message">Transfer is currently disabled</string>
 </resources>

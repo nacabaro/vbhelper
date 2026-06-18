@@ -5,6 +5,7 @@ import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 /**
  * Utility for converting character device types.
@@ -31,7 +32,7 @@ class DeviceTypeConverter(private val database: AppDatabase) {
             true
         } catch (e: Exception) {
             // Log but don't crash - character can still be sent as-is
-            android.util.Log.e("DeviceTypeConverter", "Failed to convert character $characterId to VB type", e)
+            Timber.e(e, "Failed to convert character $characterId to VB type")
             false
         }
     }
@@ -42,7 +43,7 @@ class DeviceTypeConverter(private val database: AppDatabase) {
             val vbCharacterData = VBCharacterData(
                 id = characterId,
                 generation = 0,
-                totalTrophies = 0
+                totalTrophies = 0,
             )
             database.userCharacterDao().insertVBCharacterData(vbCharacterData)
         }

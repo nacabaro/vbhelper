@@ -13,6 +13,8 @@ import com.github.nacabaro.vbhelper.daos.ItemDao
 import com.github.nacabaro.vbhelper.daos.SpecialMissionDao
 import com.github.nacabaro.vbhelper.daos.SpriteDao
 import com.github.nacabaro.vbhelper.daos.UserCharacterDao
+import com.github.nacabaro.vbhelper.companion.validation.ValidatedCardDao
+import com.github.nacabaro.vbhelper.companion.validation.ValidatedCardEntity
 import com.github.nacabaro.vbhelper.domain.card.Background
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.domain.card.Card
@@ -50,7 +52,8 @@ import com.github.nacabaro.vbhelper.domain.items.Items
         Items::class,
         Adventure::class,
         Background::class,
-        PossibleTransformations::class
+        PossibleTransformations::class,
+        ValidatedCardEntity::class
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -65,4 +68,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun specialMissionDao(): SpecialMissionDao
     abstract fun cardAdventureDao(): CardAdventureDao
     abstract fun cardFusionsDao(): CardFusionsDao
+    abstract fun validatedCardDao(): ValidatedCardDao
 }
