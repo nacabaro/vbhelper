@@ -114,28 +114,28 @@ fun StorageDialog(
                         )
                     }
                 }
-                            Row(
-                                horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                            ) {
-                                Button(
-                                    onClick = onSendToBracelet,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                ) {
-                                    Text(text = stringResource(R.string.storage_send_to_watch))
-                                }
-                                Spacer(
-                                    modifier = Modifier
-                                        .padding(4.dp)
-                                )
-                                Button(
-                                    onClick = onClickSetActive,
-                                ) {
-                                    Text(text = stringResource(R.string.storage_set_active))
-                                }
-                            }
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = onSendToBracelet,
+                        modifier = Modifier
+                            .weight(1f)
+                    ) {
+                        Text(text = stringResource(R.string.storage_send_to_watch))
+                    }
+                    Spacer(
+                        modifier = Modifier
+                            .padding(4.dp)
+                    )
+                    Button(
+                        onClick = onClickSetActive,
+                    ) {
+                        Text(text = stringResource(R.string.storage_set_active))
+                    }
+                }
                 Button(
                     onClick = {
                         onSendToAdventureClicked = true

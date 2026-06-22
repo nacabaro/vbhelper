@@ -54,7 +54,6 @@ data class AppNavigationHandlers(
 @Composable
 fun AppNavigation(
     applicationNavigationHandlers: AppNavigationHandlers,
-    initialRoute: String? = null
 ) {
     val navController = rememberNavController()
 
@@ -65,7 +64,7 @@ fun AppNavigation(
     ) { contentPadding ->
         NavHost(
             navController = navController,
-            startDestination = initialRoute ?: NavigationItems.Home.route,
+            startDestination = NavigationItems.Home.route,
             enterTransition = {
                 fadeIn(
                     animationSpec = tween(200)

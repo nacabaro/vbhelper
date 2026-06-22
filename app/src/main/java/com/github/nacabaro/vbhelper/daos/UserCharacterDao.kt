@@ -58,22 +58,6 @@ interface UserCharacterDao {
     @Query(
         """
         SELECT
-            t.stageId as stageId,
-            c.charaIndex AS monIndex,
-            ca.name as cardName,
-            t.transformationDate AS transformationDate
-        FROM TransformationHistory t
-        JOIN CardCharacter c ON c.id = t.stageId
-        JOIN Card ca ON ca.id = c.cardId
-        WHERE t.monId = :monId
-        ORDER BY t.transformationDate ASC, t.id ASC
-    """
-    )
-    suspend fun getTransformationHistoryForExport(monId: Long): List<CharacterDtos.TransformationHistoryExport>
-
-    @Query(
-        """
-        SELECT
             uc.*,
             c.stage,
             c.attribute,

@@ -33,7 +33,6 @@ import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
 import com.github.nacabaro.vbhelper.source.StorageRepository
-import com.github.nacabaro.vbhelper.source.VitalWearCharacterExporter
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import androidx.compose.ui.res.stringResource
 import com.github.nacabaro.vbhelper.R

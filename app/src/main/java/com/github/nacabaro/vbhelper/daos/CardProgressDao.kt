@@ -24,9 +24,6 @@ interface CardProgressDao {
     )
     fun getCardProgress(cardId: Long): Flow<Int>
 
-    @Query("SELECT currentStage FROM CardProgress WHERE cardId = :cardId LIMIT 1")
-    fun getCardProgressSync(cardId: Long): Int?
-
     @Insert
     fun insertCardProgress(cardProgress: CardProgress)
 }

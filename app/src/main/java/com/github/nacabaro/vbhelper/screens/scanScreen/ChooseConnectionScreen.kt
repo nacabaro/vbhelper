@@ -42,11 +42,6 @@ fun ChooseConnectOption(
                 .fillMaxSize()
                 .padding(contentPadding)
         ) {
-            Text(
-                text = "Bandai Toys = Vital Bracelet, Vital Hero, BE Bracelet",
-                fontSize = 14.sp,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
             ScanButton(
                 text = stringResource(R.string.scan_vb_to_app),
                 disabled = onClickRead == null,

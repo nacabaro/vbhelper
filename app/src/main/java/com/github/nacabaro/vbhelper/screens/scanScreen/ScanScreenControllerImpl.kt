@@ -47,22 +47,14 @@ class ScanScreenControllerImpl(
 
     override fun onClickRead(secrets: Secrets, onComplete: ()->Unit, onMultipleCards: (List<Card>) -> Unit) {
         handleTag(secrets) { tagCommunicator ->
-            try {
-                val character = tagCommunicator.receiveCharacter()
-                val resultMessage = characterFromNfc(character) { cards, nfcCharacter ->
-                    lastScannedCharacter = nfcCharacter
-                    onMultipleCards(cards)
-                }
-                onComplete.invoke()
-                resultMessage
-            } catch (e: Exception) {
-                Log.e("NFC_READ", "Error reading character from NFC", e)
-                componentActivity.runOnUiThread {
-                    Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_error_generic) + ": " + (e.message ?: e.javaClass.simpleName), Toast.LENGTH_LONG).show()
-                }
-                onComplete.invoke()
-                componentActivity.getString(R.string.scan_error_generic)
+            val character = tagCommunicator.receiveCharacter()
+            val resultMessage = characterFromNfc(character) { cards, nfcCharacter ->
+                lastScannedCharacter = nfcCharacter
+                onMultipleCards(cards)
+
             }
+            onComplete.invoke()
+            resultMessage
         }
     }
 
