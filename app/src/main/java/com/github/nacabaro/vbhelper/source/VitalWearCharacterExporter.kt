@@ -15,52 +15,56 @@ class VitalWearCharacterExporter(
     private val context: Context,
     private val database: AppDatabase
 ) {
+    fun buildCharacterProto(characterId: Long): Character = runBlocking {
+        val characterWithSprites = database.userCharacterDao().getCharacterWithSprites(characterId)
+        val userCharacter = database.userCharacterDao().getCharacter(characterId)
+        val card = database.cardDao().getCardByCharacterIdSync(characterId)
+            ?: error("Card not found for character $characterId")
+        val cardProgress = database.cardProgressDao().getCardProgressSync(card.id) ?: 0
+        Character.newBuilder()
+            .setCardId(card.cardId)
+            .setCardName(card.name)
+            .setCharacterStats(
+                Character.CharacterStats.newBuilder()
+                    .setSlotId(database.userCharacterDao().getCharacterInfo(characterId).charaIndex)
+                    .setVitals(characterWithSprites.vitalPoints)
+                    .setTrainingTimeRemainingInSeconds(resolveTrainingSeconds(characterId, userCharacter.characterType))
+                    .setTimeUntilNextTransformation(characterWithSprites.transformationCountdown.toLong() * 60L)
+                    .setTrainedBp(resolveTrainedBp(characterId, userCharacter.characterType))
+                    .setTrainedHp(resolveTrainedHp(characterId, userCharacter.characterType))
+                    .setTrainedAp(resolveTrainedAp(characterId, userCharacter.characterType))
+                    .setTrainedPp(characterWithSprites.trophies)
+                    .setInjured(characterWithSprites.injuryStatus.name.lowercase().contains("inj"))
+                    .setAccumulatedDailyInjuries(0)
+                    .setTotalBattles(characterWithSprites.totalBattlesWon + characterWithSprites.totalBattlesLost)
+                    .setCurrentPhaseBattles(characterWithSprites.currentPhaseBattlesWon + characterWithSprites.currentPhaseBattlesLost)
+                    .setTotalWins(characterWithSprites.totalBattlesWon)
+                    .setCurrentPhaseWins(characterWithSprites.currentPhaseBattlesWon)
+                    .setMood(characterWithSprites.mood)
+                    .build()
+            )
+            .setSettings(
+                Character.Settings.newBuilder()
+                    .setTrainingInBackground(false)
+                    .setAllowedBattles(Character.Settings.AllowedBattles.CARD_ONLY)
+                    .build()
+            )
+            .putMaxAdventureCompletedByCard(card.name, (cardProgress - 1).coerceAtLeast(0))
+            .addAllTransformationHistory(
+                database.userCharacterDao().getTransformationHistoryForExport(characterId).map {
+                    Character.TransformationEvent.newBuilder()
+                        .setCardName(it.cardName)
+                        .setPhase(0)
+                        .setSlotId(it.monIndex)
+                        .build()
+                }
+            )
+            .build()
+    }
+
     fun buildShareIntent(characterId: Long): Intent {
         return runBlocking {
-            val characterWithSprites = database.userCharacterDao().getCharacterWithSprites(characterId)
-            val userCharacter = database.userCharacterDao().getCharacter(characterId)
-            val card = database.cardDao().getCardByCharacterIdSync(characterId)
-                ?: error("Card not found for character $characterId")
-            val cardProgress = database.cardProgressDao().getCardProgressSync(card.id) ?: 0
-            val proto = Character.newBuilder()
-                .setCardId(card.cardId)
-                .setCardName(card.name)
-                .setCharacterStats(
-                    Character.CharacterStats.newBuilder()
-                        .setSlotId(database.userCharacterDao().getCharacterInfo(characterId).charaIndex)
-                        .setVitals(characterWithSprites.vitalPoints)
-                        .setTrainingTimeRemainingInSeconds(resolveTrainingSeconds(characterId, userCharacter.characterType))
-                        .setTimeUntilNextTransformation(characterWithSprites.transformationCountdown.toLong() * 60L)
-                        .setTrainedBp(resolveTrainedBp(characterId, userCharacter.characterType))
-                        .setTrainedHp(resolveTrainedHp(characterId, userCharacter.characterType))
-                        .setTrainedAp(resolveTrainedAp(characterId, userCharacter.characterType))
-                        .setTrainedPp(characterWithSprites.trophies)
-                        .setInjured(characterWithSprites.injuryStatus.name.lowercase().contains("inj"))
-                        .setAccumulatedDailyInjuries(0)
-                        .setTotalBattles(characterWithSprites.totalBattlesWon + characterWithSprites.totalBattlesLost)
-                        .setCurrentPhaseBattles(characterWithSprites.currentPhaseBattlesWon + characterWithSprites.currentPhaseBattlesLost)
-                        .setTotalWins(characterWithSprites.totalBattlesWon)
-                        .setCurrentPhaseWins(characterWithSprites.currentPhaseBattlesWon)
-                        .setMood(characterWithSprites.mood)
-                        .build()
-                )
-                .setSettings(
-                    Character.Settings.newBuilder()
-                        .setTrainingInBackground(false)
-                        .setAllowedBattles(Character.Settings.AllowedBattles.CARD_ONLY)
-                        .build()
-                )
-                .putMaxAdventureCompletedByCard(card.name, (cardProgress - 1).coerceAtLeast(0))
-                .addAllTransformationHistory(
-                    database.userCharacterDao().getTransformationHistoryForExport(characterId).map {
-                        Character.TransformationEvent.newBuilder()
-                            .setCardName(it.cardName)
-                            .setPhase(0)
-                            .setSlotId(it.monIndex)
-                            .build()
-                    }
-                )
-                .build()
+            val proto = buildCharacterProto(characterId)
 
             val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
             val exportFile = File(exportDir, "vbhelper_character_$characterId.vitalwear")

@@ -49,7 +49,8 @@ class MainActivity : ComponentActivity() {
             application.container.dataStoreSecretsRepository.secretsFlow,
             this,
             this::registerActivityLifecycleListener,
-            this::unregisterActivityLifecycleListener
+            this::unregisterActivityLifecycleListener,
+            application.container.db,
         )
         val settingsScreenController = SettingsScreenControllerImpl(this)
         val itemsScreenController = ItemsScreenControllerImpl(this)
