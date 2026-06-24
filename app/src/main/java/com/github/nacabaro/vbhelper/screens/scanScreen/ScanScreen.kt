@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -88,15 +89,18 @@ fun ScanScreen(
             }
         )
     } else {
+        val secretsNotInitialized = stringResource(id = R.string.scan_secrets_not_initialized)
+        val secretsNotImported = stringResource(id = R.string.scan_secrets_not_imported)
+
         ChooseConnectOption(
             onClickRead = when {
                 !launchedFromHomeScreen -> null
                 else -> {
                     {
-                        if(secrets == null) {
-                            Toast.makeText(context, context.getString(R.string.scan_secrets_not_initialized), Toast.LENGTH_SHORT).show()
-                        } else if(secrets?.isMissingSecrets() == true) {
-                            Toast.makeText(context, context.getString(R.string.scan_secrets_not_imported), Toast.LENGTH_SHORT).show()
+                        if (secrets == null) {
+                            Toast.makeText(context, secretsNotInitialized, Toast.LENGTH_SHORT).show()
+                        } else if (secrets?.isMissingSecrets() == true) {
+                            Toast.makeText(context, secretsNotImported, Toast.LENGTH_SHORT).show()
                         } else {
                             readingScreen = true // kicks off nfc adapter in DisposableEffect
                         }
@@ -107,10 +111,10 @@ fun ScanScreen(
                 nfcCharacter == null -> null
                 else -> {
                     {
-                        if(secrets == null) {
-                            Toast.makeText(context,   context.getString(R.string.scan_secrets_not_initialized), Toast.LENGTH_SHORT).show()
-                        } else if(secrets?.isMissingSecrets() == true) {
-                            Toast.makeText(context, context.getString(R.string.scan_secrets_not_imported), Toast.LENGTH_SHORT).show()
+                        if (secrets == null) {
+                            Toast.makeText(context, secretsNotInitialized, Toast.LENGTH_SHORT).show()
+                        } else if (secrets?.isMissingSecrets() == true) {
+                            Toast.makeText(context, secretsNotImported, Toast.LENGTH_SHORT).show()
                         } else {
                             writingScreen = true // kicks off nfc adapter in DisposableEffect
                         }

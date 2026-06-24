@@ -48,9 +48,6 @@
     <string name="card_adventure_missions_title">アドベンチャーミッション</string>
     <string name="card_entry_characters_obtained">%1$d / %2$d のキャラクターを取得しました。</string>
     <string name="card_entry_edit">編集</string>
-    <string name="card_entry_edit">編集</string>
-    <string name="card_entry_edit">編集</string>
-    <string name="card_entry_edit">編集</string>
     <string name="card_entry_delete">削除</string>
     <string name="home_vbdim_current_phase_win">フェーズ勝率 %</string>
     <string name="home_vbdim_special_missions">スペシャルミッション</string>
@@ -92,14 +89,12 @@
     <string name="battles_online_title">オンラインバトル</string>
     <string name="obtained_item_you_also_got_credits">%1$d クレジットを獲得しました。</string>
     <string name="obtained_item_dismiss">閉じる</string>
-    <string name="obtained_item_dismiss">閉じる</string>
     <string name="nav_dex">図鑑</string>
     <string name="action_place_near_reader">バイタルブレス本体を近くに置いて下さい。</string>
     <string name="action_cancel">キャンセル</string>
     <string name="card_view_discovered_characters">解放済みキャラクター</string>
     <string name="dex_chara_icon_description">キャラクターアイコン</string>
     <string name="dex_chara_name_icon_description">名前</string>
-    <string name="credits_section_reverse_engineering">リバースエンジニアリング</string>
     <string name="credits_section_reverse_engineering">リバースエンジニアリング</string>
     <string name="credits_section_app_development">アプリケーション開発</string>
     <string name="credits_cyanic_description">"         ファームウェアの解析を行い、開発をサポートしてくれました。"</string>
