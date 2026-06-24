@@ -142,7 +142,7 @@ fun VBDiMHomeScreen(
             ItemDisplay(
                 icon = R.drawable.baseline_swords_24,
                 textValue = when {
-                    activeMon.totalBattlesLost == 0 -> "0.00 %"
+                    activeMon.currentPhaseBattlesWon + activeMon.currentPhaseBattlesLost == 0 -> "0.00 %"
                     else -> {
                         val battleWinPercentage =
                             activeMon.currentPhaseBattlesWon.toFloat() / (activeMon.currentPhaseBattlesWon + activeMon.currentPhaseBattlesLost).toFloat()
@@ -150,7 +150,7 @@ fun VBDiMHomeScreen(
                             Locale.getDefault(),
                             "%.2f",
                             battleWinPercentage * 100
-                        ) + " %" // Specify locale
+                        ) + " %"
                     }
                 },
                 definition = stringResource(R.string.home_vbdim_current_phase_win),
@@ -193,9 +193,9 @@ fun VBDiMHomeScreen(
                     onClickMission = { missionId ->
                         selectedSpecialMissionId = missionId
                     },
-                    onClickCollect = {
+                    onClickCollect = { missionId ->
                         homeScreenController
-                            .clearSpecialMission(selectedSpecialMissionId, onClickCollect)
+                            .clearSpecialMission(missionId, onClickCollect)
                     }
                 )
             }
