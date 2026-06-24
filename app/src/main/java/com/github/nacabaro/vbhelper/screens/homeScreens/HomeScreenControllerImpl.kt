@@ -45,11 +45,12 @@ class HomeScreenControllerImpl(
                 .clearSpecialMission(missionId)
 
             if (missionStatus.status == SpecialMission.Status.COMPLETED) {
-                val randomItem = database
-                    .itemDao()
-                    .getAllItems()
-                    .first()
-                    .random()
+                val allItems = database.itemDao().getAllItems().first()
+                if (allItems.isEmpty()) {
+                    onCleared(null, null)
+                    return@launch
+                }
+                val randomItem = allItems.random()
 
                 val randomItemAmount = (Random.nextFloat() * 5).roundToInt()
 
