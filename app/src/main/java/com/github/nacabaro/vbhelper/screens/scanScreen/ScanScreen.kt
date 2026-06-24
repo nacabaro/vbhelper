@@ -44,14 +44,8 @@ fun ScanScreen(
 
     val context = LocalContext.current
 
-    LaunchedEffect(storageRepository) {
+    LaunchedEffect(characterId) {
         withContext(Dispatchers.IO) {
-            /*
-            First check if there is a character sent through the navigation system
-            If there is not, that means we got here through the home screen nfc button
-            If we got here through the home screen, it does not hurt to check if there is
-            an active character.
-             */
             if (characterId != null && nfcCharacter == null) {
                 nfcCharacter = scanScreenController.characterToNfc(characterId)
             }
