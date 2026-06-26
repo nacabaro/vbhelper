@@ -56,7 +56,6 @@
     <string name="storage_character_image_description">キャラクター画像</string>
     <string name="storage_send_to_watch">デバイスへ転送</string>
     <string name="storage_send_to_vitalwear">VitalWearへ転送</string>
-    <string name="storage_send_to_vitalwear">VitalWearへ転送</string>
     <string name="storage_set_active">選択</string>
     <string name="storage_send_on_adventure">アドベンチャーへ出発</string>
     <string name="scan_no_nfc_on_device">NFC機能が見つかりません。</string>
@@ -146,7 +145,6 @@
     <string name="special_mission_steps_progress">歩数 %1$d 歩</string>
     <string name="special_mission_battles_progress">バトル %1$d 回</string>
     <string name="special_mission_wins_progress">勝利 %1$d 回</string>
-    <string name="settings_companion_import_card_image_title">カードのインポート</string>
     <string name="settings_companion_import_card_image_title">カードのインポート</string>
     <string name="companion_validation_connect_vb">デバイスに接続</string>
     <string name="companion_card_import_success">カードのインポートに成功しました。</string>
