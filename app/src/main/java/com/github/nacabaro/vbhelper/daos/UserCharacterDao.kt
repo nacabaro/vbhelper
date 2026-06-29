@@ -167,6 +167,9 @@ interface UserCharacterDao {
     @Query("DELETE FROM UserCharacter WHERE id = :id")
     fun deleteCharacterById(id: Long)
 
+    @Query("SELECT EXISTS(SELECT 1 FROM UserCharacter WHERE id = :id)")
+    suspend fun characterExists(id: Long): Boolean
+
     @Query("UPDATE UserCharacter SET isActive = 0 WHERE isActive = 1")
     fun clearActiveCharacter()
 

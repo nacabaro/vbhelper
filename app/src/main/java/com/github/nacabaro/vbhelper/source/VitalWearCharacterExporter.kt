@@ -21,12 +21,17 @@ class VitalWearCharacterExporter(
         val card = database.cardDao().getCardByCharacterIdSync(characterId)
             ?: error("Card not found for character $characterId")
         val cardProgress = database.cardProgressDao().getCardProgressSync(card.id) ?: 0
+        val transferDeviceType = when (userCharacter.characterType) {
+            DeviceType.BEDevice -> Character.CharacterStats.TransferDeviceType.TRANSFER_DEVICE_TYPE_BE
+            else -> Character.CharacterStats.TransferDeviceType.TRANSFER_DEVICE_TYPE_VB
+        }
         Character.newBuilder()
             .setCardId(card.cardId)
             .setCardName(card.name)
             .setCharacterStats(
                 Character.CharacterStats.newBuilder()
                     .setSlotId(database.userCharacterDao().getCharacterInfo(characterId).charaIndex)
+                    .setTransferDeviceType(transferDeviceType)
                     .setVitals(characterWithSprites.vitalPoints)
                     .setTrainingTimeRemainingInSeconds(resolveTrainingSeconds(characterId, userCharacter.characterType))
                     .setTimeUntilNextTransformation(characterWithSprites.transformationCountdown.toLong() * 60L)

@@ -180,6 +180,10 @@ class ItemsScreenControllerImpl (
             .getSpecialMissions(characterId)
             .first()
 
+        if (availableSpecialMissions.size <= specialMissionSlot) {
+            return
+        }
+
         var newSpecialMission = availableSpecialMissions[specialMissionSlot]
         newSpecialMission = SpecialMissions(
             id = newSpecialMission.id,

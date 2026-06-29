@@ -76,12 +76,21 @@ class ScanScreenControllerImpl(
             hceHandler = { isoDep ->
                 try {
                     val client = VitalWearHceReaderClient(isoDep)
-                    val character = client.receiveCharacterFromWatch()
                     val importer = VitalWearCharacterImporter(database)
-                    val result = importer.importCharacter(character)
-                    Log.i("NFC_READ", "VitalWear HCE import: ${result.message}")
+                    // Read the character first and only COMMIT (which makes the watch
+                    // drop its copy) if the import actually succeeds. Otherwise the
+                    // character stays on the watch and nothing is lost.
+                    var importResult: VitalWearCharacterImporter.ImportResult? = null
+                    val committed = client.moveCharacterFromWatch { character ->
+                        val result = importer.importCharacter(character)
+                        importResult = result
+                        result.success
+                    }
+                    val message = importResult?.message
+                        ?: componentActivity.getString(R.string.scan_error_generic)
+                    Log.i("NFC_READ", "VitalWear HCE import committed=$committed: $message")
                     componentActivity.runOnUiThread {
-                        Toast.makeText(componentActivity, result.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(componentActivity, message, Toast.LENGTH_LONG).show()
                     }
                 } catch (e: Exception) {
                     Log.e("NFC_READ", "Error reading character from VitalWear HCE", e)
@@ -190,6 +199,10 @@ class ScanScreenControllerImpl(
                         Log.d("SendCharacter", "BENfcCharacter")
                         tagCommunicator.sendCharacter(nfcCharacter)
                     }
+                    // Physical bracelet write succeeded: remove the local copy here so the
+                    // WritingScreen no longer owns deletion (single source of truth).
+                    pendingExportCharacterId?.let { database.userCharacterDao().deleteCharacterById(it) }
+                    pendingExportCharacterId = null
                     onComplete.invoke()
                     componentActivity.getString(R.string.scan_sent_character_success)
                 } catch (e: Throwable) {
@@ -198,7 +211,8 @@ class ScanScreenControllerImpl(
                 }
             },
             hceHandler = { _ ->
-                // Character was already sent in onClickCheckCard's HCE handler.
+                // HCE: the character was already sent AND deleted (only if confirmed)
+                // in onClickCheckCard's HCE handler. Nothing to do here.
                 onComplete()
             }
         )
@@ -230,6 +244,11 @@ class ScanScreenControllerImpl(
                 try {
                     val proto = VitalWearCharacterExporter(componentActivity, database).buildCharacterProto(characterId)
                     val client = VitalWearHceReaderClient(isoDep)
+                    // The watch firmware only implements NEGOTIATE/WRITE_CHUNK/COMMIT (no
+                    // INS_STATUS), so we send and rely on COMMIT returning SW_OK as the signal
+                    // that the watch received the full payload. sendCharacterToWatch throws if
+                    // any APDU (including COMMIT) fails, so reaching the next line means the
+                    // transfer was accepted by the watch — only then do we delete the local copy.
                     client.sendCharacterToWatch(proto)
                     database.userCharacterDao().deleteCharacterById(characterId)
                     pendingExportCharacterId = null
@@ -271,6 +290,10 @@ class ScanScreenControllerImpl(
         val character = nfcGenerator.characterToNfc(characterId)
         Log.d("CharacterType", character.toString())
         return character
+    }
+
+    override suspend fun characterExists(characterId: Long): Boolean {
+        return database.userCharacterDao().characterExists(characterId)
     }
 
     override fun flushCharacter(cardId: Long) {

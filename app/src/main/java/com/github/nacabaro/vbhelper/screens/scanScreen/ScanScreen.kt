@@ -139,6 +139,7 @@ fun ScanScreenPreview() {
             override fun cancelRead() {}
             override fun characterFromNfc(nfcCharacter: NfcCharacter, onMultipleCards: (List<Card>, NfcCharacter) -> Unit): String { return "" }
             override suspend fun characterToNfc(characterId: Long): NfcCharacter? { return null }
+            override suspend fun characterExists(characterId: Long): Boolean { return true }
         },
         characterId = null,
         launchedFromHomeScreen = false

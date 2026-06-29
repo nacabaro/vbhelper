@@ -34,7 +34,7 @@ interface CardDao {
         WHERE uc.id = :id
     """
     )
-    fun getCardByCharacterId(id: Long): Flow<Card>
+    fun getCardByCharacterId(id: Long): Flow<Card?>
 
     @Query(
         """

@@ -128,7 +128,7 @@ fun HomeScreen(
             )
         }
     ) { contentPadding ->
-        if (activeMon == null || (beData == null && vbData == null) || cardIconData == null || transformationHistory.isEmpty()) {
+        if (activeMon == null || (beData == null && vbData == null) || cardIconData == null) {
             Column (
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,

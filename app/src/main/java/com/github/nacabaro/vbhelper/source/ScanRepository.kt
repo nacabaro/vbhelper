@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 class ScanRepository(
     val database: AppDatabase
 ) {
-    fun getCardDetails(characterId: Long): Flow<Card> {
+    fun getCardDetails(characterId: Long): Flow<Card?> {
         return database.cardDao().getCardByCharacterId(characterId)
     }
 }

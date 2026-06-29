@@ -24,4 +24,6 @@ interface ScanScreenController {
         onMultipleCards: (List<Card>, NfcCharacter) -> Unit
     ): String
     suspend fun characterToNfc(characterId: Long): NfcCharacter?
+
+    suspend fun characterExists(characterId: Long): Boolean
 }

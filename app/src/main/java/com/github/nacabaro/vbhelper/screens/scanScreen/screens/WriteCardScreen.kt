@@ -43,16 +43,7 @@ fun WriteCardScreen(
     val application = LocalContext.current.applicationContext as VBHelper
     val database = application.container.db
     val scanRepository = ScanRepository(database)
-    val cardDetails by scanRepository.getCardDetails(characterId).collectAsState(Card(
-        id = 0,
-        cardId = 0,
-        name = "",
-        logo = byteArrayOf(),
-        logoHeight = 0,
-        logoWidth = 0,
-        stageCount = 0,
-        isBEm = false
-    ))
+    val cardDetails by scanRepository.getCardDetails(characterId).collectAsState(null)
 
     Scaffold(
         topBar = {
@@ -77,11 +68,11 @@ fun WriteCardScreen(
                 Row (
                     modifier = Modifier.padding(16.dp),
                 ){
-                    if (cardDetails.logoHeight > 0 && cardDetails.logoWidth > 0) {
+                    if (cardDetails != null && cardDetails!!.logoHeight > 0 && cardDetails!!.logoWidth > 0) {
                         val charaBitmapData = BitmapData(
-                            bitmap = cardDetails.logo,
-                            width = cardDetails.logoWidth,
-                            height = cardDetails.logoHeight
+                            bitmap = cardDetails!!.logo,
+                            width = cardDetails!!.logoWidth,
+                            height = cardDetails!!.logoHeight
                         )
                         val charaImageBitmapData = charaBitmapData.getImageBitmap(
                             context = LocalContext.current,
@@ -123,7 +114,7 @@ fun WriteCardScreen(
                         Text(
                             stringResource(
                                 R.string.write_card_required_card,
-                                cardDetails.name
+                                cardDetails?.name ?: ""
                             )
                         )
 

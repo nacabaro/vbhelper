@@ -104,7 +104,7 @@ class ToNfcConverter(
             0u
         }
 
-        appReserved[0] = cardData.id.toUShort()
+        appReserved[0] = cardData?.id?.toUShort() ?: 0u
 
         return appReserved
     }

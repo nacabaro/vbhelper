@@ -1,12 +1,15 @@
 package com.github.nacabaro.vbhelper.source
 
 import com.github.cfogrady.vbnfc.data.NfcCharacter
+import com.github.cfogrady.vbnfc.vb.SpecialMission
 import com.github.cfogrady.vitalwear.protos.Character
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.utils.DeviceType
+import timber.log.Timber
 import kotlin.math.max
 
 class VitalWearCharacterImporter(
@@ -21,7 +24,7 @@ class VitalWearCharacterImporter(
         val importedCard = resolveCard(character)
             ?: return ImportResult(
                 success = false,
-                message = "Matching card not found in VBHelper. Import that card first."
+                message = "Card '${character.cardName}' (id ${character.cardId}) not found in VBHelper. Import that card first."
             )
 
         val slotId = character.characterStats.slotId
@@ -97,6 +100,22 @@ class VitalWearCharacterImporter(
                     totalTrophies = character.characterStats.trainedPp
                 )
             )
+            // VB characters need 4 special mission slots (one per type: steps, vitals,
+            // battles, wins). Physical bracelet imports get these from the NFC data, but
+            // HCE imports have no equivalent proto field, so we create them empty here.
+            val emptyMissions = (0..3).map { slot ->
+                SpecialMissions(
+                    characterId = userCharacterId,
+                    goal = 0,
+                    watchId = slot,
+                    progress = 0,
+                    status = SpecialMission.Status.UNAVAILABLE,
+                    timeElapsedInMinutes = 0,
+                    timeLimitInMinutes = 0,
+                    missionType = SpecialMission.Type.NONE
+                )
+            }
+            database.userCharacterDao().insertSpecialMissions(*emptyMissions.toTypedArray())
         }
 
         val now = System.currentTimeMillis()
@@ -152,17 +171,27 @@ class VitalWearCharacterImporter(
     private fun resolveCard(character: Character) = resolveCard(character.cardName, character.cardId)
 
     private fun resolveCard(cardName: String?, cardId: Int?): com.github.nacabaro.vbhelper.domain.card.Card? {
-        if (!cardName.isNullOrBlank()) {
-            database.cardDao().getCardByName(cardName)?.let { return it }
+        // 1. Exact (case-insensitive, trimmed) name match.
+        val trimmedName = cardName?.trim()
+        if (!trimmedName.isNullOrBlank()) {
+            database.cardDao().getCardByName(trimmedName)?.let { return it }
         }
 
+        // 2. Fall back to the DIM/card id (original behaviour: only a unique match).
         if (cardId != null) {
             val matches = database.cardDao().getCardByCardId(cardId)
             if (matches.size == 1) {
                 return matches.first()
             }
+            if (matches.size > 1) {
+                Timber.w("VitalWear import: cardId=$cardId matched ${matches.size} cards, not disambiguating")
+            }
         }
 
+        // Diagnostic: log exactly what the watch sent vs. what is stored locally.
+        val known = database.cardDao().getAllCards()
+            .joinToString { "${it.name}(cardId=${it.cardId})" }
+        Timber.w("VitalWear import: no card matched name='$cardName' cardId=$cardId. Known cards: $known")
         return null
     }
 
