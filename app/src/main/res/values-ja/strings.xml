@@ -56,7 +56,6 @@
     <string name="storage_character_image_description">キャラクター画像</string>
     <string name="storage_send_to_watch">デバイスへ転送</string>
     <string name="storage_send_to_vitalwear">VitalWearへ転送</string>
-    <string name="storage_send_to_vitalwear">VitalWearへ転送</string>
     <string name="storage_set_active">選択</string>
     <string name="storage_send_on_adventure">アドベンチャーへ出発</string>
     <string name="scan_no_nfc_on_device">NFC機能が見つかりません。</string>
@@ -111,7 +110,7 @@
     <string name="write_card_required_card">%1$s カードが必要です。</string>
     <string name="write_card_confirm">転送</string>
     <string name="write_character_success">カードの読み込みが完了しました。</string>
-    <string name="write_character_wait_ready">" デバイスの準備をしてから確認を押して下さい。"</string>
+    <string name="write_character_wait_ready">デバイスの準備をしてから確認を押して下さい。</string>
     <string name="write_character_confirm">確認</string>
     <string name="home_vbdim_trophies">トロフィー</string>
     <string name="items_purchase_success">購入しました。</string>
@@ -146,7 +145,6 @@
     <string name="special_mission_steps_progress">歩数 %1$d 歩</string>
     <string name="special_mission_battles_progress">バトル %1$d 回</string>
     <string name="special_mission_wins_progress">勝利 %1$d 回</string>
-    <string name="settings_companion_import_card_image_title">カードのインポート</string>
     <string name="settings_companion_import_card_image_title">カードのインポート</string>
     <string name="companion_validation_connect_vb">デバイスに接続</string>
     <string name="companion_card_import_success">カードのインポートに成功しました。</string>

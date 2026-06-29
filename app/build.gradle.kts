@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.vksp)
     alias(libs.plugins.vprotobuf)
@@ -10,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.github.nacabaro.vbhelper"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.github.nacabaro.vbhelper"
         minSdk = 28
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "Alpha 0.6.4"
 
@@ -56,9 +55,6 @@ protobuf {
         artifact = "com.google.protobuf:protoc:4.27.0"
     }
 
-    // Generates the java Protobuf-lite code for the Protobufs in this project. See
-    // https://github.com/google/protobuf-gradle-plugin#customizing-protobuf-compilation
-    // for more information.
     generateProtoTasks {
         all().forEach  { task ->
             task.builtins {

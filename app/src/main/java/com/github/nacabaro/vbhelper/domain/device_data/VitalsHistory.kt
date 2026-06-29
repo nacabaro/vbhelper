@@ -1,6 +1,7 @@
 package com.github.nacabaro.vbhelper.domain.device_data
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
@@ -12,7 +13,8 @@ import androidx.room.PrimaryKey
             childColumns = ["charId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["charId"])]
 )
 data class VitalsHistory (
     @PrimaryKey(autoGenerate = true) val id: Long = 0,

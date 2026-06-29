@@ -1,6 +1,7 @@
 package com.github.nacabaro.vbhelper.domain.card
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.github.cfogrady.vbnfc.data.NfcCharacter
@@ -19,6 +20,10 @@ import com.github.cfogrady.vbnfc.data.NfcCharacter
             childColumns = ["toCharaId"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        Index(value = ["fromCharaId"]),
+        Index(value = ["toCharaId"])
     ]
 )
 data class CardFusions(

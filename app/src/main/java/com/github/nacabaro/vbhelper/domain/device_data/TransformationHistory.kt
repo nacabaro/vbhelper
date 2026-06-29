@@ -1,6 +1,7 @@
 package com.github.nacabaro.vbhelper.domain.device_data
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
@@ -19,6 +20,10 @@ import com.github.nacabaro.vbhelper.domain.card.CardCharacter
             childColumns = ["stageId"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        Index(value = ["monId"]),
+        Index(value = ["stageId"])
     ]
 )
 data class TransformationHistory (

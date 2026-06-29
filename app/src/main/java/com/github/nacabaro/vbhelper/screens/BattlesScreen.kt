@@ -1,10 +1,15 @@
 package com.github.nacabaro.vbhelper.screens
 
+/**
+ * This is me, nacabaro.
+ * File related to battles.
+ * TODO: Refactor this, 2400+ lines feels like a lot.
+ */
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-//import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -28,10 +33,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.LinearProgressIndicator
-//import androidx.compose.material3.ExposedDropdownMenuBox
-//import androidx.compose.material3.ExposedDropdownMenuDefaults
-//import androidx.compose.material3.OutlinedTextField
-//import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
@@ -51,8 +52,6 @@ import android.content.Intent
 import android.net.Uri
 import android.media.MediaPlayer
 import android.os.Environment
-//import androidx.compose.animation.core.animateFloatAsState
-//import androidx.compose.animation.core.tween
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
@@ -72,13 +71,8 @@ import com.github.nacabaro.vbhelper.battle.AnimatedSpriteImage
 import com.github.nacabaro.vbhelper.battle.HitEffectOverlay
 import com.github.nacabaro.vbhelper.battle.BattleAuthContainer
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.collect
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-//import kotlin.math.sin
-//import kotlin.math.PI
-//import androidx.compose.animation.core.animateDpAsState
-//import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Shadow
@@ -86,24 +80,20 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.BitmapFactory
-//import android.os.Environment
 import java.io.File
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.width
 import com.github.nacabaro.vbhelper.di.VBHelper
 import kotlinx.coroutines.Dispatchers
-//import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.AlertDialog
 
-@Composable
+/*@Composable
 fun isLandscapeMode(): Boolean {
     val configuration = LocalConfiguration.current
     return configuration.screenWidthDp > configuration.screenHeightDp
-}
+}*/
 
 @Composable
 fun getLandscapeModifier(): Modifier {
@@ -1735,7 +1725,7 @@ fun BattlesScreen() {
         val currentCharacter = activeUserCharacter
         if (currentCharacter != null && canBattle && playerBattleType != null) {
             try {
-                RetrofitHelper().getOpponents(context, playerBattleType!!) { opponents ->
+                RetrofitHelper().getOpponents(context, playerBattleType) { opponents ->
                     try {
                         // Create a new list to trigger UI recomposition
                         opponentsList = ArrayList(opponents.opponentsList)
@@ -2415,7 +2405,7 @@ fun BattlesScreen() {
                             
                             // Also check winner field if it's not empty
                             val playerWonFromWinner = activeCardId?.let { cardId ->
-                                val winner = apiResult.winner ?: ""
+                                val winner = apiResult.winner
                                 if (winner.isNotEmpty()) {
                                     if (winner.contains("|")) {
                                         // Pipe-separated format: first part is the winner
@@ -2442,7 +2432,7 @@ fun BattlesScreen() {
                             println("BATTLESCREEN: Battle result (first call) - winner: '${apiResult.winner}', playerHP: ${apiResult.playerHP}, opponentHP: ${apiResult.opponentHP}, playerWonFromHP: $playerWonFromHP, playerWonFromWinner: $playerWonFromWinner, final playerWon: $playerWon")
                             
                             // Store winner name for display (will be updated in cleanup call if available)
-                            winnerName = apiResult.winner ?: if (playerWon) "You" else "Opponent"
+                            winnerName = apiResult.winner
                             isWinnerLoaded = true
                             
                             // Then send the cleanup call - this will have the actual winner name
@@ -2465,7 +2455,7 @@ fun BattlesScreen() {
                                 // Primary method: Check HP values (opponentHP <= 0 means opponent lost = player won)
                                 // Secondary method: Check winner name (if winner doesn't match opponent, player won)
                                 val opponentName = selectedOpponent?.name ?: ""
-                                val winner = cleanupResult.winner ?: ""
+                                val winner = cleanupResult.winner
                                 
                                 // Primary: HP-based determination (most reliable)
                                 // If opponentHP <= 0, opponent is dead = player won

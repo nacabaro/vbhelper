@@ -2,11 +2,13 @@ package com.github.nacabaro.vbhelper.daos
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.RewriteQueriesToDropUnusedColumns
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+@RewriteQueriesToDropUnusedColumns
 interface CardFusionsDao {
     @Query("""
         INSERT INTO

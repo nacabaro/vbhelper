@@ -1,6 +1,7 @@
 package com.github.nacabaro.vbhelper.domain.card
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
@@ -18,6 +19,10 @@ import androidx.room.PrimaryKey
             childColumns = ["cardId"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        Index(value = ["characterId"]),
+        Index(value = ["cardId"])
     ]
 )
 data class CardAdventure(

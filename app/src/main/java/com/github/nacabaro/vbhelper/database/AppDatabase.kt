@@ -40,7 +40,8 @@ import com.github.nacabaro.vbhelper.domain.device_data.CharacterTransferPolicy
 import com.github.nacabaro.vbhelper.domain.items.Items
 
 @Database(
-    version = 2,
+    version = 3,
+    exportSchema = false,
     entities = [
         Card::class,
         CardProgress::class,

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
+import androidx.room.RewriteQueriesToDropUnusedColumns
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
@@ -16,6 +17,7 @@ import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+@RewriteQueriesToDropUnusedColumns
 interface UserCharacterDao {
     @Insert
     fun insertCharacterData(characterData: UserCharacter): Long

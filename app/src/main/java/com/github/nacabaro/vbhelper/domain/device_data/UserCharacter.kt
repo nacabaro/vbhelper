@@ -1,6 +1,7 @@
 package com.github.nacabaro.vbhelper.domain.device_data
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.github.cfogrady.vbnfc.data.NfcCharacter
@@ -15,7 +16,8 @@ import com.github.nacabaro.vbhelper.domain.card.CardCharacter
             childColumns = ["charId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["charId"])]
 )
 /**
  * UserCharacter represents and instance of a character. The charId should map to a Character
