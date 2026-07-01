@@ -136,7 +136,7 @@ class SettingsScreenControllerImpl(
                     secrets = secretsImporter.importSecrets(it)
                 } catch (e: Exception) {
                     context.runOnUiThread {
-                        Toast.makeText(context, "Secrets import failed. Please only select the official Vital Arena App 2.1.0 APK.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Secrets import failed. Please only select the official app APK.", Toast.LENGTH_SHORT).show()
                     }
                     return@launch
                 }

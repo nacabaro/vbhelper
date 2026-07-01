@@ -231,9 +231,7 @@ class ScanScreenControllerImpl(
                     val proto = VitalWearCharacterExporter(componentActivity, database).buildCharacterProto(characterId)
                     val client = VitalWearHceReaderClient(isoDep)
                     client.sendCharacterToWatch(proto)
-                    database.userCharacterDao().deleteCharacterById(characterId)
-                    pendingExportCharacterId = null
-                    Log.i("NFC_WRITE", "Character sent to VitalWear and deleted from app (id=$characterId)")
+                    Log.i("NFC_WRITE", "Character sent to VitalWear (id=$characterId), deletion deferred to WritingScreen")
                     componentActivity.runOnUiThread {
                         Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_sent_character_success), Toast.LENGTH_SHORT).show()
                     }

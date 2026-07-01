@@ -24,7 +24,7 @@
     <string name="scan_sent_dim_success">DIMの転送に成功しました。</string>
     <string name="scan_nfc_must_be_enabled">NFC機能を有効にして下さい。</string>
     <string name="settings_title">設定</string>
-    <string name="scan_missing_secrets">Vital ArenaのAPKを読み込みして下さい。</string>
+    <string name="scan_missing_secrets">公式アプリのAPKを読み込みして下さい。</string>
     <string name="scan_sent_character_success">転送が成功しました。</string>
     <string name="scan_error_generic">エラー</string>
     <string name="settings_about_desc">このアプリについて</string>
@@ -64,7 +64,7 @@
     <string name="settings_section_dim_bem">DiM / BEm管理</string>
     <string name="settings_section_data">データ管理</string>
     <string name="settings_import_apk_title">アプリのインポート</string>
-    <string name="settings_import_apk_desc">Vital Arena 2.1.0のAPKファイルを読み込みします。</string>
+    <string name="settings_import_apk_desc">公式アプリのAPKファイルを読み込みします。</string>
     <string name="settings_import_card_title">カードのインポート</string>
     <string name="settings_section_about">概要 / クレジット</string>
     <string name="dex_chara_fusions_button">ジョグレス</string>
