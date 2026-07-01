@@ -104,7 +104,7 @@ fun TransferAnimationScreen(
                 ) {
                     Image(
                         bitmap = preview.imageBitmap,
-                        contentDescription = "Transferred Digimon sprite",
+                        contentDescription = "Transferred character sprite",
                         modifier = Modifier
                             .size(preview.dpWidth, preview.dpHeight)
                             .padding(8.dp),

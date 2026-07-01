@@ -2124,8 +2124,8 @@ fun BattlesScreen() {
                     
                     // Create APIBattleCharacter from database character
                     val playerCharacter = APIBattleCharacter(
-                        name = "Player Digimon", // We could get this from the database if needed
-                        namekey = "player_digimon", // Name key for the character
+                        name = "Player Character", // We could get this from the database if needed
+                        namekey = "player_digimon", // Name key for the character (functional lookup key, not shown)
                         charaId = formattedCardId, // Use the formatted card ID for sprite loading
                         stage = characterData.stage,
                         attribute = characterData.attribute.ordinal, // Convert enum to int
@@ -2232,10 +2232,10 @@ fun BattlesScreen() {
                         ) {
                             // Show active character info
                             activeUserCharacter?.let { character ->
-                                Text("Active Digimon:")
+                                Text("Active character:")
                                 Text("Stage: ${character.stage}")
                                 activeCardId?.let { cardId ->
-                                    Text("Digimon ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
+                                    Text("Character ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
                                 }
                                 
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -2336,7 +2336,7 @@ fun BattlesScreen() {
                                              textAlign = TextAlign.Center)
                                     }
                                 } else {
-                                    Text("Your Digimon must be at least Stage 2 to battle", 
+                                    Text("Your character must be at least Stage 2 to battle",
                                          fontSize = 16.sp, 
                                          color = Color.Red,
                                          textAlign = TextAlign.Center)

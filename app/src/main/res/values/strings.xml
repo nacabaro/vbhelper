@@ -43,13 +43,13 @@
         Secrets not yet imported. Go to Settings and Import APK.
     </string>
 
-    <string name="scan_title">Scan a Vital Bracelet</string>
+    <string name="scan_title">Scan a VB</string>
     <string name="scan_vb_to_app">Watch to VBH</string>
     <string name="scan_app_to_vb">VBH to Watch</string>
 
     <string name="scan_no_nfc_on_device">No NFC on device!</string>
     <string name="scan_tag_not_vb">Tag detected is not VB</string>
-    <string name="scan_missing_secrets">"         Missing Secrets. Go to settings and import Vital Arena APK.     "</string>
+    <string name="scan_missing_secrets">"         Missing Secrets. Go to settings and import the official app APK.     "</string>
     <string name="scan_sent_character_success">Sent character successfully!</string>
     <string name="scan_error_generic">Whoops</string>
     <string name="scan_sent_dim_success">Sent DIM successfully!</string>
@@ -65,7 +65,7 @@
 
     <string name="settings_import_apk_title">Import APK</string>
     <string name="settings_import_apk_desc">
-        Import Secrets From Vital Arena APK
+        Import Secrets From the official app APK
     </string>
 
     <string name="settings_import_card_title">Import card</string>
@@ -109,7 +109,7 @@
     <string name="credits_RedEyez_description">
         Devout Debugger.
     </string>
-    <string name="action_place_near_reader">Place your Vital Bracelet near the reader...</string>
+    <string name="action_place_near_reader">Place your VB near the reader...</string>
     <string name="action_cancel">Cancel</string>
 
     <string name="read_character_title">Read character</string>
@@ -220,10 +220,10 @@
     <string name="home_special_mission_delete_remove">Remove</string>
 
     <string name="settings_companion_import_card_image_title">Import Card Image</string>
-    <string name="companion_validation_connect_vb">Connect Vital Bracelet</string>
+    <string name="companion_validation_connect_vb">Connect VB</string>
     <string name="companion_card_import_success">Card imported successfully!</string>
     <string name="companion_firmware_no_watch">No watch found!</string>
-    <string name="companion_validation_insert_card">Insert card into Vital Bracelet</string>
+    <string name="companion_validation_insert_card">Insert card into VB</string>
     <string name="companion_validation_success">Validation successful!</string>
     <string name="companion_loading_select_firmware">Select firmware file</string>
     <string name="companion_firmware_sent_success">Firmware sent successfully!</string>

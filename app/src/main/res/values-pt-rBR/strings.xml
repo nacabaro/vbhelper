@@ -43,13 +43,13 @@
         Os segredos ainda não foram importados. Vá em Configurações e importe o APK.
     </string>
 
-    <string name="scan_title">Escanear um Vital Bracelet</string>
-    <string name="scan_vb_to_app">Vital Bracelet para o app</string>
-    <string name="scan_app_to_vb">App para o Vital Bracelet</string>
+    <string name="scan_title">Escanear um VB</string>
+    <string name="scan_vb_to_app">VB para o app</string>
+    <string name="scan_app_to_vb">App para o VB</string>
 
     <string name="scan_no_nfc_on_device">O dispositivo não possui NFC!</string>
-    <string name="scan_tag_not_vb">A tag detectada não é do Vital Bracelet.</string>
-    <string name="scan_missing_secrets">"         Segredos ausentes. Vá em Configurações e importe o APK do Vital Arena.     "</string>
+    <string name="scan_tag_not_vb">A tag detectada não é do VB.</string>
+    <string name="scan_missing_secrets">"         Segredos ausentes. Vá em Configurações e importe o APK do app oficial.     "</string>
     <string name="scan_sent_character_success">Personagem enviado com sucesso!</string>
     <string name="scan_error_generic">Ops!</string>
     <string name="scan_sent_dim_success">DIM enviado com sucesso!</string>
@@ -64,7 +64,7 @@
 
     <string name="settings_import_apk_title">Importar APK</string>
     <string name="settings_import_apk_desc">
-        Importar segredos do APK do Vital Arena 2.1.0
+        Importar segredos do APK do app oficial
     </string>
 
     <string name="settings_import_card_title">Importar card</string>
@@ -106,7 +106,7 @@
         Responsável pelo design do ícone do aplicativo em SVG.
     </string>
 
-    <string name="action_place_near_reader">Aproxime o seu Vital Bracelet do leitor...</string>
+    <string name="action_place_near_reader">Aproxime o seu VB do leitor...</string>
     <string name="action_cancel">Cancelar</string>
 
     <string name="read_character_title">Ler personagem</string>
