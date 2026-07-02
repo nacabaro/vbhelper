@@ -43,7 +43,7 @@ fun ChooseConnectOption(
                 .padding(contentPadding)
         ) {
             Text(
-                text = "Bandai Toys = Vital Bracelet, Vital Hero, BE Bracelet",
+                text = "VB, VH, VBBE, Vital Wear",
                 fontSize = 14.sp,
                 modifier = Modifier.padding(bottom = 24.dp)
             )

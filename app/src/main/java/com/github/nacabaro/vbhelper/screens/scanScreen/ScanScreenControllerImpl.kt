@@ -198,8 +198,10 @@ class ScanScreenControllerImpl(
                 }
             },
             hceHandler = { _ ->
-                // Character was already sent in onClickCheckCard's HCE handler.
-                onComplete()
+                // HCE transfers complete entirely in onClickCheckCard, so this step
+                // should never be reached for the watch. Do not complete the flow
+                // here: doing so would delete a character that was never sent.
+                Log.w("NFC_WRITE", "onClickWrite reached for HCE; transfer already handled in first scan")
             }
         )
     }
@@ -207,24 +209,27 @@ class ScanScreenControllerImpl(
     override fun onClickCheckCard(
         secrets: Secrets,
         nfcCharacter: NfcCharacter,
-        onComplete: () -> Unit
+        onComplete: (transferComplete: Boolean) -> Unit
     ) {
         handleTag(
             secrets,
             handlerFunc = { tagCommunicator ->
                 tagCommunicator.prepareDIMForCharacter(nfcCharacter.dimId)
-                onComplete.invoke()
+                onComplete.invoke(false)
                 componentActivity.getString(R.string.scan_sent_dim_success)
             },
             hceHandler = { isoDep ->
-                // VitalWear watch: send the character proto directly via HCE.
+                // VitalWear watch: the whole transfer happens on this first scan.
+                // The character is committed to the watch here, so it must be deleted
+                // from the app in the same step and the second scan must be skipped.
+                // Otherwise cancelling the second scan leaves the character on both
+                // devices (duplication exploit).
                 val characterId = pendingExportCharacterId
                 if (characterId == null) {
                     Log.e("NFC_WRITE", "No pending character to send to VitalWear")
                     componentActivity.runOnUiThread {
                         Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_error_generic), Toast.LENGTH_SHORT).show()
                     }
-                    onComplete()
                     return@handleTag
                 }
                 try {
@@ -237,13 +242,14 @@ class ScanScreenControllerImpl(
                     componentActivity.runOnUiThread {
                         Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_sent_character_success), Toast.LENGTH_SHORT).show()
                     }
+                    onComplete(true)
                 } catch (e: Exception) {
+                    // Transfer failed: the character is still in the app, so do not
+                    // advance the flow. The scan screen stays active for a retry.
                     Log.e("NFC_WRITE", "Error sending character to VitalWear HCE", e)
                     componentActivity.runOnUiThread {
                         Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_error_generic) + ": " + (e.message ?: e.javaClass.simpleName), Toast.LENGTH_LONG).show()
                     }
-                } finally {
-                    onComplete()
                 }
             }
         )

@@ -10,8 +10,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.R
 
@@ -36,6 +38,12 @@ fun ActionScreen(
                 .fillMaxSize()
         ) {
             Text(stringResource(R.string.action_place_near_reader))
+            Text(
+                stringResource(R.string.action_keep_device_stable),
+                modifier = Modifier.padding(top = 8.dp),
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
             Button(
                 onClick = onClickCancel,
                 modifier = Modifier.padding(16.dp)

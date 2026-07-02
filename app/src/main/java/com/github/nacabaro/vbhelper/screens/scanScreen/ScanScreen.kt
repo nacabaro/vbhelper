@@ -134,7 +134,7 @@ fun ScanScreenPreview() {
             }
             override fun flushCharacter(cardId: Long) {}
             override fun onClickRead(secrets: Secrets, onComplete: ()->Unit, onMultipleCards: (List<Card>) -> Unit) {}
-            override fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
+            override fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: (Boolean) -> Unit) {}
             override fun onClickWrite(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit) {}
             override fun cancelRead() {}
             override fun characterFromNfc(nfcCharacter: NfcCharacter, onMultipleCards: (List<Card>, NfcCharacter) -> Unit): String { return "" }

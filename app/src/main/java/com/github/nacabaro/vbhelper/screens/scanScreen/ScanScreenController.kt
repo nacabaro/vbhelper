@@ -9,7 +9,13 @@ import kotlinx.coroutines.flow.Flow
 interface ScanScreenController {
     val secretsFlow: Flow<Secrets>
     fun onClickRead(secrets: Secrets, onComplete: ()->Unit, onMultipleCards: (List<Card>) -> Unit)
-    fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit)
+    /**
+     * First scan step. For physical bracelets this only prepares the DIM and the
+     * character is written in a second step (onClickWrite). For the VitalWear watch
+     * (HCE) the whole transfer happens here, so onComplete receives
+     * transferComplete = true and no second step must run.
+     */
+    fun onClickCheckCard(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: (transferComplete: Boolean) -> Unit)
     fun onClickWrite(secrets: Secrets, nfcCharacter: NfcCharacter, onComplete: () -> Unit)
 
     fun cancelRead()

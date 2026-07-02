@@ -93,6 +93,7 @@
     <string name="nav_dex">図鑑</string>
     <string name="credits_RedEyez_description">献身的なデバッグ作業を行って頂きました。</string>
     <string name="action_place_near_reader">デバイスを近づけて下さい。</string>
+    <string name="action_keep_device_stable">デバイスを1〜2秒間接触させたままにして下さい</string>
     <string name="action_cancel">キャンセル</string>
     <string name="card_view_discovered_characters">解放済みキャラクター</string>
     <string name="dex_chara_icon_description">キャラクターアイコン</string>

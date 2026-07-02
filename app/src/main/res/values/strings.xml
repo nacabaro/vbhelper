@@ -109,7 +109,8 @@
     <string name="credits_RedEyez_description">
         Devout Debugger.
     </string>
-    <string name="action_place_near_reader">Place your Vital Bracelet near the reader...</string>
+    <string name="action_place_near_reader">Place your VB near the reader...</string>
+    <string name="action_keep_device_stable">Keep device in contact for 1-2 seconds</string>
     <string name="action_cancel">Cancel</string>
 
     <string name="read_character_title">Read character</string>

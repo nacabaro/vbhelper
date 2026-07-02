@@ -38,6 +38,10 @@ fun WritingScreen(
     var writingConfirmScreen by remember { mutableStateOf(false) }
     var isDoneSendingCard by remember { mutableStateOf(false) }
     var isDoneWritingCharacter by remember { mutableStateOf(false) }
+    // VitalWear (HCE) completes the whole transfer, including the local delete,
+    // on the first scan. When set, the second scan is skipped entirely and this
+    // screen must not delete or query the character again.
+    var hceTransferComplete by remember { mutableStateOf(false) }
 
     DisposableEffect(writing) {
         if (writing) {
@@ -50,7 +54,11 @@ fun WritingScreen(
 
                     override fun onResume() {
                         if (!isDoneSendingCard) {
-                            scanScreenController.onClickCheckCard(secrets!!, nfcCharacter) {
+                            scanScreenController.onClickCheckCard(secrets!!, nfcCharacter) { transferComplete ->
+                                if (transferComplete) {
+                                    hceTransferComplete = true
+                                    isDoneWritingCharacter = true
+                                }
                                 isDoneSendingCard = true
                             }
                         } else if (!isDoneWritingCharacter) {
@@ -64,7 +72,11 @@ fun WritingScreen(
 
             if (secrets != null) {
                 if (!isDoneSendingCard) {
-                    scanScreenController.onClickCheckCard(secrets!!, nfcCharacter) {
+                    scanScreenController.onClickCheckCard(secrets!!, nfcCharacter) { transferComplete ->
+                        if (transferComplete) {
+                            hceTransferComplete = true
+                            isDoneWritingCharacter = true
+                        }
                         isDoneSendingCard = true
                     }
                 } else if (!isDoneWritingCharacter) {
@@ -103,6 +115,10 @@ fun WritingScreen(
             scanScreenController.cancelRead()
             onCancel()
         }
+    } else if (hceTransferComplete) {
+        // Transfer already finished on the first scan (VitalWear): the character
+        // no longer exists locally, so none of the second-step screens may run.
+        writing = false
     } else if (!writingConfirmScreen) {
         writing = false
         WriteCharacterScreen (
@@ -129,8 +145,11 @@ fun WritingScreen(
     LaunchedEffect(isDoneSendingCard, isDoneWritingCharacter) {
         withContext(Dispatchers.IO) {
             if (isDoneSendingCard && isDoneWritingCharacter) {
-                storageRepository
-                    .deleteCharacter(characterId)
+                if (!hceTransferComplete) {
+                    // Physical bracelet: the character leaves the app only after
+                    // both write steps succeed. HCE already deleted it on scan one.
+                    storageRepository.deleteCharacter(characterId)
+                }
                 completedWriting = true
             }
         }

@@ -106,7 +106,8 @@
         Responsável pelo design do ícone do aplicativo em SVG.
     </string>
 
-    <string name="action_place_near_reader">Aproxime o seu Vital Bracelet do leitor...</string>
+    <string name="action_place_near_reader">Aproxime o seu VB do leitor...</string>
+    <string name="action_keep_device_stable">Mantenha o dispositivo em contato por 1-2 segundos</string>
     <string name="action_cancel">Cancelar</string>
 
     <string name="read_character_title">Ler personagem</string>
