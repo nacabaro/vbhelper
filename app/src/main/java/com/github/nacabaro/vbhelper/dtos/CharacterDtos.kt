@@ -5,6 +5,18 @@ import com.github.nacabaro.vbhelper.utils.DeviceType
 
 
 object CharacterDtos {
+    class CardCharacterOption(
+        val id: Long,
+        val charaIndex: Int,
+        val stage: Int,
+        val spriteIdle: ByteArray,
+        val spriteWidth: Int,
+        val spriteHeight: Int,
+        val nameSprite: ByteArray,
+        val nameWidth: Int,
+        val nameHeight: Int
+    )
+
     data class CharacterWithSprites(
         var id: Long = 0,
         var charId: Long,
@@ -336,13 +348,18 @@ object CharacterDtos {
         val requiredBattles: Int,
         val requiredWinRate: Int,
         val changeTimerHours: Int,
-        val requiredAdventureLevelCompleted: Int
+        val requiredAdventureLevelCompleted: Int,
+        val nameSprite: ByteArray? = null,
+        val nameWidth: Int = 0,
+        val nameHeight: Int = 0
     ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
 
             other as EvolutionRequirementsWithSpritesAndObtained
+
+            if (!(nameSprite ?: byteArrayOf()).contentEquals(other.nameSprite ?: byteArrayOf())) return false
 
             if (charaId != other.charaId) return false
             if (fromCharaId != other.fromCharaId) return false

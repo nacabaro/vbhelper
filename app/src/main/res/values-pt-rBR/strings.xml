@@ -152,6 +152,14 @@
     <string name="item_dialog_use">Usar item</string>
     <string name="item_dialog_purchase">Comprar</string>
     <string name="item_dialog_cancel">Cancelar</string>
+    <string name="item_compat_label">Compatível com: %1$s</string>
+    <string name="item_compat_be">Apenas Vital Bracelet BE</string>
+    <string name="item_compat_vb">Apenas Vital Bracelet (VB)</string>
+    <string name="item_compat_all">Todos os dispositivos</string>
+    <string name="item_compat_badge_be">BE</string>
+    <string name="item_compat_badge_vb">VB</string>
+    <string name="item_compat_badge_all">TODOS</string>
+    <string name="items_no_compatible_items">Nenhum item compatível com o personagem ativo</string>
 
     <string name="battles_online_title">Batalhas online</string>
     <string name="battles_coming_soon">Em breve</string>

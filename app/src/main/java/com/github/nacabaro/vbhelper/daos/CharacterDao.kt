@@ -13,8 +13,31 @@ interface CharacterDao {
     @Insert
     suspend fun insertCharacter(vararg characterData: CardCharacter)
 
+    @Query("SELECT * FROM CardCharacter WHERE id = :id")
+    fun getCardCharacterById(id: Long): CardCharacter
+
     @Query("SELECT * FROM CardCharacter WHERE charaIndex = :monIndex AND cardId = :dimId LIMIT 1")
     fun getCharacterByMonIndex(monIndex: Int, dimId: Long): CardCharacter
+
+    @Query(
+        """
+        SELECT
+            c.id as id,
+            c.charaIndex as charaIndex,
+            c.stage as stage,
+            s.spriteIdle1 as spriteIdle,
+            s.width as spriteWidth,
+            s.height as spriteHeight,
+            c.nameSprite as nameSprite,
+            c.nameWidth as nameWidth,
+            c.nameHeight as nameHeight
+        FROM CardCharacter c
+        JOIN Sprite s ON s.id = c.spriteId
+        WHERE c.cardId = :cardId
+        ORDER BY c.charaIndex
+    """
+    )
+    suspend fun getCharactersOfCard(cardId: Long): List<CharacterDtos.CardCharacterOption>
 
     @Insert
     suspend fun insertSprite(vararg sprite: Sprite)
@@ -76,7 +99,10 @@ interface CharacterDao {
             pt.requiredBattles as requiredBattles,
             pt.requiredWinRate as requiredWinRate,
             pt.changeTimerHours as changeTimerHours,
-            pt.requiredAdventureLevelCompleted as requiredAdventureLevelCompleted
+            pt.requiredAdventureLevelCompleted as requiredAdventureLevelCompleted,
+            c.nameSprite as nameSprite,
+            c.nameWidth as nameWidth,
+            c.nameHeight as nameHeight
         FROM
             PossibleTransformations pt
         JOIN CardCharacter c on pt.toCharaId = c.id
@@ -87,4 +113,36 @@ interface CharacterDao {
     """
     )
     fun getEvolutionRequirementsForCard(characterId: Long): Flow<List<CharacterDtos.EvolutionRequirementsWithSpritesAndObtained>>
+
+    @Query(
+        """
+        SELECT
+            c.id as id,
+            c.charaIndex as charaIndex,
+            c.stage as stage,
+            s.spriteIdle1 as spriteIdle,
+            s.width as spriteWidth,
+            s.height as spriteHeight,
+            c.nameSprite as nameSprite,
+            c.nameWidth as nameWidth,
+            c.nameHeight as nameHeight
+        FROM PossibleTransformations pt
+        JOIN CardCharacter c ON c.id = pt.toCharaId
+        JOIN Sprite s ON s.id = c.spriteId
+        WHERE pt.charaId = :characterId
+        ORDER BY c.charaIndex
+    """
+    )
+    suspend fun getNextForms(characterId: Long): List<CharacterDtos.CardCharacterOption>
+
+    @Query(
+        """
+        SELECT c.*
+        FROM PossibleTransformations pt
+        JOIN CardCharacter c ON c.id = pt.charaId
+        WHERE pt.toCharaId = :characterId
+        ORDER BY c.charaIndex ASC
+    """
+    )
+    fun getPreviousForms(characterId: Long): List<CardCharacter>
 }

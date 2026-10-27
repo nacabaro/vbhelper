@@ -19,8 +19,11 @@ class FromNfcConverter (
 ) {
     private val application = componentActivity.applicationContext as VBHelper
     private val database = application.container.db
-    
-    
+
+    companion object {
+        const val CARD_NOT_FOUND = "Card not found"
+    }
+
     fun addCharacterUsingCard(
         nfcCharacter: NfcCharacter,
         cardId: Long
@@ -30,12 +33,12 @@ class FromNfcConverter (
             .getCardById(cardId)
 
         if (cardData == null) {
-            return "Card not found"
+            return CARD_NOT_FOUND
         }
 
         return insertCharacter(nfcCharacter, cardData)
     }
-    
+
 
     fun addCharacter(
         nfcCharacter: NfcCharacter,
@@ -52,7 +55,7 @@ class FromNfcConverter (
                 .getCardById(appReservedCardId)
 
             if (fetchedCard == null) {
-                return "Card not found"
+                return CARD_NOT_FOUND
             } else if (fetchedCard.cardId == nfcCharacter.dimId.toInt()) {
                 cardData = fetchedCard
             }
@@ -64,7 +67,7 @@ class FromNfcConverter (
                 .getCardByCardId(nfcCharacter.dimId.toInt())
 
             if (allCards.isEmpty())
-                return "Card not found"
+                return CARD_NOT_FOUND
 
             if (allCards.size > 1) {
                 onMultipleCards(allCards, nfcCharacter)

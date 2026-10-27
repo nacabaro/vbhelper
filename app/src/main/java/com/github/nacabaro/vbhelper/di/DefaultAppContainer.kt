@@ -33,6 +33,7 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
             "internalDb"
         )
             .addMigrations(AppDatabase.MIGRATION_1_2)
+            .addCallback(AppDatabase.SEED_EVOLUTION_ITEMS)
             .createFromAsset("items.db")
             .build()
     }

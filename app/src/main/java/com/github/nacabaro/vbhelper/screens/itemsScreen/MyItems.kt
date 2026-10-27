@@ -23,6 +23,7 @@ import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.ItemsRepository
+import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.R
 
 
@@ -32,7 +33,15 @@ fun MyItems(
 ) {
     val application = LocalContext.current.applicationContext as VBHelper
     val itemsRepository = ItemsRepository(application.container.db)
-    val myItems by itemsRepository.getUserItems().collectAsState(emptyList())
+    val allItems by itemsRepository.getUserItems().collectAsState(emptyList())
+    val activeCharacter by StorageRepository(application.container.db)
+        .getActiveCharacter()
+        .collectAsState(null)
+
+    // Without an active character there is nothing to filter by, so show everything
+    val myItems = activeCharacter?.let { character ->
+        allItems.filter { it.itemType.isCompatibleWith(character.characterType) }
+    } ?: allItems
 
     var selectedElementIndex by remember { mutableStateOf<Int?>(null) }
 
@@ -42,7 +51,12 @@ fun MyItems(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            Text(stringResource(R.string.items_no_items))
+            Text(
+                stringResource(
+                    if (allItems.isEmpty()) R.string.items_no_items
+                    else R.string.items_no_compatible_items
+                )
+            )
         }
     } else {
         LazyVerticalGrid(

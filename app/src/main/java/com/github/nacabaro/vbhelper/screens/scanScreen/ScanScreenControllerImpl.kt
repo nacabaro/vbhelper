@@ -57,10 +57,15 @@ class ScanScreenControllerImpl(
             secrets,
             handlerFunc = { tagCommunicator ->
                 try {
-                    val character = tagCommunicator.receiveCharacter()
-                    val resultMessage = characterFromNfc(character) { cards, nfcCharacter ->
-                        lastScannedCharacter = nfcCharacter
-                        onMultipleCards(cards)
+                    var resultMessage = ""
+                    // Only tell the bracelet the transfer is done if the character found a card;
+                    // otherwise the bracelet deletes it and the character is lost.
+                    tagCommunicator.receiveCharacter { received ->
+                        resultMessage = characterFromNfc(received) { cards, nfcCharacter ->
+                            lastScannedCharacter = nfcCharacter
+                            onMultipleCards(cards)
+                        }
+                        resultMessage != FromNfcConverter.CARD_NOT_FOUND
                     }
                     onComplete.invoke()
                     resultMessage

@@ -111,4 +111,9 @@ dependencies {
 
     // HTTP request logging
     implementation(libs.okhttp.logging.interceptor)
+
+    // Widget
+    implementation("androidx.glance:glance:1.1.1")
+    implementation("androidx.glance:glance-appwidget:1.1.1")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }

@@ -57,7 +57,7 @@ class ToNfcConverter(
             .getVbData(characterId)
             .first()
 
-        val paddedTransformationArray = generateTransformationHistory(characterId, 9)
+        val paddedTransformationArray = generateTransformationHistory(characterId, characterInfo.charId, 9)
 
         val watchSpecialMissions = generateSpecialMissionsArray(characterId)
 
@@ -179,7 +179,7 @@ class ToNfcConverter(
             .getBeData(characterId)
             .first()
 
-        val paddedTransformationArray = generateTransformationHistory(characterId)
+        val paddedTransformationArray = generateTransformationHistory(characterId, characterInfo.charId)
 
         val nfcData = BENfcCharacter(
             dimId = characterInfo.cardId.toUShort(),
@@ -236,12 +236,28 @@ class ToNfcConverter(
 
     private suspend fun generateTransformationHistory(
         characterId: Long,
+        charIndex: Int,
         length: Int = 8
     ): Array<NfcCharacter.Transformation> {
-        val transformationHistory = database
+        val history = database
             .userCharacterDao()
             .getTransformationHistory(characterId)
             .first()
+
+        // The device always expects a first dated entry (the character itself). A character
+        // created without history (e.g. recovered) would otherwise fail to be written.
+        if (history.isEmpty()) {
+            val now = android.icu.util.GregorianCalendar(TimeZone.getTimeZone("UTC"))
+            val firstEntry = NfcCharacter.Transformation(
+                toCharIndex = charIndex.toUByte(),
+                year = now.get(Calendar.YEAR).toUShort(),
+                month = (now.get(Calendar.MONTH) + 1).toUByte(),
+                day = now.get(Calendar.DAY_OF_MONTH).toUByte()
+            )
+            return padTransformationArray(arrayOf(firstEntry), length)
+        }
+
+        val transformationHistory = history
             .map {
                 val date = Date(it.transformationDate)
                 val calendar = android.icu.util.GregorianCalendar(TimeZone.getTimeZone("UTC"))

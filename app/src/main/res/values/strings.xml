@@ -68,6 +68,31 @@
         Import Secrets From the official app APK
     </string>
 
+    <string name="home_evolve_title">Evolve</string>
+    <string name="home_evolve_view">Evolution branches</string>
+    <string name="home_evolve_none">This character has no known evolutions.</string>
+    <string name="home_evolve_no_requirements">No requirements</string>
+    <string name="home_evolve_vitals">Vitals</string>
+    <string name="home_evolve_trophies">Trophies</string>
+    <string name="home_evolve_battles">Battles (this phase)</string>
+    <string name="home_evolve_win_rate">Win rate (this phase)</string>
+    <string name="home_evolve_adventure">Adventure level completed</string>
+    <string name="home_evolve_button">Evolve</string>
+    <string name="home_evolve_done">Evolved. Send it to the bracelet to keep it there.</string>
+    <string name="settings_create_character_title">Create character</string>
+    <string name="settings_create_character_desc">Create a character from an imported card, e.g. to recover one that was lost</string>
+    <string name="settings_create_character_pick_card">Choose the card</string>
+    <string name="settings_create_character_no_cards">No cards imported yet. Import the card first.</string>
+    <string name="settings_create_character_pick_character">Choose the character from %1$s</string>
+    <string name="settings_create_character_stage">Stage %1$d · #%2$d</string>
+    <string name="settings_create_character_stats_hint">Original stats cannot be recovered. Set the values you want.</string>
+    <string name="settings_create_character_age">Age (days)</string>
+    <string name="settings_create_character_vitals">Vital points</string>
+    <string name="settings_create_character_trophies">Trophies</string>
+    <string name="settings_create_character_won">Battles won</string>
+    <string name="settings_create_character_lost">Battles lost</string>
+    <string name="settings_create_character_create">Create</string>
+    <string name="settings_create_character_done">Character created. Find it in Storage and send it to the bracelet.</string>
     <string name="settings_import_card_title">Import card</string>
     <string name="settings_import_card_desc">
         Import DiM/BEm
@@ -156,6 +181,14 @@
     <string name="item_dialog_use">Use item</string>
     <string name="item_dialog_purchase">Purchase</string>
     <string name="item_dialog_cancel">Cancel</string>
+    <string name="item_compat_label">Compatible with: %1$s</string>
+    <string name="item_compat_be">Vital Bracelet BE only</string>
+    <string name="item_compat_vb">Vital Bracelet (VB) only</string>
+    <string name="item_compat_all">All devices</string>
+    <string name="item_compat_badge_be">BE</string>
+    <string name="item_compat_badge_vb">VB</string>
+    <string name="item_compat_badge_all">ALL</string>
+    <string name="items_no_compatible_items">No items compatible with the active character</string>
 
     <string name="battles_online_title">Online battles</string>
     <string name="battles_coming_soon">Coming soon</string>

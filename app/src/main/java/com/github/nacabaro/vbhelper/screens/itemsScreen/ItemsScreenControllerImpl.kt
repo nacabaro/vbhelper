@@ -7,6 +7,8 @@ import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
+import com.github.nacabaro.vbhelper.domain.items.EvolutionItems
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.utils.DeviceType
@@ -37,7 +39,11 @@ class ItemsScreenControllerImpl (
         Battle20(13),
         Battle5(14),
         Win10(15),
-        Win4(16)
+        Win4(16),
+        Trophies(17),
+        Wins(18),
+        Battles(19),
+        ResetLosses(20)
     }
 
     init {
@@ -121,6 +127,13 @@ class ItemsScreenControllerImpl (
                         .userCharacterDao()
                         .updateCharacter(characterData)
 
+                } else if (item.itemIcon in ItemTypes.Trophies.id .. ItemTypes.ResetLosses.id) {
+                    applyEvolutionItem(item.itemIcon, item.itemLength, characterData)
+
+                    database
+                        .userCharacterDao()
+                        .updateCharacter(characterData)
+
                 } else if (item.itemIcon in ItemTypes.Step8k.id  .. ItemTypes.Win4.id &&
                     characterData.characterType == DeviceType.VBDevice &&
                     vbCharacterData != null
@@ -133,6 +146,31 @@ class ItemsScreenControllerImpl (
                 context.runOnUiThread {
                     onCompletion()
                 }
+            }
+        }
+    }
+
+    private fun applyEvolutionItem(itemIcon: Int, amount: Int, character: UserCharacter) {
+        val max = EvolutionItems.MAX_STAT
+
+        when (itemIcon) {
+            ItemTypes.Trophies.id -> {
+                character.trophies = (character.trophies + amount).coerceAtMost(max)
+            }
+            ItemTypes.Wins.id -> {
+                character.currentPhaseBattlesWon = (character.currentPhaseBattlesWon + amount).coerceAtMost(max)
+                character.totalBattlesWon = (character.totalBattlesWon + amount).coerceAtMost(max)
+            }
+            ItemTypes.Battles.id -> {
+                val won = (amount + 1) / 2
+                val lost = amount / 2
+                character.currentPhaseBattlesWon = (character.currentPhaseBattlesWon + won).coerceAtMost(max)
+                character.currentPhaseBattlesLost = (character.currentPhaseBattlesLost + lost).coerceAtMost(max)
+                character.totalBattlesWon = (character.totalBattlesWon + won).coerceAtMost(max)
+                character.totalBattlesLost = (character.totalBattlesLost + lost).coerceAtMost(max)
+            }
+            ItemTypes.ResetLosses.id -> {
+                character.currentPhaseBattlesLost = 0
             }
         }
     }

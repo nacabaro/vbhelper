@@ -14,6 +14,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -32,6 +36,11 @@ fun SettingsScreen(
     settingsScreenController: SettingsScreenControllerImpl,
 ) {
     val context = LocalContext.current
+    var showCreateCharacter by remember { mutableStateOf(false) }
+
+    if (showCreateCharacter) {
+        CreateCharacterDialog(onDismiss = { showCreateCharacter = false })
+    }
 
     Scaffold(
         topBar = {
@@ -65,6 +74,13 @@ fun SettingsScreen(
                 description = stringResource(R.string.settings_import_card_desc)
             ) {
                 settingsScreenController.onClickImportCard()
+            }
+
+            SettingsEntry(
+                title = stringResource(R.string.settings_create_character_title),
+                description = stringResource(R.string.settings_create_character_desc)
+            ) {
+                showCreateCharacter = true
             }
 
             SettingsSection(title = stringResource(R.string.settings_section_about))

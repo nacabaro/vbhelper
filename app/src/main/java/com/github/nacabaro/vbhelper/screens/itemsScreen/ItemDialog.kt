@@ -63,12 +63,11 @@ fun ItemDialog(
                                 .size(96.dp)
                                 .align(Alignment.Center)
                         )
-                        Icon(
-                            painter = painterResource(id = getLengthResource(item.itemLength)),
-                            contentDescription = null,
+                        ItemLengthIndicator(
+                            item = item,
                             tint = MaterialTheme.colorScheme.outline,
+                            size = 64.dp, // Set the size of the overlay image
                             modifier = Modifier
-                                .size(64.dp) // Set the size of the overlay image
                                 .align(Alignment.BottomEnd) // Align to the top end (top-right corner)
                         )
                     }
@@ -92,6 +91,14 @@ fun ItemDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(4.dp)
+                )
+                Text(
+                    textAlign = TextAlign.Center,
+                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                    fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
+                    text = itemCompatibilityText(item.itemType),
+                    modifier = Modifier
+                        .fillMaxWidth()
                 )
                 if (onClickPurchase != null) {
                     Text(

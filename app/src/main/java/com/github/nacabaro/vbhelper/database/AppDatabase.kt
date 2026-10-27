@@ -37,6 +37,7 @@ import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.VitalsHistory
 import com.github.nacabaro.vbhelper.domain.device_data.VitalWearCharacterSettings
 import com.github.nacabaro.vbhelper.domain.device_data.CharacterTransferPolicy
+import com.github.nacabaro.vbhelper.domain.items.EvolutionItems
 import com.github.nacabaro.vbhelper.domain.items.Items
 
 @Database(
@@ -82,6 +83,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun characterTransferPolicyDao(): CharacterTransferPolicyDao
 
     companion object {
+        // Adds the evolution items to databases created before they existed
+        val SEED_EVOLUTION_ITEMS = object : RoomDatabase.Callback() {
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                EvolutionItems.insertStatements.forEach { db.execSQL(it) }
+            }
+        }
+
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Create new tables

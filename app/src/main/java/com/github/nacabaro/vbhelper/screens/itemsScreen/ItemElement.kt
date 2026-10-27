@@ -36,14 +36,19 @@ fun ItemElement(
                     .align(Alignment.Center)
                     .padding(16.dp)
             )
-            Icon(
-                painter = painterResource(id = getLengthResource(item.itemLength)),
-                contentDescription = null,
+            ItemLengthIndicator(
+                item = item,
                 tint = MaterialTheme.colorScheme.surfaceTint,
+                size = 48.dp,
                 modifier = Modifier
-                    .size(48.dp)
                     .align(Alignment.TopStart)
                     .padding(8.dp)
+            )
+            ItemCompatibilityBadge(
+                itemType = item.itemType,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(6.dp)
             )
         }
     }

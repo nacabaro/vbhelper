@@ -1,6 +1,8 @@
 package com.github.nacabaro.vbhelper.screens.homeScreens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +31,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
+import com.github.nacabaro.vbhelper.screens.homeScreens.dialogs.EvolutionBranchesDialog
+import com.github.nacabaro.vbhelper.screens.homeScreens.dialogs.EvolutionDialog
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
@@ -45,6 +50,9 @@ import com.github.nacabaro.vbhelper.source.VitalWearCharacterExporter
 import android.widget.Toast
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import kotlinx.coroutines.flow.flowOf
+import com.github.nacabaro.vbhelper.screens.settingsScreen.controllers.CreateCharacterController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.collections.emptyList
 
 @Composable
@@ -105,8 +113,28 @@ fun HomeScreen(
 
     var adventureMissionsFinished by rememberSaveable { mutableStateOf(false) }
     var betaWarning by rememberSaveable { mutableStateOf(true) }
+    var showEvolution by remember { mutableStateOf(false) }
+    var showBranches by remember { mutableStateOf(false) }
     var collectedItem by remember { mutableStateOf<ItemDtos.PurchasedItem?>(null) }
     var collectedCurrency by remember { mutableStateOf<Int?>(null) }
+
+    // A character created without its earlier forms gets them filled in once
+    LaunchedEffect(activeMon?.id, transformationHistory.size) {
+        val mon = activeMon ?: return@LaunchedEffect
+        if (transformationHistory.size == 1) {
+            withContext(Dispatchers.IO) {
+                val database = application.container.db
+                val controller = CreateCharacterController(database)
+                val previous = database.characterDao().getPreviousForms(mon.charId)
+                if (previous.isNotEmpty()) {
+                    database.runInTransaction {
+                        database.userCharacterDao().deleteTransformationHistory(mon.id)
+                        controller.addEvolutionTrace(mon.id, mon.charId)
+                    }
+                }
+            }
+        }
+    }
 
     LaunchedEffect(true) {
         homeScreenController
@@ -140,6 +168,8 @@ fun HomeScreen(
             }
         } else {
             Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
+                // The home screens scroll and fill the height; the weight keeps the buttons below visible
+                Box(modifier = Modifier.weight(1f)) {
                 val cardIcon = BitmapData(
                     bitmap = cardIconData!!.cardIcon,
                     width = cardIconData!!.cardIconWidth,
@@ -177,6 +207,27 @@ fun HomeScreen(
                         cardIcon = cardIcon
                     )
                 }
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Button(
+                        onClick = { showEvolution = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = stringResource(R.string.home_evolve_title))
+                    }
+                    OutlinedButton(
+                        onClick = { showBranches = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = stringResource(R.string.home_evolve_view))
+                    }
+                }
 
                 Button(
                     onClick = {
@@ -201,6 +252,20 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    if (showBranches && activeMon != null) {
+        EvolutionBranchesDialog(
+            fromCharaId = activeMon!!.charId,
+            onDismiss = { showBranches = false }
+        )
+    }
+
+    if (showEvolution && activeMon != null) {
+        EvolutionDialog(
+            activeMon = activeMon!!,
+            onDismiss = { showEvolution = false }
+        )
     }
 
     if (collectedItem != null) {

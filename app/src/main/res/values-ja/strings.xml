@@ -85,6 +85,14 @@
     <string name="item_dialog_use">アイテム使用</string>
     <string name="item_dialog_purchase">購入</string>
     <string name="item_dialog_cancel">キャンセル</string>
+    <string name="item_compat_label">対応機種：%1$s</string>
+    <string name="item_compat_be">Vital Bracelet BE のみ</string>
+    <string name="item_compat_vb">Vital Bracelet (VB) のみ</string>
+    <string name="item_compat_all">すべての機種</string>
+    <string name="item_compat_badge_be">BE</string>
+    <string name="item_compat_badge_vb">VB</string>
+    <string name="item_compat_badge_all">全て</string>
+    <string name="items_no_compatible_items">アクティブなキャラクターに対応するアイテムはありません</string>
     <string name="dex_chara_stage_attribute">Stg: %1$s, Atr: %2$s</string>
     <string name="dex_chara_unknown_name">\?\\?\\?\\?\\?\\?\\?\\?\\?\\?\\?\\?\\?\\?\\?\\?</string>
     <string name="battles_online_title">オンラインバトル</string>

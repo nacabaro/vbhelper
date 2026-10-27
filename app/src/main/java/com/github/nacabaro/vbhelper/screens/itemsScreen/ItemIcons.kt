@@ -1,6 +1,17 @@
 package com.github.nacabaro.vbhelper.screens.itemsScreen
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
 import com.github.nacabaro.vbhelper.R
+import com.github.nacabaro.vbhelper.dtos.ItemDtos
 
 fun getIconResource(index: Int): Int {
     return when (index) {
@@ -12,6 +23,10 @@ fun getIconResource(index: Int): Int {
         6 -> R.drawable.baseline_timer_24
         7 -> R.drawable.baseline_rank_24
         8 -> R.drawable.baseline_vitals_24
+        ItemsScreenControllerImpl.ItemTypes.Trophies.id -> R.drawable.baseline_trophy_24
+        ItemsScreenControllerImpl.ItemTypes.Wins.id -> R.drawable.baseline_wins_24
+        ItemsScreenControllerImpl.ItemTypes.Battles.id -> R.drawable.baseline_battles_24
+        ItemsScreenControllerImpl.ItemTypes.ResetLosses.id -> R.drawable.baseline_reset_losses_24
         else -> R.drawable.baseline_question_mark_24
     }
 }
@@ -36,5 +51,36 @@ fun getLengthResource(index: Int): Int {
         -2500 -> R.drawable.baseline_triple_arrow_down
         -9999 -> R.drawable.baseline_reset_24
         else -> R.drawable.baseline_question_mark_24
+    }
+}
+
+// Evolution items show their amount ("+5") instead of a timer icon
+@Composable
+fun ItemLengthIndicator(
+    item: ItemDtos.ItemsWithQuantities,
+    tint: Color,
+    size: Dp,
+    modifier: Modifier = Modifier
+) {
+    when {
+        item.itemIcon == ItemsScreenControllerImpl.ItemTypes.ResetLosses.id -> Icon(
+            painter = painterResource(id = R.drawable.baseline_reset_24),
+            contentDescription = null,
+            tint = tint,
+            modifier = modifier.size(size)
+        )
+        item.itemIcon in ItemsScreenControllerImpl.ItemTypes.Trophies.id..ItemsScreenControllerImpl.ItemTypes.Battles.id -> Text(
+            text = "+${item.itemLength}",
+            color = tint,
+            fontWeight = FontWeight.Bold,
+            fontSize = (size.value / 3).sp,
+            modifier = modifier
+        )
+        else -> Icon(
+            painter = painterResource(id = getLengthResource(item.itemLength)),
+            contentDescription = null,
+            tint = tint,
+            modifier = modifier.size(size)
+        )
     }
 }

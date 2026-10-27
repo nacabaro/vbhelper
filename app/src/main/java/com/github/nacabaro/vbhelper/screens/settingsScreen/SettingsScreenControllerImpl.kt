@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.screens.settingsScreen
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
@@ -106,12 +107,19 @@ class SettingsScreenControllerImpl(
             val contentResolver = context.contentResolver
             val inputStream = contentResolver.openInputStream(uri)
 
-            inputStream.use { fileReader ->
-                val cardImportController = CardImportController(database)
-                cardImportController.importCard(fileReader)
+            try {
+                inputStream.use { fileReader ->
+                    val cardImportController = CardImportController(database)
+                    cardImportController.importCard(fileReader)
+                }
+            } catch (e: Exception) {
+                Log.e("CARD_IMPORT", "Error importing card", e)
+                context.runOnUiThread {
+                    Toast.makeText(context, "Card import failed: ${e.message ?: e.javaClass.simpleName}", Toast.LENGTH_LONG).show()
+                }
+                return@launch
             }
 
-            inputStream?.close()
             context.runOnUiThread {
                 Toast.makeText(context, "Import successful!", Toast.LENGTH_SHORT).show()
             }

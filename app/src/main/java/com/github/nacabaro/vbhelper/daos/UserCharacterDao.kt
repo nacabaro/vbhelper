@@ -130,6 +130,12 @@ interface UserCharacterDao {
     @Query("SELECT * FROM BECharacterData WHERE id = :id")
     fun getBeData(id: Long): Flow<BECharacterData>
 
+    @Query("SELECT * FROM UserCharacter WHERE id = :id")
+    fun getCharacterSync(id: Long): UserCharacter
+
+    @Query("SELECT * FROM BECharacterData WHERE id = :id")
+    suspend fun getBeDataOrNull(id: Long): BECharacterData?
+
     @Query("SELECT * FROM VBCharacterData WHERE id = :id")
     fun getVbData(id: Long): Flow<VBCharacterData>
 
@@ -197,6 +203,9 @@ interface UserCharacterDao {
     """
     )
     fun insertTransformation(monId: Long, stage: Int, dimId: Long, transformationDate: Long)
+
+    @Query("DELETE FROM TransformationHistory WHERE monId = :monId")
+    fun deleteTransformationHistory(monId: Long)
 
     @Upsert
     fun insertVitals(vararg vitalsHistory: VitalsHistory)
